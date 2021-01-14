@@ -91,14 +91,14 @@ func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
 	return nil
 }
 
-// resolve creates a list of task from a list of task Definitions
+// resolve creates a list of actions from the case actions Definitions
 func resolve(c Case, k KnowledgeBase) []DefaultAction {
 	resolvedActions := make([]DefaultAction, 0)
 
 	for _, a := range c.Actions {
 		rAction, err := a.Resolve(k)
-		rAction.MetaData["caseName"] = c.Name
 		if err == nil {
+			rAction.MetaData["caseName"] = c.Name
 			resolvedActions = append(resolvedActions, rAction)
 		}
 	}
