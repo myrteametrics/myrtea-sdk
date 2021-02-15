@@ -13,8 +13,8 @@ type TemplateMapping struct {
 // Template is the ES template
 type Template struct {
 	IndexPatterns []string               `json:"index_patterns"` // Keep the snake_case for elasticsearch template generation
-	Settings      map[string]interface{} `json:"settings"`
-	Mappings      TemplateMapping        `json:"mappings"`
+	Settings      map[string]interface{} `json:"settings,omitempty"`
+	Mappings      TemplateMapping        `json:"mappings,omitempty"`
 }
 
 //NewTemplate constructor the ES template
