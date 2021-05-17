@@ -17,7 +17,7 @@ type Server struct {
 }
 
 // NewSecuredServer returns a pointer to a new instance of Server
-func NewSecuredServer(port int, cert string, key string, router http.Handler) *http.Server {
+func NewSecuredServer(port int, cert string, key string, router http.Handler) *Server {
 	tlsConfig := &tls.Config{
 		MinVersion:               tls.VersionTLS12,
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
@@ -36,17 +36,17 @@ func NewSecuredServer(port int, cert string, key string, router http.Handler) *h
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
 	}
 
-	return server
+	return &Server{server, true, cert, key}
 }
 
 // NewUnsecuredServer returns a pointer to a new instance of Server, without any SSL security
-func NewUnsecuredServer(port int, router http.Handler) *http.Server {
+func NewUnsecuredServer(port int, router http.Handler) *Server {
 	server := &http.Server{
 		Addr:    ":" + strconv.Itoa(port),
 		Handler: router,
 	}
 
-	return server
+	return &Server{server, false, "", ""}
 }
 
 // Run starts the server
