@@ -47,6 +47,7 @@ var (
 		gval.Function("datemillis", dateToMillis),
 		gval.Function("calendar_add", addDurationDays),
 		gval.Function("calendar_delay", delayInDays),
+		gval.Function("truncate_date", truncateDate),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions

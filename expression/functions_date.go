@@ -196,3 +196,23 @@ func addDurationDays(arguments ...interface{}) (interface{}, error) {
 	}
 	return t.Add(d).Format(utils.TimeLayout), nil
 }
+
+func truncateDate(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 2 {
+		return nil, fmt.Errorf("truncateDate() expects exactly 2 string argument")
+	}
+	s1, ok1 := arguments[0].(string)
+	s2, ok2 := arguments[1].(string)
+	if !ok1 || !ok2 {
+		return nil, fmt.Errorf("truncateDate() expects exactly 2 string argument")
+	}
+	t, _, err := parseDateAllFormat(s1)
+	if err != nil {
+		return nil, fmt.Errorf("truncateDate() %s", err.Error())
+	}
+	d, err := time.ParseDuration(s2)
+	if err != nil {
+		return nil, fmt.Errorf("truncateDate() %s", err.Error())
+	}
+	return t.Truncate(d).Format(utils.TimeLayout), nil
+}
