@@ -235,3 +235,77 @@ func TestAddDurationDaysInvalid(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestTruncateDate(t *testing.T) {
+	res, err := truncateDate("2020-02-08T12:31:00.000", "30m")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != "2020-02-08T12:30:00.000" {
+		t.Error("invalid result")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.FailNow()
+	}
+
+	res, err = truncateDate("2020-02-08T12:59:00.000", "30m")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != "2020-02-08T12:30:00.000" {
+		t.Error("invalid result")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.FailNow()
+	}
+
+	res, err = truncateDate("2020-02-08T12:30:00.000", "30m")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != "2020-02-08T12:30:00.000" {
+		t.Error("invalid result")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.FailNow()
+	}
+
+	res, err = truncateDate("2020-02-08T12:59:00.000", "15m")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != "2020-02-08T12:45:00.000" {
+		t.Error("invalid result")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.FailNow()
+	}
+}
+
+func TestTruncateDateInvalid(t *testing.T) {
+	_, err := truncateDate("2020-02-08T12:30:00.000")
+	if err == nil {
+		t.Error("invalid parameters number should return an error")
+		t.FailNow()
+	}
+	_, err = truncateDate("2020-02-08T12:30:00.000", "3h", "other")
+	if err == nil {
+		t.Error("invalid parameters number should return an error")
+		t.FailNow()
+	}
+	_, err = truncateDate("2020-2020-2020", "3h")
+	if err == nil {
+		t.Error("invalid parameters date format should return an error")
+		t.FailNow()
+	}
+	_, err = truncateDate("2020-02-08T12:30:00.000", "not_a_duration")
+	if err == nil {
+		t.Error("invalid parameters date format should return an error")
+		t.FailNow()
+	}
+	_, err = truncateDate(3, true)
+	if err == nil {
+		t.Error("invalid parameters types should return an error")
+		t.FailNow()
+	}
+}
