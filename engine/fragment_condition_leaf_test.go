@@ -11,7 +11,7 @@ func TestGetLeafConditionFragment(t *testing.T) {
 			t.Error(err)
 		}
 		if f.Operator != tok {
-			t.Error("Invalid operator")
+			t.Error("Invalid operator", f.Operator, tok)
 		}
 	}
 }

@@ -327,3 +327,102 @@ func TestContextualize(t *testing.T) {
 		t.Error("invalid __myvariable__ replacement")
 	}
 }
+
+func TestContextualizeOptionalFor(t *testing.T) {
+	f := Fact{
+		ID:     1,
+		Name:   "1",
+		Model:  "model",
+		Intent: &IntentFragment{Operator: Count, Term: "myintent"},
+		Condition: &BooleanFragment{
+			Operator: And,
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{Operator: Exists, Field: "myfield"},
+				&LeafConditionFragment{Operator: OptionalFor, Field: "myfield", Value: "myvariable"},
+			},
+		},
+	}
+
+	placeholders := map[string]string{
+		"myvariable": "myvalue",
+	}
+
+	ts := time.Now()
+
+	err := f.ContextualizeCondition(ts, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	c1 := f.Condition.(*BooleanFragment)
+	if c1.Fragments[1].(*LeafConditionFragment).Field == "" {
+		t.Error("Fragment 2 Field should have not been removed (OptionalFor)")
+	}
+	if c1.Fragments[1].(*LeafConditionFragment).Value == "" {
+		t.Error("Fragment 2 Value should have not been removed (OptionalFor)")
+	}
+}
+
+func TestContextualizeOptionalForEmpty(t *testing.T) {
+	f := Fact{
+		ID:     1,
+		Name:   "1",
+		Model:  "model",
+		Intent: &IntentFragment{Operator: Count, Term: "myintent"},
+		Condition: &BooleanFragment{
+			Operator: And,
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{Operator: Exists, Field: "myfield"},
+				&LeafConditionFragment{Operator: OptionalFor, Field: "myfield", Value: "myvariable"},
+			},
+		},
+	}
+
+	placeholders := map[string]string{
+		// "myvariable": "myvalue",
+	}
+
+	ts := time.Now()
+
+	err := f.ContextualizeCondition(ts, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	c1 := f.Condition.(*BooleanFragment)
+	if c1.Fragments[1].(*LeafConditionFragment).Field != "" {
+		t.Error("Fragment 2 Field should have been removed (OptionalFor)")
+	}
+	if c1.Fragments[1].(*LeafConditionFragment).Value != "" {
+		t.Error("Fragment 2 Value should have been removed (OptionalFor)")
+	}
+}
+
+func TestToElasticQueryOptionalForEmpty(t *testing.T) {
+
+	f := Fact{
+		ID:        1,
+		Name:      "1",
+		Model:     "model",
+		Intent:    &IntentFragment{Operator: Sum, Term: "model"},
+		Condition: &LeafConditionFragment{Operator: OptionalFor, Field: "myfield", Value: "myvalue"},
+	}
+
+	ti := time.Now()
+	placeholders := map[string]string{}
+
+	f.ContextualizeDimensions(ti, placeholders)
+	err := f.ContextualizeCondition(ti, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	q, err := f.ToElasticQuery(ti, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	_ = q
+}
