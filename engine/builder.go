@@ -254,6 +254,17 @@ func buildElasticFilter(frag ConditionFragment, variables map[string]interface{}
 			}
 			output = &q
 
+		case OptionalFor:
+			if f.Field == "" || f.Value == "" {
+				return nil, nil
+			}
+			q := builder.TermQuery{
+				Type:  "terms",
+				Field: f.Field,
+				Value: f.Value,
+			}
+			output = &q
+
 		default:
 			return nil, errors.New("Invalid filter kind")
 		}

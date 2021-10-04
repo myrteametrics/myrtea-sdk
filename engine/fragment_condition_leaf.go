@@ -46,6 +46,10 @@ func (frag *LeafConditionFragment) IsValid() (bool, error) {
 		if frag.Value2 == nil {
 			return false, errors.New("Missing Value2")
 		}
+	case OptionalFor:
+		if frag.Value == nil {
+			return false, errors.New("Missing Value")
+		}
 	}
 	return true, nil
 }
@@ -68,6 +72,9 @@ var leafConditionMap = map[ConditionToken]func() *LeafConditionFragment{
 	},
 	Script: func() *LeafConditionFragment {
 		return &LeafConditionFragment{Script, "", nil, nil, ""}
+	},
+	OptionalFor: func() *LeafConditionFragment {
+		return &LeafConditionFragment{OptionalFor, "", nil, nil, ""}
 	},
 }
 

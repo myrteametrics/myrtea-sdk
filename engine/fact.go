@@ -157,8 +157,13 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 			exp := c.Value.(string)
 			result, err := expression.Process(expression.LangEval, exp, variables)
 			if err != nil {
-				zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value.(string)), zap.Error(err))
-				return err
+				if c.Operator == OptionalFor {
+					c.Field = ""
+					c.Value = ""
+				} else {
+					zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value.(string)), zap.Error(err))
+					return err
+				}
 			}
 			if result != nil {
 				c.Value = result

@@ -21,6 +21,8 @@ const (
 	Exists
 	// Script condition token
 	Script
+	// OptionalFor condition token
+	OptionalFor
 )
 
 func (s ConditionToken) String() string {
@@ -28,24 +30,26 @@ func (s ConditionToken) String() string {
 }
 
 // ConditionTokens list every supported condition token
-var ConditionTokens = []ConditionToken{For, From, To, Between, Exists, Script}
+var ConditionTokens = []ConditionToken{For, From, To, Between, Exists, Script, OptionalFor}
 
 var conditionToString = map[ConditionToken]string{
-	For:     "for",
-	From:    "from",
-	To:      "to",
-	Between: "between",
-	Exists:  "exists",
-	Script:  "script",
+	For:         "for",
+	From:        "from",
+	To:          "to",
+	Between:     "between",
+	Exists:      "exists",
+	Script:      "script",
+	OptionalFor: "optionalfor",
 }
 
 var conditionToID = map[string]ConditionToken{
-	"for":     For,
-	"from":    From,
-	"to":      To,
-	"between": Between,
-	"exists":  Exists,
-	"script":  Script,
+	"for":         For,
+	"from":        From,
+	"to":          To,
+	"between":     Between,
+	"exists":      Exists,
+	"script":      Script,
+	"optionalfor": OptionalFor,
 }
 
 // GetConditionToken search and return a condition token from the standard supported operator list
