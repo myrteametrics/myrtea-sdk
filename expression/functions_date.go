@@ -216,3 +216,38 @@ func truncateDate(arguments ...interface{}) (interface{}, error) {
 	}
 	return t.Truncate(d).Format(utils.TimeLayout), nil
 }
+
+func extractFromDate(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 2 {
+		return nil, fmt.Errorf("extractFromDate() expects exactly two string argument <date> <component>")
+	}
+	s1, ok := arguments[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("extractFromDate() expects exactly two string argument <date> <component>")
+	}
+	s2, ok := arguments[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("extractFromDate() expects exactly two string argument <date> <component>")
+	}
+	t, _, err := parseDateAllFormat(s1)
+	if err != nil {
+		return nil, fmt.Errorf("extractFromDate() %s", err.Error())
+	}
+	switch s2 {
+	case "year":
+		return t.Year(), nil
+	case "month":
+		return int(t.Month()), nil
+	case "day":
+		return t.Day(), nil
+	case "dayOfMonth":
+		return ((int(t.Weekday()) + 6) % 7) + 1, nil
+	case "hour":
+		return t.Hour(), nil
+	case "minute":
+		return t.Minute(), nil
+	case "second":
+		return t.Second(), nil
+	}
+	return nil, fmt.Errorf("extractFromDate() %s is not a valid component", s2)
+}

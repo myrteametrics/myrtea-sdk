@@ -309,3 +309,101 @@ func TestTruncateDateInvalid(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestExtractFromDate(t *testing.T) {
+	res, err := extractFromDate("2020-02-08T12:31:18.000", "year")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 2020 {
+		t.Errorf("Result: %d, Expected: %d", res, 2020)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "month")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 2 {
+		t.Errorf("Result: %d, Expected: %d", res, 2)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "day")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 8 {
+		t.Errorf("Result: %d, Expected: %d", res, 8)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "dayOfMonth")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 6 {
+		t.Errorf("Result: %d, Expected: %d", res, 6)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "hour")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 12 {
+		t.Errorf("Result: %d, Expected: %d", res, 12)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "minute")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 31 {
+		t.Errorf("Result: %d, Expected: %d", res, 31)
+		t.FailNow()
+	}
+
+	res, err = extractFromDate("2020-02-08T12:31:18.000", "second")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if res != 18 {
+		t.Errorf("Result: %d, Expected: %d", res, 18)
+		t.FailNow()
+	}
+}
+
+func TestExtractFromDateInvalid(t *testing.T) {
+	_, err := extractFromDate("2020-02-08T12:31:18.000", "invalid")
+	if err == nil {
+		t.Error("invalid parameters types should return an error")
+		t.FailNow()
+	}
+
+	_, err = extractFromDate("2020-02-08T12:31:18.000")
+	if err == nil {
+		t.Error("invalid parameters types should return an error")
+		t.FailNow()
+	}
+
+	_, err = extractFromDate("2020-02-08T12:31", "month")
+	if err == nil {
+		t.Error("invalid parameters types should return an error")
+		t.FailNow()
+	}
+
+	_, err = extractFromDate("month")
+	if err == nil {
+		t.Error("invalid parameters types should return an error")
+		t.FailNow()
+	}
+}
