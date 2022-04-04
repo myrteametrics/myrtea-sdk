@@ -41,6 +41,21 @@ func PatchNestedMap(pathParts []string, data map[string]interface{}, newValue in
 	return false
 }
 
+// DeleteNestedMap delete a specific path value in a map
+func DeleteNestedMap(pathParts []string, data map[string]interface{}) bool {
+	if val, found := data[pathParts[0]]; found {
+		if len(pathParts) > 1 {
+			if subdata, ok := val.(map[string]interface{}); ok {
+				return DeleteNestedMap(pathParts[1:], subdata)
+			}
+		} else {
+			delete(data, pathParts[0])
+			return true
+		}
+	}
+	return false
+}
+
 func buildNestedMap(pathParts []string, newValue interface{}) map[string]interface{} {
 	m := make(map[string]interface{}, 0)
 	mElement := m
