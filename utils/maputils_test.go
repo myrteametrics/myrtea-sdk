@@ -86,6 +86,67 @@ func TestUpdateNestedMap(t *testing.T) {
 	)
 }
 
+func TestDeleteNestedMap(t *testing.T){
+		
+
+	testDeleteNestedMap(t,
+		strings.Split("a.b", "."),
+		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+		false,
+		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+	)
+
+	testDeleteNestedMap(t,
+		strings.Split("a.b", "."),
+		map[string]interface{}{},
+		false,
+		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+	)
+
+	testDeleteNestedMap(t,
+		strings.Split("a","."),
+		map[string]interface{}{"a": 12},
+		true,
+		map[string]interface{}{},
+	)
+
+	testDeleteNestedMap(t,
+		strings.Split("a.b.c.d", "."),
+		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"c": 10}}},
+		false,
+		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"c": 10}}},
+	)
+
+	testDeleteNestedMap(t,
+		strings.Split("a.b.e.f.g", "."),
+		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"c": 10, "e": map[string]interface{}{"f": map[string]interface{}{"g": 50}}}}},
+		true,
+		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"c": 10, "e": map[string]interface{}{"f": map[string]interface{}{}}}}},
+	)
+
+	testDeleteNestedMap(t,
+		strings.Split("a.b.e.f.g", "."),
+		map[string]interface{}{},
+		false,
+		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"e": map[string]interface{}{"f": map[string]interface{}{"g": 50}}}}},
+	)
+}
+
+func testDeleteNestedMap(t *testing.T, path []string, data map[string]interface{}, expected bool, expectedData map[string]interface{}){
+	success := DeleteNestedMap(path, data)
+	if success != expected {
+		t.Log(success)
+		t.Log(expected)
+	}
+
+	dataJSON, _ := json.Marshal(data)
+	expectedDataJSON, _ := json.Marshal(expectedData)
+	if string(dataJSON) != string(expectedDataJSON) {
+		t.Log(string(dataJSON))
+		t.Log(string(expectedDataJSON))
+	}
+}
+
 func testSearchNestedMap(t *testing.T, path []string, data map[string]interface{}, expected bool, value interface{}) {
 	val, found := LookupNestedMap(path, data)
 	if found != expected {
