@@ -1,5 +1,7 @@
 package utils
 
+import "strings"
+
 // LookupNestedMap lookup for a value corresponding to the exact specified path inside a map
 func LookupNestedMap(pathParts []string, data map[string]interface{}) (interface{}, bool) {
 	if val, found := data[pathParts[0]]; found {
@@ -71,11 +73,11 @@ func buildNestedMap(pathParts []string, newValue interface{}) map[string]interfa
 	return m
 }
 
-func FlattenMap(pathKey []string, pathValue []string, dataArray []map[string]interface{}) map[string]interface{}{
+func FlattenMap(pathKey string, pathValue string, dataArray []map[string]interface{}) map[string]interface{}{
 	m := make(map[string]interface{}, 0)
 	for _, data := range dataArray {
-		if key, found := LookupNestedMap(pathKey, data); found {
-			if val, found := LookupNestedMap(pathValue, data); found {
+		if key, found := LookupNestedMap(strings.Split(pathKey, "."), data); found {
+			if val, found := LookupNestedMap(strings.Split(pathValue, "."), data); found {
 				m[key.(string)] = val
 			} else {
 				return nil

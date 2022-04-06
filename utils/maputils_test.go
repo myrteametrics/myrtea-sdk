@@ -87,8 +87,8 @@ func TestUpdateNestedMap(t *testing.T) {
 }
 func TestFlattenMap(t *testing.T){
 	testFlattenMap(t,
-		[]string{"key"},
-		[]string{"aggs","doc_count","value"},
+		"key",
+		"aggs.doc_count.value",
 		[]map[string]interface{}{{
             "key": "2022-02-24T05:00:00.000",
             "aggs": map[string]interface{}{
@@ -113,8 +113,8 @@ func TestFlattenMap(t *testing.T){
 	)
 
 	testFlattenMap(t,
-		[]string{"a"},
-		[]string{"aggs","doc_count","value"},
+		"a",
+		"aggs.doc_count.value",
 		[]map[string]interface{}{{
             "key": "2022-02-24T05:00:00.000",
             "aggs": map[string]interface{}{
@@ -132,15 +132,12 @@ func TestFlattenMap(t *testing.T){
             },
 		},
 		},
-		map[string]interface{}{
-			"2022-02-24T05:00:00.000":2,
-			"2022-02-24T08:00:00.000":12,
-		},
+		nil,
 	)
 
 	testFlattenMap(t,
-		[]string{"key"},
-		[]string{"aggs","doc_count","value"},
+		"key",
+		"aggs.doc_count.value",
 		[]map[string]interface{}{{
             "a": "2022-02-24T05:00:00.000",
             "aggs": map[string]interface{}{
@@ -149,9 +146,7 @@ func TestFlattenMap(t *testing.T){
                 },
             },
 		}},
-		map[string]interface{}{
-			"2022-02-24T05:00:00.000":2,
-		},
+		nil,
 	)
 }
 
@@ -244,7 +239,7 @@ func testUpdateNestedMap(t *testing.T, path []string, data map[string]interface{
 	}
 }
 
-func testFlattenMap(t *testing.T, path []string, pathValue []string, data []map[string]interface{}, expectedData map[string]interface{}){
+func testFlattenMap(t *testing.T, path string, pathValue string, data []map[string]interface{}, expectedData map[string]interface{}){
 	flatMap := FlattenMap(path, pathValue, data)
 	dataJSON, _ := json.Marshal(flatMap)
 	expectedDataJSON, _ := json.Marshal(expectedData)
