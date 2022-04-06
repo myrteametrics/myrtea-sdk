@@ -70,3 +70,19 @@ func buildNestedMap(pathParts []string, newValue interface{}) map[string]interfa
 	}
 	return m
 }
+
+func FlattenMap(pathKey []string, pathValue []string, dataArray []map[string]interface{}) map[string]interface{}{
+	m := make(map[string]interface{}, 0)
+	for _, data := range dataArray {
+		if key, found := LookupNestedMap(pathKey, data); found {
+			if val, found := LookupNestedMap(pathValue, data); found {
+				m[key.(string)] = val
+			} else {
+				return nil
+			}
+		} else {
+			return nil
+		}
+	}
+	return m
+}

@@ -85,6 +85,76 @@ func TestUpdateNestedMap(t *testing.T) {
 		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"e": map[string]interface{}{"f": map[string]interface{}{"g": 50}}}}},
 	)
 }
+func TestFlattenMap(t *testing.T){
+	testFlattenMap(t,
+		[]string{"key"},
+		[]string{"aggs","doc_count","value"},
+		[]map[string]interface{}{{
+            "key": "2022-02-24T05:00:00.000",
+            "aggs": map[string]interface{}{
+                "doc_count": map[string]interface{}{
+                    "value": 2,
+                },
+            },
+		},
+		{
+            "key": "2022-02-24T08:00:00.000",
+            "aggs": map[string]interface{}{
+                "doc_count": map[string]interface{}{
+                    "value": 12,
+                },
+            },
+		},
+		},
+		map[string]interface{}{
+			"2022-02-24T05:00:00.000":2,
+			"2022-02-24T08:00:00.000":12,
+		},
+	)
+
+	testFlattenMap(t,
+		[]string{"a"},
+		[]string{"aggs","doc_count","value"},
+		[]map[string]interface{}{{
+            "key": "2022-02-24T05:00:00.000",
+            "aggs": map[string]interface{}{
+                "doc_count": map[string]interface{}{
+                    "value": 2,
+                },
+            },
+		},
+		{
+            "key": "2022-02-24T08:00:00.000",
+            "aggs": map[string]interface{}{
+                "doc_count": map[string]interface{}{
+                    "value": 12,
+                },
+            },
+		},
+		},
+		map[string]interface{}{
+			"2022-02-24T05:00:00.000":2,
+			"2022-02-24T08:00:00.000":12,
+		},
+	)
+
+	testFlattenMap(t,
+		[]string{"key"},
+		[]string{"aggs","doc_count","value"},
+		[]map[string]interface{}{{
+            "a": "2022-02-24T05:00:00.000",
+            "aggs": map[string]interface{}{
+                "doc_count": map[string]interface{}{
+                    "value": 2,
+                },
+            },
+		}},
+		map[string]interface{}{
+			"2022-02-24T05:00:00.000":2,
+		},
+	)
+}
+
 
 func TestDeleteNestedMap(t *testing.T){
 		
@@ -172,4 +242,15 @@ func testUpdateNestedMap(t *testing.T, path []string, data map[string]interface{
 		t.Log(string(dataJSON))
 		t.Log(string(expectedDataJSON))
 	}
+}
+
+func testFlattenMap(t *testing.T, path []string, pathValue []string, data []map[string]interface{}, expectedData map[string]interface{}){
+	flatMap := FlattenMap(path, pathValue, data)
+	dataJSON, _ := json.Marshal(flatMap)
+	expectedDataJSON, _ := json.Marshal(expectedData)
+	if string(dataJSON) != string(expectedDataJSON) {
+		t.Log(string(dataJSON))
+		t.Log(string(expectedDataJSON))
+	}
+
 }
