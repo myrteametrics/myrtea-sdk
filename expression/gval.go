@@ -21,6 +21,7 @@ var (
 		LangEvalDate,
 		LangEvalDateOpenDays,
 		LangAdvancedInfix,
+		LangEvalMap,
 	)
 
 	// LangExprMath is a custom GVal evaluator for business rules and facts conditions
@@ -66,6 +67,11 @@ var (
 		gval.InfixOperator("-", advancedSubtraction),
 		gval.InfixOperator("*", advancedMultiplication),
 		gval.InfixOperator("/", advancedDivision),
+	)
+
+	LangEvalMap = gval.NewLanguage(
+		gval.Full(),
+		gval.Function("flat_map", flatMap),
 	)
 )
 
