@@ -6,7 +6,7 @@ import "testing"
 
 
 func TestFlatMap(t *testing.T){
-	res, err := flatMap(		
+	res, err := flattenFact(		
 		"key",
 		"aggs.doc_count.value",
 		[]map[string]interface{}{{

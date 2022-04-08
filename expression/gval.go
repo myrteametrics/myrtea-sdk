@@ -71,7 +71,7 @@ var (
 
 	LangEvalMap = gval.NewLanguage(
 		gval.Full(),
-		gval.Function("flat_map", flatMap),
+		gval.Function("flatten_fact", flattenFact),
 	)
 )
 
