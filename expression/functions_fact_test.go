@@ -7,8 +7,6 @@ import "testing"
 
 func TestFlatMap(t *testing.T){
 	res, err := flattenFact(		
-		"key",
-		"aggs.doc_count.value",
 		[]map[string]interface{}{{
 			"key": "2022-02-24T05:00:00.000",
 			"aggs": map[string]interface{}{
@@ -25,7 +23,9 @@ func TestFlatMap(t *testing.T){
 				},
 			},
 		},
-	})
+		},
+		"key",
+		"aggs.doc_count.value")
 
 	if err != nil {
 		t.Error(err)
