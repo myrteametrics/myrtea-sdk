@@ -73,11 +73,15 @@ func buildNestedMap(pathParts []string, newValue interface{}) map[string]interfa
 	return m
 }
 
-func FlattenFact(dataArray []map[string]interface{}, pathKey string, pathValue string) map[string]interface{}{
+func FlattenFact(dataArray []interface{}, pathKey string, pathValue string) map[string]interface{}{
 	m := make(map[string]interface{}, 0)
 	for _, data := range dataArray {
-		if key, found := LookupNestedMap(strings.Split(pathKey, "."), data); found {
-			if val, found := LookupNestedMap(strings.Split(pathValue, "."), data); found {
+		val, ok := data.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		if key, found := LookupNestedMap(strings.Split(pathKey, "."), val); found {
+			if val, found := LookupNestedMap(strings.Split(pathValue, "."), val); found {
 				m[key.(string)] = val
 			} else {
 				return nil

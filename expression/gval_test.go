@@ -270,3 +270,26 @@ func TestAdvancedDivision(t *testing.T) {
 	}
 
 }
+
+func TestFlatten(t *testing.T){
+	variables := map[string]interface{}{
+		"fact": []interface{}{map[string]interface{}{
+			"aggs": map[string]interface{}{"doc_count":map[string]interface{}{"value":2}},
+			"key":"2022-04-11T11:00:00.000"}},
+		"key": "key",
+		"path":"aggs.doc_count.value",
+	}	
+
+	eval, err := Process(LangEval,"flatten_fact(fact,key,path)",variables)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}	
+	resultat, ok := eval.(map[string]interface{})
+	if !ok {
+		t.Error("Result type not as expected")
+	}
+	if resultat["2022-04-11T11:00:00.000"].(int) != 2{
+		t.Error("result is not as expected")
+	}
+}
