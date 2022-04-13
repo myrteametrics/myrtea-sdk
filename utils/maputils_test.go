@@ -86,24 +86,25 @@ func TestUpdateNestedMap(t *testing.T) {
 	)
 }
 func TestFlattenMap(t *testing.T){
+	data := make([]interface{},0)
+	data = append(data, map[string]interface{}{
+		"key": "2022-02-24T05:00:00.000",
+		"aggs": map[string]interface{}{
+			"doc_count": map[string]interface{}{
+				"value": 2,
+			},
+		},
+	})
+	data = append(data, map[string]interface{}{
+		"key": "2022-02-24T08:00:00.000",
+		"aggs": map[string]interface{}{
+			"doc_count": map[string]interface{}{
+				"value": 12,
+			},
+		},
+	})
 	testFlattenMap(t,
-		[]map[string]interface{}{{
-            "key": "2022-02-24T05:00:00.000",
-            "aggs": map[string]interface{}{
-                "doc_count": map[string]interface{}{
-                    "value": 2,
-                },
-            },
-		},
-		{
-            "key": "2022-02-24T08:00:00.000",
-            "aggs": map[string]interface{}{
-                "doc_count": map[string]interface{}{
-                    "value": 12,
-                },
-            },
-		},
-		},
+		data,
 		"key",
 		"aggs.doc_count.value",
 		map[string]interface{}{
@@ -113,41 +114,27 @@ func TestFlattenMap(t *testing.T){
 	)
 
 	testFlattenMap(t,
-		[]map[string]interface{}{{
-            "key": "2022-02-24T05:00:00.000",
-            "aggs": map[string]interface{}{
-                "doc_count": map[string]interface{}{
-                    "value": 2,
-                },
-            },
-		},
-		{
-            "key": "2022-02-24T08:00:00.000",
-            "aggs": map[string]interface{}{
-                "doc_count": map[string]interface{}{
-                    "value": 12,
-                },
-            },
-		},
-		},
+		data,
 		"a",
 		"aggs.doc_count.value",
 		nil,
 	)
 
+	data = data[:1]
 	testFlattenMap(t,
-		[]map[string]interface{}{{
-            "a": "2022-02-24T05:00:00.000",
-            "aggs": map[string]interface{}{
-                "doc_count": map[string]interface{}{
-                    "value": 2,
-                },
-            },
-		}},
+		data,
 		"key",
 		"aggs.doc_count.value",
 		nil,
 	)
+
+	dataS := append(data, map[string]int{"a" : 12})
+	testFlattenMap(t,
+		dataS,
+		"key",
+		"aggs.doc_count.value",
+		nil)
+
 }
 
 
@@ -239,7 +226,7 @@ func testUpdateNestedMap(t *testing.T, path []string, data map[string]interface{
 	}
 }
 
-func testFlattenMap(t *testing.T, data []map[string]interface{}, pathKey string, pathValue string, expectedData map[string]interface{}){
+func testFlattenMap(t *testing.T, data []interface{}, pathKey string, pathValue string, expectedData map[string]interface{}){
 	flatMap := FlattenFact(data, pathKey, pathValue)
 	dataJSON, _ := json.Marshal(flatMap)
 	expectedDataJSON, _ := json.Marshal(expectedData)
