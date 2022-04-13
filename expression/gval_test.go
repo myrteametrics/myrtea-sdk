@@ -289,7 +289,7 @@ func TestFlatten(t *testing.T){
 	if !ok {
 		t.Error("Result type not as expected")
 	}
-	if resultat["2022-04-11T11:00:00.000"].(int) != 2{
+	if resultat["2022-04-11T11:00:00.000"].(int) != 12{
 		t.Error("result is not as expected")
 	}
 
