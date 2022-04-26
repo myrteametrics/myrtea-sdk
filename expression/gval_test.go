@@ -278,6 +278,9 @@ func TestFlatten(t *testing.T){
 			"key":"2022-04-11T11:00:00.000"}},
 		"key": "key",
 		"path":"aggs.doc_count.value",
+		"a":2,
+		"test": "4",
+		"str": "abcd",
 	}	
 
 	eval, err := Process(LangEval,"flatten_fact(fact,key,path)",variables)
@@ -293,7 +296,7 @@ func TestFlatten(t *testing.T){
 		t.Error("result is not as expected")
 	}
 
-	eval, err = Process(LangEval,"flatten_fact(fact,key,path) / 2",variables)
+	eval, err = Process(LangEval,"flatten_fact(fact,key,path)/test",variables)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -302,7 +305,35 @@ func TestFlatten(t *testing.T){
 	if !ok {
 		t.Error("Result type not as expected")
 	}
-	if resultat["2022-04-11T11:00:00.000"].(float64) != 6{
+	if resultat["2022-04-11T11:00:00.000"].(float64) != 3{
+		t.Error("result is not as expected")
+	}
+
+	_, err = Process(LangEval,"flatten_fact(fact,key,path)/str",variables)
+	if err == nil {
+		t.Error(err)
+		t.FailNow()
+	}	
+
+}
+
+func TestDivision(t *testing.T){
+	variables := map[string]interface{}{
+		"a": "2",
+		"test": 2,
+	}	
+
+	eval, err := Process(LangEval, "test / a", variables)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	resultat, ok := eval.(float64)
+	if !ok {
+		t.Error("Result type not as expected")
+	}
+
+	if resultat != 1 {
 		t.Error("result is not as expected")
 	}
 }
