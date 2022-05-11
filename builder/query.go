@@ -203,12 +203,7 @@ type TermQuery struct {
 // Source convert the query to a elasticsearch query interface
 func (q *TermQuery) Source() elastic.Query {
 	if reflect.TypeOf(q.Value).Kind() == reflect.Slice {
-		valuesString := q.Value.([]string)
-		values := make([]interface{}, 0)
-		for _, value := range valuesString {
-			values = append(values, value)
-		}
-		return elastic.NewTermsQuery(q.Field, values...)
+		return elastic.NewTermsQuery(q.Field, q.Value.([]interface{})...)
 	}
 	return elastic.NewTermQuery(q.Field, q.Value)
 }

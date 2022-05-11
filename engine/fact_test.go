@@ -426,3 +426,48 @@ func TestToElasticQueryOptionalForEmpty(t *testing.T) {
 	}
 	_ = q
 }
+
+func TestContextualizeForSlice(t *testing.T) {
+	f := Fact{
+		ID:     1,
+		Name:   "1",
+		Model:  "model",
+		Intent: &IntentFragment{Operator: Count, Term: "myintent"},
+		Condition: &BooleanFragment{
+			Operator: And,
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{Operator: Exists, Field: "myfield"},
+				&LeafConditionFragment{Operator: For, Field: "myfield", Value: `[myvariable1, "my_variable_2", "my-variable-3", myvariable4]`},
+			},
+		},
+	}
+
+	placeholders := map[string]string{
+		"myvariable1": "test1",
+		"myvariable4": "test4",
+	}
+
+	ts := time.Now()
+
+	err := f.ContextualizeCondition(ts, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	c1 := f.Condition.(*BooleanFragment)
+	if c1.Fragments[1].(*LeafConditionFragment).Field == "" {
+		t.Error("Fragment 2 Field should have not been removed (OptionalFor)")
+	}
+	if c1.Fragments[1].(*LeafConditionFragment).Value == "" {
+		t.Error("Fragment 2 Value should have not been removed (OptionalFor)")
+	}
+
+	// spew.Dump(f.ToElasticQuery(ts, placeholders))
+	// q, _ := f.ToElasticQuery(ts, placeholders)
+	// s, _ := builder.BuildEsSearchSource(q)
+	// b, _ := json.Marshal(s)
+	// t.Log(string(b))
+	// t.Fail()
+
+}
