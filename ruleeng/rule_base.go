@@ -2,6 +2,7 @@ package ruleeng
 
 import (
 	"errors"
+	"strconv"
 
 	"go.uber.org/zap"
 )
@@ -76,7 +77,7 @@ func (rBase *DefaultRuleBase) ExecuteByID(ruleID int64, k KnowledgeBase) ([]Acti
 	if rule, ok := rBase.rules[ruleID]; ok {
 		return rBase.executeRule(rule, k), nil
 	}
-	return nil, errors.New(string(ruleID) + " does not exists")
+	return nil, errors.New(strconv.FormatInt(ruleID, 10) + " does not exists")
 }
 
 func (rBase *DefaultRuleBase) executeRule(rule Rule, k KnowledgeBase) []Action {

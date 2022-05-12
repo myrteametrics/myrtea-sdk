@@ -3,7 +3,6 @@ package configuration
 import (
 	"flag"
 
-	"github.com/alecthomas/repr"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -35,14 +34,12 @@ func InitializeConfig(allowedConfigKey []ConfigKey, configName, configPath, envP
 	viper.SetConfigName(configName)
 	viper.AddConfigPath(configPath)
 	viper.ReadInConfig()
-	viperDebugFile := viper.AllSettings()
 
 	// Initialize environment variables configuration
 	viper.SetEnvPrefix(envPrefix)
 	for _, configKey := range allowedConfigKey {
 		viper.BindEnv(configKey.Name)
 	}
-	viperDebugEnv := viper.AllSettings()
 
 	// Initialize flags configuration
 	for _, configKey := range allowedConfigKey {
@@ -58,11 +55,4 @@ func InitializeConfig(allowedConfigKey []ConfigKey, configName, configPath, envP
 	viper.BindPFlags(pflag.CommandLine)
 	viperDebugFlag := viper.AllSettings()
 	delete(viperDebugFlag, "test") // Remove golang standarad test flags for cleaner debug
-
-	if viper.GetBool("DEBUG_MODE") {
-		// repr.Println("config/api.toml Configuration", viperDebugFile)
-		repr.Println(configPath, "/", configName, ".toml Configuration", viperDebugFile)
-		repr.Println("Environment variables Configuration", viperDebugEnv)
-		repr.Println("Flag variables Configuration", viperDebugFlag)
-	}
 }
