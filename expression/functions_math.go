@@ -13,6 +13,8 @@ func length(input interface{}) (interface{}, error) {
 		return (float64)(len(v)), nil
 	case []float64:
 		return (float64)(len(v)), nil
+	case []interface{}:
+		return (float64)(len(v)), nil
 	default:
 		return nil, errors.New("Not suported input type in function length")
 	}
