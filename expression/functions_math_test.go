@@ -61,9 +61,13 @@ func TestLength(t *testing.T) {
 	}
 
 	val, err = length([]interface{}{true, true, false})
-	if err == nil {
-		t.Error("invalid type should return an error")
+	if err != nil {
+		t.Error(err)
 		t.FailNow()
+	}
+	if val != 3.0 {
+		t.Error("invalid length")
+		t.Log(val)
 	}
 }
 
