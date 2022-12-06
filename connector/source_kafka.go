@@ -6,7 +6,7 @@ import (
 	cluster "github.com/bsm/sarama-cluster"
 	"go.uber.org/zap"
 )
-KafkaSource ...
+
 type KafkaSource struct {
 	Topic     string
 	Consumer  *cluster.Consumer
