@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,30 +24,18 @@ type AvroToJSONTransformer struct {
 
 // Transform is the convertor transformer, it has to decode the AVRO message into a byte message (JSONMessage)
 func (transformer AvroToJSONTransformer) Transform(msg Message) (*KafkaMessage, error) {
-	switch msg.(type) {
+	switch kafkaMsg := msg.(type) {
 	case KafkaMessage:
-		kafkaMsg := msg.(KafkaMessage)
 		textual, err := transformer.AvroBinaryToTextual(kafkaMsg.Data)
 		if err != nil {
 			zap.L().Info("transformer.AvroBinaryToTextual() : ", zap.Error(err))
-			return nil, errors.New("Couldn't convert the AVRO binary to a TextualBinary (JSONMessage)")
+			return nil, errors.New("couldn't convert the AVRO binary to a TextualBinary (JSONMessage)")
 		}
 		return &KafkaMessage{Data: textual}, nil
 
 	default:
-		return nil, errors.New("Couldn't transform the Message, the convertor transformer couldn't get the Type of the incoming message")
+		return nil, errors.New("couldn't transform the Message, the convertor transformer couldn't get the Type of the incoming message")
 	}
-}
-
-// InitConverter Init a new transformer
-func InitConverter(schemaRegistryURL string, ttlDuration int) *AvroToJSONTransformer {
-	// Avro AvroToJSONTransformer
-	transformer, err := NewAvroToJSONTransformer(schemaRegistryURL, time.Duration(ttlDuration)*time.Hour)
-	if err != nil {
-		zap.L().Error("Couldn't create the Avro transformer, the connenctor cannot start", zap.Error(err))
-		os.Exit(1)
-	}
-	return transformer
 }
 
 // New transformer constructor

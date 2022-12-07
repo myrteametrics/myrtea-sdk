@@ -53,107 +53,6 @@ func NewJSONMapper(name, path string) (*JSONMapper, error) {
 	return &JSONMapper{filters: filters, mapping: mapping}, nil
 }
 
-func getExtractedValue(data []byte, paths [][]string, separator string) (string, []byte) {
-	var fieldExtractedValue string
-	var err error
-	var payload []byte
-
-	for i, path := range paths {
-		payload = data
-
-		var firstPath []string
-		var count = 0
-		var keyBody string
-		var value []byte
-
-		//TODO: handle only one wildcard, should handle many of them
-		for _, element := range path {
-			count++
-
-			if element == wildcard {
-				value, _, _, err = jsonparser.Get(payload, firstPath...)
-				if err != nil {
-					break
-				}
-				var handler func([]byte, []byte, jsonparser.ValueType, int) error
-
-				handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-					//fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
-					keyBody = string(key)
-					return nil
-				}
-
-				//FIXME: Probably a problem with concurrency (the call of the callback)
-				jsonparser.ObjectEach(value, handler)
-
-				payload = value
-				path = append([]string{keyBody}, path[count:]...)
-				firstPath = nil
-				break
-			}
-			firstPath = append(firstPath, element)
-		}
-
-		var str string
-		str, err = jsonparser.GetString(payload, path...)
-		if err == nil {
-			if i > 0 {
-				fieldExtractedValue += separator
-			}
-			fieldExtractedValue += str
-		}
-	}
-
-	return fieldExtractedValue, payload
-}
-
-func getExtractedValueInt64(data []byte, path []string, separator string) (int64, []byte) {
-	var err error
-	var payload []byte
-
-	payload = data
-
-	var firstPath []string
-	var count = 0
-	var keyBody string
-	var value []byte
-
-	//TODO: handle only one wildcard, should handle many of them
-	for _, element := range path {
-		count++
-
-		if element == wildcard {
-			value, _, _, err = jsonparser.Get(payload, firstPath...)
-			if err != nil {
-				break
-			}
-
-			handler := func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
-				//fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
-				keyBody = string(key)
-				return nil
-			}
-
-			//FIXME: Probably a problem with concurrency (the call of the callback)
-			jsonparser.ObjectEach(value, handler)
-
-			payload = value
-			path = append([]string{keyBody}, path[count:]...)
-			firstPath = nil
-			break
-		}
-		firstPath = append(firstPath, element)
-	}
-
-	var val int64
-	val, err = jsonparser.GetInt(payload, path...)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	return val, payload
-}
-
 func (mapper JSONMapper) FilterDocument(msg KafkaMessage) (bool, string) {
 	for _, filter := range mapper.filters {
 		fieldExtractedValue, _ := getExtractedValue(msg.Data, filter.Paths, filter.Separator)
@@ -204,7 +103,7 @@ func (mapper JSONMapper) FilterDocument(msg KafkaMessage) (bool, string) {
 }
 
 // MapAvroToDocument :
-func (mapper JSONMapper) MapAvroToDocument(msg KafkaMessage) (FilteredJsonMessage, error) {
+func (mapper JSONMapper) MapToDocument(msg KafkaMessage) (FilteredJsonMessage, error) {
 
 	formatedMap := make(map[string]interface{})
 	var payload []byte
@@ -356,4 +255,105 @@ func getConfig(name, path string) (map[string]JSONMapperFilterItem, map[string]m
 	}
 
 	return filtersConfig, mapConfig, nil
+}
+
+func getExtractedValue(data []byte, paths [][]string, separator string) (string, []byte) {
+	var fieldExtractedValue string
+	var err error
+	var payload []byte
+
+	for i, path := range paths {
+		payload = data
+
+		var firstPath []string
+		var count = 0
+		var keyBody string
+		var value []byte
+
+		//TODO: handle only one wildcard, should handle many of them
+		for _, element := range path {
+			count++
+
+			if element == wildcard {
+				value, _, _, err = jsonparser.Get(payload, firstPath...)
+				if err != nil {
+					break
+				}
+				var handler func([]byte, []byte, jsonparser.ValueType, int) error
+
+				handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+					//fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
+					keyBody = string(key)
+					return nil
+				}
+
+				//FIXME: Probably a problem with concurrency (the call of the callback)
+				jsonparser.ObjectEach(value, handler)
+
+				payload = value
+				path = append([]string{keyBody}, path[count:]...)
+				firstPath = nil
+				break
+			}
+			firstPath = append(firstPath, element)
+		}
+
+		var str string
+		str, err = jsonparser.GetString(payload, path...)
+		if err == nil {
+			if i > 0 {
+				fieldExtractedValue += separator
+			}
+			fieldExtractedValue += str
+		}
+	}
+
+	return fieldExtractedValue, payload
+}
+
+func getExtractedValueInt64(data []byte, path []string, separator string) (int64, []byte) {
+	var err error
+	var payload []byte
+
+	payload = data
+
+	var firstPath []string
+	var count = 0
+	var keyBody string
+	var value []byte
+
+	//TODO: handle only one wildcard, should handle many of them
+	for _, element := range path {
+		count++
+
+		if element == wildcard {
+			value, _, _, err = jsonparser.Get(payload, firstPath...)
+			if err != nil {
+				break
+			}
+
+			handler := func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+				//fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
+				keyBody = string(key)
+				return nil
+			}
+
+			//FIXME: Probably a problem with concurrency (the call of the callback)
+			jsonparser.ObjectEach(value, handler)
+
+			payload = value
+			path = append([]string{keyBody}, path[count:]...)
+			firstPath = nil
+			break
+		}
+		firstPath = append(firstPath, element)
+	}
+
+	var val int64
+	val, err = jsonparser.GetInt(payload, path...)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return val, payload
 }
