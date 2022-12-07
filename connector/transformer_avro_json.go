@@ -158,7 +158,7 @@ func (transformer AvroToJSONTransformer) getSchemaFromAvroBinary(msg []byte) (st
 	case 0x0: // Standard Magic Avro (Schema ID)
 
 		id := int(binary.BigEndian.Uint32(msg[1:5]))
-		messageBinary := msg[5:len(msg)]
+		messageBinary := msg[5:]
 
 		schema, err := transformer.client.GetSchemaByID(id)
 		if err != nil {
@@ -176,7 +176,7 @@ func (transformer AvroToJSONTransformer) getSchemaFromAvroBinary(msg []byte) (st
 		subjectStr := string(subjectBytes)
 
 		version := int(binary.BigEndian.Uint32(msg[currPos : currPos+4]))
-		messageBinary := msg[4+subjectSize+4+1 : len(msg)]
+		messageBinary := msg[4+subjectSize+4+1:]
 
 		schema, err := transformer.client.GetSchemaBySubject(subjectStr, version)
 		if err != nil {
@@ -185,6 +185,6 @@ func (transformer AvroToJSONTransformer) getSchemaFromAvroBinary(msg []byte) (st
 		return schema.Schema, schema.ID, messageBinary, nil
 
 	default:
-		return "", -1, nil, errors.New("Magic Byte must contains : 0 or 1")
+		return "", -1, nil, errors.New("magic byte must contains : 0 or 1")
 	}
 }

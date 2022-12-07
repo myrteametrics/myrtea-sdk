@@ -181,7 +181,6 @@ func (mapper Mapper) FilterDocument(msg KafkaMessage) (bool, string) {
 
 		case "equals":
 			if fieldExtractedValue != filter.Value {
-				//zap.L().Info("case equals false", zap.String("fieldExtractedValue", fieldExtractedValue), zap.String("filter value", filter.Value))
 				return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
 			}
 		case "equals_atleastone":
@@ -218,7 +217,7 @@ func (mapper Mapper) FilterDocument(msg KafkaMessage) (bool, string) {
 
 // MapAvroToDocument :
 func (mapper Mapper) MapAvroToDocument(msg KafkaMessage) (FilteredJsonMessage, error) {
-	//zap.L().Info("start mapping avro to document")
+
 	formatedMap := make(map[string]interface{})
 	var payload []byte
 	for _, groupVal := range mapper.mapping {
