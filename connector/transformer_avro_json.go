@@ -23,7 +23,7 @@ type AvroToJSONTransformer struct {
 }
 
 // Transform is the convertor transformer, it has to decode the AVRO message into a byte message (JSONMessage)
-func (transformer AvroToJSONTransformer) Transform(msg Message) (*KafkaMessage, error) {
+func (transformer AvroToJSONTransformer) Transform(msg Message) (Message, error) {
 	switch kafkaMsg := msg.(type) {
 	case KafkaMessage:
 		textual, err := transformer.AvroBinaryToTextual(kafkaMsg.Data)
