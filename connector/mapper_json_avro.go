@@ -2,7 +2,6 @@ package connector
 
 import (
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -16,8 +15,8 @@ import (
 
 const wildcard = "*"
 
-// ConfigItem :
-type ConfigItem struct {
+// JSONMapperConfigItem :
+type JSONMapperConfigItem struct {
 	Mandatory    bool
 	FieldType    string
 	DefaultValue interface{}
@@ -28,7 +27,7 @@ type ConfigItem struct {
 	Separator    string
 }
 
-type FilterItem struct {
+type JSONMapperFilterItem struct {
 	Keep         bool
 	FieldType    string
 	DefaultValue string
@@ -39,29 +38,19 @@ type FilterItem struct {
 	Separator    string
 }
 
-// Mapper :
-type Mapper struct {
-	filters map[string]FilterItem
-	mapping map[string]map[string]ConfigItem
+// JSONMapper :
+type JSONMapper struct {
+	filters map[string]JSONMapperFilterItem
+	mapping map[string]map[string]JSONMapperConfigItem
 }
 
-//InitAvroMapper init avro mapper
-func InitAvroMapper(path string, file string) *Mapper {
-	mapper, err := New(file, path)
-	if err != nil {
-		zap.L().Error("Couldn't init the mapper", zap.Error(err))
-		os.Exit(1)
-	}
-	return mapper
-}
-
-// New :
-func New(name, path string) (*Mapper, error) {
+// NewJSONMapper :
+func NewJSONMapper(name, path string) (*JSONMapper, error) {
 	filters, mapping, err := getConfig(name, path)
 	if err != nil {
 		return nil, err
 	}
-	return &Mapper{filters: filters, mapping: mapping}, nil
+	return &JSONMapper{filters: filters, mapping: mapping}, nil
 }
 
 func getExtractedValue(data []byte, paths [][]string, separator string) (string, []byte) {
@@ -138,9 +127,8 @@ func getExtractedValueInt64(data []byte, path []string, separator string) (int64
 			if err != nil {
 				break
 			}
-			var handler func([]byte, []byte, jsonparser.ValueType, int) error
 
-			handler = func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
+			handler := func(key []byte, value []byte, dataType jsonparser.ValueType, offset int) error {
 				//fmt.Printf("Key: '%s'\n Value: '%s'\n Type: %s\n", string(key), string(value), dataType)
 				keyBody = string(key)
 				return nil
@@ -166,7 +154,7 @@ func getExtractedValueInt64(data []byte, path []string, separator string) (int64
 	return val, payload
 }
 
-func (mapper Mapper) FilterDocument(msg KafkaMessage) (bool, string) {
+func (mapper JSONMapper) FilterDocument(msg KafkaMessage) (bool, string) {
 	for _, filter := range mapper.filters {
 		fieldExtractedValue, _ := getExtractedValue(msg.Data, filter.Paths, filter.Separator)
 		if fieldExtractedValue == "" {
@@ -216,7 +204,7 @@ func (mapper Mapper) FilterDocument(msg KafkaMessage) (bool, string) {
 }
 
 // MapAvroToDocument :
-func (mapper Mapper) MapAvroToDocument(msg KafkaMessage) (FilteredJsonMessage, error) {
+func (mapper JSONMapper) MapAvroToDocument(msg KafkaMessage) (FilteredJsonMessage, error) {
 
 	formatedMap := make(map[string]interface{})
 	var payload []byte
@@ -329,7 +317,7 @@ func (mapper Mapper) MapAvroToDocument(msg KafkaMessage) (FilteredJsonMessage, e
 }
 
 // with Fixed GetStringSlice key ("keys_list.keys" instead of "mapping.keys")
-func getConfig(name, path string) (map[string]FilterItem, map[string]map[string]ConfigItem, error) {
+func getConfig(name, path string) (map[string]JSONMapperFilterItem, map[string]map[string]JSONMapperConfigItem, error) {
 	viperMapper := viper.New()
 	viperMapper.SetConfigName(name)
 	viperMapper.AddConfigPath(path)
@@ -340,12 +328,12 @@ func getConfig(name, path string) (map[string]FilterItem, map[string]map[string]
 		return nil, nil, err
 	}
 
-	filtersConfig := make(map[string]FilterItem)
-	mapConfig := make(map[string]map[string]ConfigItem)
+	filtersConfig := make(map[string]JSONMapperFilterItem)
+	mapConfig := make(map[string]map[string]JSONMapperConfigItem)
 	for groupKey := range viperMapper.AllSettings() {
 		if groupKey == "filter" {
 			for fieldKey, fieldConfig := range viperMapper.GetStringMap(groupKey) {
-				itemConfig := FilterItem{}
+				itemConfig := JSONMapperFilterItem{}
 				err := mapstructure.Decode(fieldConfig, &itemConfig)
 				if err != nil {
 					zap.L().Fatal("Cannot decode config file ", zap.Error(err))
@@ -354,9 +342,9 @@ func getConfig(name, path string) (map[string]FilterItem, map[string]map[string]
 				filtersConfig[fieldKey] = itemConfig
 			}
 		} else {
-			mapConfig[groupKey] = make(map[string]ConfigItem)
+			mapConfig[groupKey] = make(map[string]JSONMapperConfigItem)
 			for fieldKey, fieldConfig := range viperMapper.GetStringMap(groupKey) {
-				itemConfig := ConfigItem{}
+				itemConfig := JSONMapperConfigItem{}
 				err := mapstructure.Decode(fieldConfig, &itemConfig)
 				if err != nil {
 					zap.L().Fatal("Cannot decode config file ", zap.Error(err))
