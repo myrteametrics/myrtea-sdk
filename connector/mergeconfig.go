@@ -25,5 +25,3 @@ type FieldMath struct {
 	Expression  string `json:"expression"`
 	OutputField string `json:"outputField"`
 }
-
-
