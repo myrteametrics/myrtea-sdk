@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 )
 
+type FormatToBIR func([]Message) *BulkIngestRequest
+
 // BatchSink ..
 type BatchSink struct {
 	TargetURL    string
@@ -18,13 +20,13 @@ type BatchSink struct {
 	Client       *retryablehttp.Client
 	BufferSize   int
 	FlushTimeout time.Duration
-	FormatToBIR  func([]FilteredJsonMessage) *BulkIngestRequest // TODO: Change to be more generic ? (sending []byte or interface{})
+	FormatToBIR  FormatToBIR // TODO: Change to be more generic ? (sending []byte or interface{})
 	DryRun       bool
 }
 
 // NewBatchSink constructor for BatchSink
 func NewBatchSink(targetURL string, client *retryablehttp.Client, bufferSize int, flushTimeout time.Duration,
-	formatToBIR func([]FilteredJsonMessage) *BulkIngestRequest, dryRun bool) *BatchSink {
+	formatToBIR FormatToBIR, dryRun bool) *BatchSink {
 	return &BatchSink{
 		TargetURL:    targetURL,
 		Client:       client,
@@ -41,7 +43,7 @@ func (sink *BatchSink) AddMessageToQueue(message Message) {
 }
 
 func (sink *BatchSink) Sender() {
-	buffer := make([]FilteredJsonMessage, 0)
+	buffer := make([]Message, 0)
 	forceFlush := sink.resetForceFlush(sink.FlushTimeout)
 	for {
 		select {
@@ -86,7 +88,7 @@ func (sink *BatchSink) resetForceFlush(d time.Duration) <-chan time.Time {
 	return time.After(d)
 }
 
-func (sink *BatchSink) flushBuffer(buffer []FilteredJsonMessage) {
+func (sink *BatchSink) flushBuffer(buffer []Message) {
 	if len(buffer) == 0 {
 		return
 	}
