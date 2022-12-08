@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type FormatToBIR func([]Message) *BulkIngestRequest
+type FormatToBIRs func([]Message) []*BulkIngestRequest
 
 // BatchSink ..
 type BatchSink struct {
@@ -20,20 +20,20 @@ type BatchSink struct {
 	Client       *retryablehttp.Client
 	BufferSize   int
 	FlushTimeout time.Duration
-	FormatToBIR  FormatToBIR // TODO: Change to be more generic ? (sending []byte or interface{})
+	FormatToBIRs FormatToBIRs // TODO: Change to be more generic ? (sending []byte or interface{})
 	DryRun       bool
 }
 
 // NewBatchSink constructor for BatchSink
 func NewBatchSink(targetURL string, client *retryablehttp.Client, bufferSize int, flushTimeout time.Duration,
-	formatToBIR FormatToBIR, dryRun bool) *BatchSink {
+	formatToBIRs FormatToBIRs, dryRun bool) *BatchSink {
 	return &BatchSink{
 		TargetURL:    targetURL,
 		Client:       client,
 		Send:         make(chan Message, 100),
 		BufferSize:   bufferSize,
 		FlushTimeout: flushTimeout,
-		FormatToBIR:  formatToBIR,
+		FormatToBIRs: formatToBIRs,
 		DryRun:       dryRun,
 	}
 }
@@ -93,17 +93,25 @@ func (sink *BatchSink) flushBuffer(buffer []Message) {
 		return
 	}
 
-	bir := sink.FormatToBIR(buffer)
-	if bir == nil {
-		zap.L().Warn("Couldn't create the BIR with the given data")
+	birs := sink.FormatToBIRs(buffer)
+	if len(birs) == 0 {
+		return
 	}
 
 	if !sink.DryRun {
-		err := sink.SendToIngester(bir)
-		if err != nil {
-			return
+		for _, bir := range birs {
+			if bir == nil {
+				zap.L().Warn("Couldn't create the BIR with the given data")
+				continue
+			}
+			err := sink.SendToIngester(bir)
+			if err != nil {
+				return
+			}
 		}
 	} else {
-		zap.L().Info("SendToIngester", zap.Any("bir", bir))
+		for _, bir := range birs {
+			zap.L().Info("SendToIngester", zap.Any("bir", bir))
+		}
 	}
 }
