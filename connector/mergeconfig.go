@@ -18,6 +18,7 @@ type Group struct {
 	FieldMath             []FieldMath `json:"fieldMath,omitempty"`
 	FieldKeepLatest       []string    `json:"fieldKeepLatest,omitempty"`
 	FieldKeepEarliest     []string    `json:"fieldKeepEarliest,omitempty"`
+	FieldForceUpdate      []string    `json:"fieldForceUpdate,omitempty"`
 }
 
 // FieldMath specify a merge rule using a math expression
