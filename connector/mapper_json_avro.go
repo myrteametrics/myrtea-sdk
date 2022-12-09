@@ -201,6 +201,13 @@ func (mapper JSONMapper) MapToDocument(msg Message) (FilteredJsonMessage, error)
 					} else {
 						formatedMap[fieldKey] = i
 					}
+				case "boolean":
+					boolValue, err := jsonparser.GetBoolean(payload, fieldConfig.Paths[0]...)
+					if err != nil {
+						formatedMap[fieldKey] = fieldConfig.DefaultValue
+					} else {
+						formatedMap[fieldKey] = boolValue
+					}
 				case "date":
 					if fieldExtractedValue == "now" {
 						formatedMap[fieldKey] = time.Now().UTC().Truncate(1 * time.Second).Format("2006-01-02T15:04:05.000")
