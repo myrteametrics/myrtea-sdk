@@ -31,7 +31,7 @@ func (transformer AvroToJSONTransformer) Transform(msg Message) (Message, error)
 			zap.L().Info("transformer.AvroBinaryToTextual() : ", zap.Error(err))
 			return nil, errors.New("couldn't convert the AVRO binary to a TextualBinary (JSONMessage)")
 		}
-		return &KafkaMessage{Data: textual}, nil
+		return KafkaMessage{Data: textual}, nil
 
 	default:
 		return nil, errors.New("couldn't transform the Message, the convertor transformer couldn't get the Type of the incoming message")
