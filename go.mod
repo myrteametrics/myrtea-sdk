@@ -9,9 +9,11 @@ require (
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/buger/jsonparser v1.1.1
 	github.com/cactus/go-statsd-client/statsd v0.0.0-20191106001114-12b4e2b38748
+	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/jwtauth/v5 v5.0.2
 	github.com/go-redis/redis v6.15.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.4.1
+	github.com/gorilla/context v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/json-iterator/go v1.1.12
