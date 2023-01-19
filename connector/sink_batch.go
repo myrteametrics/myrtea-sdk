@@ -2,6 +2,7 @@ package connector
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -42,7 +43,7 @@ func (sink *BatchSink) AddMessageToQueue(message Message) {
 	sink.Send <- message
 }
 
-func (sink *BatchSink) Sender() {
+func (sink *BatchSink) Sender(ctx context.Context) {
 	buffer := make([]Message, 0)
 	forceFlush := sink.resetForceFlush(sink.FlushTimeout)
 	for {
@@ -50,7 +51,7 @@ func (sink *BatchSink) Sender() {
 		case <-forceFlush:
 			if l := len(buffer); l > 0 {
 				zap.L().Info("flushing buffer after flush timeout", zap.Int("buffer", l))
-				sink.flushBuffer(buffer)
+				sink.flushBuffer(ctx, buffer)
 				buffer = buffer[:0]
 			}
 			forceFlush = sink.resetForceFlush(sink.FlushTimeout)
@@ -59,7 +60,7 @@ func (sink *BatchSink) Sender() {
 			buffer = append(buffer, pm.(FilteredJsonMessage))
 			if len(buffer) >= sink.BufferSize {
 				zap.L().Info("flushing buffer after max length reached", zap.Int("buffer_length", sink.BufferSize))
-				sink.flushBuffer(buffer)
+				sink.flushBuffer(ctx, buffer)
 				buffer = buffer[:0]
 				forceFlush = sink.resetForceFlush(sink.FlushTimeout)
 			}
@@ -67,14 +68,20 @@ func (sink *BatchSink) Sender() {
 	}
 }
 
-func (sink *BatchSink) SendToIngester(bir *BulkIngestRequest) error {
+func (sink *BatchSink) SendToIngester(ctx context.Context, bir *BulkIngestRequest) error {
 	json, err := json.Marshal(bir)
 	if err != nil {
 		zap.L().Error("cannot marshall bulkIngestRequest", zap.Error(err))
 		return err
 	}
 
-	resp, err := sink.Client.Post(sink.TargetURL, "application/json", bytes.NewBuffer(json))
+	req, err := retryablehttp.NewRequestWithContext(ctx, "POST", sink.TargetURL, bytes.NewBuffer(json))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := sink.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -88,7 +95,7 @@ func (sink *BatchSink) resetForceFlush(d time.Duration) <-chan time.Time {
 	return time.After(d)
 }
 
-func (sink *BatchSink) flushBuffer(buffer []Message) {
+func (sink *BatchSink) flushBuffer(ctx context.Context, buffer []Message) {
 	if len(buffer) == 0 {
 		return
 	}
@@ -104,7 +111,7 @@ func (sink *BatchSink) flushBuffer(buffer []Message) {
 				zap.L().Warn("Couldn't create the BIR with the given data")
 				continue
 			}
-			err := sink.SendToIngester(bir)
+			err := sink.SendToIngester(ctx, bir)
 			if err != nil {
 				return
 			}

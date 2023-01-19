@@ -5,8 +5,7 @@ go 1.14
 require (
 	github.com/BurntSushi/toml v1.2.1 // indirect
 	github.com/PaesslerAG/gval v1.0.1
-	github.com/Shopify/sarama v1.24.0 // indirect
-	github.com/bsm/sarama-cluster v2.1.15+incompatible
+	github.com/Shopify/sarama v1.38.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/cactus/go-statsd-client/statsd v0.0.0-20191106001114-12b4e2b38748
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
