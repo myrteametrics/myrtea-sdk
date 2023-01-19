@@ -1,4 +1,4 @@
-package configuration
+package helpers
 
 import (
 	"log"
