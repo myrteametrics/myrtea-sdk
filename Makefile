@@ -59,9 +59,13 @@ test-race:
 test-memory:
 	GO111MODULE=$(GO111MODULE) go test -msan -short $$(go list ./... | grep -v /vendor/)
 
+$(lint):
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
 .PHONY: lint ## Lint the code
-lint:
-	golint -set_exit_status=true $$(go list ./... | grep $(PROJECT_PATH)/v4)
+lint: $(lint)
+	go mod tidy
+	golangci-lint run
 
 .PHONY: swag ## Generate swagger documentation
 swag:
