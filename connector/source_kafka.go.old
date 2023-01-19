@@ -1,0 +1,135 @@
+package connector
+
+import (
+	"context"
+	"log"
+	"os"
+	"strings"
+	"sync"
+
+	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
+)
+
+type KafkaSource struct {
+	Topic     string
+	Consumer  *sarama.Consumer
+	OutChanel chan Message
+	Signals   chan os.Signal
+}
+
+func NewConsumer() {
+
+	var versionStr string
+	var assignor string
+	var oldest bool
+	var brokers string
+	var group string
+	var topics string
+
+	// sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
+
+	version, err := sarama.ParseKafkaVersion(versionStr)
+	if err != nil {
+		log.Panicf("Error parsing Kafka version: %v", err)
+	}
+
+	config := sarama.NewConfig()
+	config.Version = version
+
+	switch assignor {
+	case "sticky":
+		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.BalanceStrategySticky}
+	case "roundrobin":
+		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.BalanceStrategyRoundRobin}
+	case "range":
+		config.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.BalanceStrategyRange}
+	default:
+		log.Panicf("Unrecognized consumer group partition assignor: %s", assignor)
+	}
+
+	if oldest {
+		config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	client, err := sarama.NewConsumerGroup(strings.Split(brokers, ","), group, config)
+	if err != nil {
+		log.Panicf("Error creating consumer group client: %v", err)
+	}
+
+	consumer := Consumer{
+		ready: make(chan bool),
+	}
+
+	consumptionIsPaused := false
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			// `Consume` should be called inside an infinite loop, when a
+			// server-side rebalance happens, the consumer session will need to be
+			// recreated to get the new claims
+			if err := client.Consume(ctx, strings.Split(topics, ","), &consumer); err != nil {
+				log.Panicf("Error from consumer: %v", err)
+			}
+			// check if context was cancelled, signaling that the consumer should stop
+			if ctx.Err() != nil {
+				return
+			}
+			consumer.ready = make(chan bool)
+		}
+	}()
+
+	<-consumer.ready // Await till the consumer has been set up
+	log.Println("Sarama consumer up and running!...")
+}
+
+func NewKafkaSource(topic string, consumer *sarama.Consumer, out chan Message, signals chan os.Signal) *KafkaSource {
+
+	source := KafkaSource{
+		Topic:     topic,
+		Consumer:  consumer,
+		Signals:   signals,
+		OutChanel: out,
+	}
+	return &source
+}
+
+func (src *KafkaSource) Init() error {
+	return nil
+}
+
+func (src *KafkaSource) Close() error {
+	return nil
+}
+
+func (src *KafkaSource) Run() error {
+	zap.L().Sugar().Infof("Starting consumer on topic=%s", src.Topic)
+
+	go func() {
+		for err := range src.Consumer.Errors() {
+			zap.L().Error("Error:", zap.Error(err))
+		}
+	}()
+
+	go func() {
+		for ntf := range src.Consumer.Notifications() {
+			zap.L().Sugar().Infof("Rebalanced: %+v\n", ntf)
+		}
+	}()
+
+	for {
+		select {
+		case msg, ok := <-src.Consumer.Messages():
+			if ok {
+				newMsg := KafkaMessage{
+					Data: msg.Value,
+				}
+				src.OutChanel <- newMsg
+				src.Consumer.MarkOffset(msg, "")
+			}
+		}
+	}
+}
