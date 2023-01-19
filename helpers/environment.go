@@ -16,11 +16,11 @@ var (
 	}
 
 	HTTPServerConfigKeys = []ConfigKey{
-		{Type: StringFlag, Name: "HTTP_SERVER_PORT", DefaultValue: "9024", Description: "Server port"},
+		{Type: StringFlag, Name: "HTTP_SERVER_PORT", DefaultValue: "9000", Description: "Server port"},
 		{Type: StringFlag, Name: "HTTP_SERVER_ENABLE_TLS", DefaultValue: "false", Description: "Run the server in unsecured mode (without SSL)"},
 		{Type: StringFlag, Name: "HTTP_SERVER_TLS_FILE_CRT", DefaultValue: "certs/server.rsa.crt", Description: "SSL certificate crt file location"},
 		{Type: StringFlag, Name: "HTTP_SERVER_TLS_FILE_KEY", DefaultValue: "certs/server.rsa.key", Description: "SSL certificate key file location"},
-		{Type: StringFlag, Name: "HTTP_SERVER_API_ENABLE_CORS", DefaultValue: "false", Description: "Run the api with CORS enabled"},
+		{Type: StringFlag, Name: "HTTP_SERVER_API_ENABLE_CORS", DefaultValue: "true", Description: "Run the api with CORS enabled"},
 		{Type: StringFlag, Name: "HTTP_SERVER_API_ENABLE_SECURITY", DefaultValue: "true", Description: "Run the api in unsecured mode (without authentication)"},
 		{Type: StringFlag, Name: "HTTP_SERVER_API_ENABLE_GATEWAY_MODE", DefaultValue: "false", Description: "Run the api without external Auth API (with gateway)"},
 	}
@@ -40,9 +40,9 @@ var (
 	ConsumerKafkaConfigKeys = []ConfigKey{
 		{Type: StringFlag, Name: "KAFKA_CONSUMER_VERBOSE", DefaultValue: "false", Description: "Enable debug mode"},
 		{Type: StringFlag, Name: "KAFKA_CONSUMER_CLIENTID", DefaultValue: "", Description: "Enable debug mode"},
-		{Type: StringSliceFlag, Name: "KAFKA_CONSUMER_BROKERS", DefaultValue: "", Description: "Enable debug mode"},
+		{Type: StringSliceFlag, Name: "KAFKA_CONSUMER_BROKERS", DefaultValue: []string{}, Description: "Enable debug mode"},
 		{Type: StringFlag, Name: "KAFKA_CONSUMER_GROUPID", DefaultValue: "", Description: "Enable debug mode"},
-		{Type: StringSliceFlag, Name: "KAFKA_CONSUMER_TOPICS", DefaultValue: "", Description: "Enable debug mode"},
+		{Type: StringSliceFlag, Name: "KAFKA_CONSUMER_TOPICS", DefaultValue: []string{}, Description: "Enable debug mode"},
 		{Type: StringFlag, Name: "KAFKA_CONSUMER_OFFSET_OLDEST", DefaultValue: "false", Description: "Enable debug mode"},
 		{Type: StringFlag, Name: "KAFKA_SCHEMA_REGISTRY_URL", DefaultValue: "", Description: "Enable debug mode"},
 		{Type: StringFlag, Name: "KAFKA_SCHEMA_REGISTRY_TTL_DURATION", DefaultValue: "24", Description: "Enable debug mode"},
