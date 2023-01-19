@@ -8,21 +8,21 @@ type ConsumerProcessor interface {
 
 // DefaultConsumer represents a Sarama consumer group consumer
 type DefaultConsumer struct {
-	ready     chan bool
+	Ready     chan bool
 	processor ConsumerProcessor
 }
 
 func NewDefaultConsumer(processor ConsumerProcessor) DefaultConsumer {
 	return DefaultConsumer{
-		ready:     make(chan bool),
+		Ready:     make(chan bool),
 		processor: processor,
 	}
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
 func (consumer *DefaultConsumer) Setup(sarama.ConsumerGroupSession) error {
-	// Mark the consumer as ready
-	close(consumer.ready)
+	// Mark the consumer as Ready
+	close(consumer.Ready)
 	return nil
 }
 
@@ -54,21 +54,21 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 
 // DefaultMultiConsumer represents a Sarama consumer group consumer
 type DefaultMultiConsumer struct {
-	ready      chan bool
+	Ready      chan bool
 	processors map[string]ConsumerProcessor
 }
 
 func NewDefaultMultiConsumer(processors map[string]ConsumerProcessor) DefaultMultiConsumer {
 	return DefaultMultiConsumer{
-		ready:      make(chan bool),
+		Ready:      make(chan bool),
 		processors: processors,
 	}
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
 func (consumer *DefaultMultiConsumer) Setup(sarama.ConsumerGroupSession) error {
-	// Mark the consumer as ready
-	close(consumer.ready)
+	// Mark the consumer as Ready
+	close(consumer.Ready)
 	return nil
 }
 
