@@ -57,7 +57,7 @@ func (sink *BatchSink) Sender(ctx context.Context) {
 			forceFlush = sink.resetForceFlush(sink.FlushTimeout)
 
 		case pm := <-sink.Send:
-			buffer = append(buffer, pm.(FilteredJsonMessage))
+			buffer = append(buffer, pm)
 			if len(buffer) >= sink.BufferSize {
 				zap.L().Info("flushing buffer after max length reached", zap.Int("buffer_length", sink.BufferSize))
 				sink.flushBuffer(ctx, buffer)
