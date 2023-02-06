@@ -53,7 +53,7 @@ var (
 		{Type: StringFlag, Name: "SINK_INGESTER_API_PORT", DefaultValue: "9001", Description: "Ingester-API port"},
 		{Type: StringFlag, Name: "SINK_INGESTER_API_DRY_RUN", DefaultValue: "false", Description: "Ingester-API port"},
 		{Type: StringFlag, Name: "SINK_HTTP_TIMEOUT", DefaultValue: "", Description: "HTTP client timeout for the Ingester sink"},
-		{Type: StringFlag, Name: "SINK_BUFFERLENGHT", DefaultValue: "", Description: "Sink buffer lenght"},
+		{Type: StringFlag, Name: "SINK_BUFFER_SIZE", DefaultValue: "", Description: "Sink buffer lenght"},
 		{Type: StringFlag, Name: "SINK_FLUSH_TIMEOUT", DefaultValue: "", Description: "Flush timout for the Sink buffer"},
 	}
 
