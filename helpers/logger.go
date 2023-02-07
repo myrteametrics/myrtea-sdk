@@ -4,11 +4,13 @@ import (
 	"log"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 // InitLogger initialialize zap logging component
 func InitLogger(production bool) zap.Config {
 	var zapConfig zap.Config
+	zapConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	if production {
 		zapConfig = zap.NewProductionConfig()
 	} else {
