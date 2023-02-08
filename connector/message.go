@@ -1,5 +1,7 @@
 package connector
 
+import "time"
+
 // Message ...
 type Message interface {
 	String() string
@@ -35,5 +37,16 @@ type MessageWithOptions struct {
 }
 
 func (msg MessageWithOptions) String() string {
+	return ""
+}
+
+type TypedDataMessage struct {
+	Strings map[string]string
+	Ints    map[string]int64
+	Bools   map[string]bool
+	Times   map[string]time.Time
+}
+
+func (m TypedDataMessage) String() string {
 	return ""
 }
