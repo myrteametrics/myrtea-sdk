@@ -81,7 +81,7 @@ func (mapper JSONMapper) FilterDocument(msg Message) (bool, string) {
 }
 
 // MapAvroToDocument :
-func (mapper JSONMapper) MapToDocument(msg Message) (FilteredJsonMessage, error) {
+func (mapper JSONMapper) MapToDocument(msg Message) (Message, error) {
 	switch message := msg.(type) {
 	case KafkaMessage:
 		formatedMap := make(map[string]interface{})
