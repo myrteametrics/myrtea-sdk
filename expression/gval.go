@@ -22,6 +22,7 @@ var (
 		LangEvalDateOpenDays,
 		LangAdvancedInfix,
 		LangEvalMap,
+		LangEvalString,
 	)
 
 	// LangExprMath is a custom GVal evaluator for business rules and facts conditions
@@ -72,6 +73,12 @@ var (
 	LangEvalMap = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("flatten_fact", flattenFact),
+	)
+
+	// LangEvalString is a custom GVal evaluator for handling char arrays (strings)
+	LangEvalString = gval.NewLanguage(
+		gval.Full(),
+		gval.Function("replace", replace),
 	)
 )
 
