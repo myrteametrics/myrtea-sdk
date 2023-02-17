@@ -271,57 +271,57 @@ func TestAdvancedDivision(t *testing.T) {
 
 }
 
-func TestFlatten(t *testing.T){
+func TestFlatten(t *testing.T) {
 	variables := map[string]interface{}{
 		"fact": []interface{}{map[string]interface{}{
-			"aggs": map[string]interface{}{"doc_count":map[string]interface{}{"value":12}},
-			"key":"2022-04-11T11:00:00.000"}},
-		"key": "key",
-		"path":"aggs.doc_count.value",
-		"a":2,
+			"aggs": map[string]interface{}{"doc_count": map[string]interface{}{"value": 12}},
+			"key":  "2022-04-11T11:00:00.000"}},
+		"key":  "key",
+		"path": "aggs.doc_count.value",
+		"a":    2,
 		"test": "4",
-		"str": "abcd",
-	}	
+		"str":  "abcd",
+	}
 
-	eval, err := Process(LangEval,"flatten_fact(fact,key,path)",variables)
+	eval, err := Process(LangEval, "flatten_fact(fact,key,path)", variables)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
-	}	
+	}
 	resultat, ok := eval.(map[string]interface{})
 	if !ok {
 		t.Error("Result type not as expected")
 	}
-	if resultat["2022-04-11T11:00:00.000"].(int) != 12{
+	if resultat["2022-04-11T11:00:00.000"].(int) != 12 {
 		t.Error("result is not as expected")
 	}
 
-	eval, err = Process(LangEval,"flatten_fact(fact,key,path)/test",variables)
+	eval, err = Process(LangEval, "flatten_fact(fact,key,path)/test", variables)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
-	}	
+	}
 	resultat, ok = eval.(map[string]interface{})
 	if !ok {
 		t.Error("Result type not as expected")
 	}
-	if resultat["2022-04-11T11:00:00.000"].(float64) != 3{
+	if resultat["2022-04-11T11:00:00.000"].(float64) != 3 {
 		t.Error("result is not as expected")
 	}
 
-	_, err = Process(LangEval,"flatten_fact(fact,key,path)/str",variables)
+	_, err = Process(LangEval, "flatten_fact(fact,key,path)/str", variables)
 	if err == nil {
 		t.Error(err)
 		t.FailNow()
-	}	
+	}
 
 }
 
-func TestDivision(t *testing.T){
+func TestDivision(t *testing.T) {
 	variables := map[string]interface{}{
-		"a": "2",
+		"a":    "2",
 		"test": 2,
-	}	
+	}
 
 	eval, err := Process(LangEval, "test / a", variables)
 	if err != nil {
@@ -336,4 +336,33 @@ func TestDivision(t *testing.T){
 	if resultat != 1 {
 		t.Error("result is not as expected")
 	}
+}
+
+func TestEvalReplace(t *testing.T) {
+	// testing replace without variables
+	eval, err := Process(LangEvalString, "replace(\"Hello World!\", \"World\", \"Myrtea\")", map[string]interface{}{})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	result, ok := eval.(string)
+	if !ok {
+		t.Error("Result type not as expected")
+	}
+
+	AssertEqual(t, result, "Hello Myrtea!")
+
+	// testing replace with variables
+	variables := map[string]interface{}{
+		"a": "test",
+		"b": "es",
+	}
+	eval, err = Process(LangEvalString, "replace(a, b, \"se\")", variables)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	AssertEqual(t, eval, "tset")
+
 }
