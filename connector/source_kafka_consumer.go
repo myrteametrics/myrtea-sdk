@@ -1,6 +1,9 @@
 package connector
 
-import "github.com/Shopify/sarama"
+import (
+	"github.com/Shopify/sarama"
+	"go.uber.org/zap"
+)
 
 type ConsumerProcessor interface {
 	Process(message *sarama.ConsumerMessage)
@@ -86,8 +89,12 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 	for {
 		select {
 		case message := <-claim.Messages():
-			consumer.processors[message.Topic].Process(message)
-			session.MarkMessage(message, "")
+			if processor, found := consumer.processors[message.Topic]; found {
+				processor.Process(message)
+				session.MarkMessage(message, "")
+			} else {
+				zap.L().Warn("Processor not found for topic", zap.String("topic", message.Topic))
+			}
 
 		// Should return when `session.Context()` is done.
 		// If not, will raise `ErrRebalanceInProgress` or `read tcp <ip>:<port>: i/o timeout` when kafka rebalance. see:
