@@ -23,6 +23,7 @@ var (
 		LangAdvancedInfix,
 		LangEvalMap,
 		LangEvalString,
+		LangEvalSlice,
 	)
 
 	// LangExprMath is a custom GVal evaluator for business rules and facts conditions
@@ -79,6 +80,11 @@ var (
 	LangEvalString = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("replace", replace),
+	)
+
+	LangEvalSlice = gval.NewLanguage(
+		gval.Full(),
+		gval.Function("contains", contains),
 	)
 )
 

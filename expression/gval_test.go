@@ -5,6 +5,17 @@ import (
 	"time"
 )
 
+func TestProcessArray(t *testing.T) {
+	variables := map[string]interface{}{"a": []string{"a", "b", "c"}}
+
+	result, err := Process(LangEval, "a[0]", variables)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Fail()
+	t.Log(result)
+}
+
 func TestProcess(t *testing.T) {
 	variables := map[string]interface{}{"a": 10}
 

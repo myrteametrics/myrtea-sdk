@@ -6,6 +6,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
+	"github.com/myrteametrics/myrtea-sdk/v4/utils"
 	"go.uber.org/zap"
 )
 
@@ -53,32 +54,52 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 				// 	continue
 				// }
 
-				val, found := lookupNestedMap(fieldConfig.Paths[0], data)
-				if !found {
-					continue
-				}
+				var val interface{}
+				if fieldConfig.FieldType != "uuid_from_longs" {
+					var found bool
+					val, found = lookupNestedMap(fieldConfig.Paths[0], data)
+					if !found {
+						continue
+					}
 
-				if len(fieldConfig.Paths) > 1 {
-					var str string = ""
-					for i, path := range fieldConfig.Paths {
-						if i > 0 {
-							str += fieldConfig.Separator
-						}
+					if len(fieldConfig.Paths) > 1 {
+						var str string = ""
+						for i, path := range fieldConfig.Paths {
+							if i > 0 {
+								str += fieldConfig.Separator
+							}
 
-						val, found := lookupNestedMap(path, data)
-						if !found {
-							continue
-						} else {
-							switch v := val.(type) {
-							case string:
-								str += v
+							val, found := lookupNestedMap(path, data)
+							if !found {
+								continue
+							} else {
+								switch v := val.(type) {
+								case string:
+									str += v
+								}
 							}
 						}
+						val = str
 					}
-					val = str
 				}
 
 				switch v := val.(type) {
+				case nil:
+					switch fieldConfig.FieldType {
+					case "uuid_from_longs":
+						rawMostSig, _ := lookupNestedMap(fieldConfig.Paths[0], data)
+						rawLeastSig, _ := lookupNestedMap(fieldConfig.Paths[1], data)
+						if mostSig, ok := rawMostSig.(float64); !ok || mostSig == 0 {
+							// TODO: handle this case !
+							// strings[fieldKey] = uuid.UUID{}.String()
+						} else if leastSig, ok := rawLeastSig.(float64); !ok || leastSig == 0 {
+							// TODO: handle this case !
+							// strings[fieldKey] = uuid.UUID{}.String()
+						} else {
+							strings[fieldKey] = utils.NewUUIDFromBits(int64(mostSig), int64(leastSig))
+						}
+					}
+
 				case string:
 					switch fieldConfig.FieldType {
 					case "string":
@@ -113,7 +134,7 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 							if err != nil {
 								ddt, err := time.Parse(fieldConfig.DateFormat, v)
 								if err != nil {
-
+									// TODO: handle this error !
 								}
 								times[fieldKey] = ddt.UTC().Truncate(1 * time.Second)
 							} else {
@@ -145,13 +166,19 @@ func lookupNestedMap(pathParts []string, data interface{}) (interface{}, bool) {
 	}
 
 	searchField := pathParts[0]
-	// fmt.Println("path", pathParts)
-	// fmt.Println("search", searchField)
+
 	switch v := data.(type) {
 	case map[string]interface{}:
-		// fmt.Println("data is map", v)
-		if val, found := v[searchField]; found {
-			return lookupNestedMap(pathParts[1:], val)
+		if searchField != "*" {
+			if val, found := v[searchField]; found {
+				return lookupNestedMap(pathParts[1:], val)
+			}
+		} else {
+			for _, l := range v {
+				if val, found := lookupNestedMap(pathParts[1:], l); found {
+					return val, found
+				}
+			}
 		}
 	case []interface{}:
 		if searchField == "[0]" && len(v) > 0 {
