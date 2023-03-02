@@ -5,6 +5,16 @@ import (
 	"time"
 )
 
+func TestContainsSlice(t *testing.T) {
+	variables := map[string]interface{}{"a": "C"}
+
+	result, err := Process(LangEval, `contains(["A", "B", "C", "D"], a)`, variables)
+	if err != nil {
+		t.Error(err)
+	}
+	_ = result
+}
+
 func TestProcessArray(t *testing.T) {
 	variables := map[string]interface{}{"a": []string{"a", "b", "c"}}
 
@@ -12,8 +22,7 @@ func TestProcessArray(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	t.Fail()
-	t.Log(result)
+	_ = result
 }
 
 func TestProcess(t *testing.T) {

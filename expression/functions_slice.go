@@ -1,6 +1,8 @@
 package expression
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func contains(arguments ...interface{}) (bool, error) {
 	if len(arguments) != 2 {

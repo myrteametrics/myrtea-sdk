@@ -7,9 +7,11 @@ import (
 // Usage: <value> [<value>...]
 func length(input interface{}) (interface{}, error) {
 	switch v := input.(type) {
-	case []int:
-		return (float64)(len(v)), nil
+	case string, int, float64, interface{}:
+		return (float64)(1), nil
 	case []string:
+		return (float64)(len(v)), nil
+	case []int:
 		return (float64)(len(v)), nil
 	case []float64:
 		return (float64)(len(v)), nil
