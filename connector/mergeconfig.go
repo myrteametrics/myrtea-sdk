@@ -2,7 +2,6 @@ package connector
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -127,11 +126,6 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 			}
 		}
 
-		fmt.Println(mergeGroup.Condition)
-		fmt.Println("BEFORE")
-		fmt.Println("newDoc", newDoc.Source)
-		fmt.Println("existingDoc", existingDoc.Source)
-
 		if mergeGroup.Condition == "" || applyMergeGroup {
 			ApplyFieldMath(mergeGroup.FieldMath, newDoc, existingDoc, outputSource)
 			// zap.L().Debug("math", zap.Any("source", outputSource))
@@ -157,9 +151,6 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 			ApplyFieldForceUpdate(mergeGroup.FieldForceUpdate, enricherSource, outputSource)
 			// zap.L().Debug("update", zap.Any("source", outputSource))
 		}
-		fmt.Println("AFTER")
-		fmt.Println("newDoc", newDoc.Source)
-		fmt.Println("existingDoc", existingDoc.Source)
 	}
 	return output
 }
@@ -172,7 +163,6 @@ func ApplyFieldMath(config []FieldMath, newDoc *models.Document, existingDoc *mo
 			math.Expression,
 			map[string]interface{}{"New": newDoc.Source, "Existing": existingDoc.Source},
 		)
-		fmt.Println(result, err)
 		if err != nil {
 			if strings.Contains(err.Error(), "unknown parameter") {
 				zap.L().Debug("Math evaluation is invalid", zap.Error(err))
