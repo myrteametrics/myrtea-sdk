@@ -7,8 +7,6 @@ import (
 // Usage: <value> [<value>...]
 func length(input interface{}) (interface{}, error) {
 	switch v := input.(type) {
-	case string, int, float64, interface{}:
-		return (float64)(1), nil
 	case []string:
 		return (float64)(len(v)), nil
 	case []int:
@@ -17,6 +15,8 @@ func length(input interface{}) (interface{}, error) {
 		return (float64)(len(v)), nil
 	case []interface{}:
 		return (float64)(len(v)), nil
+	case string, int, float64, interface{}:
+		return (float64)(1), nil
 	default:
 		return nil, errors.New("Not suported input type in function length")
 	}
