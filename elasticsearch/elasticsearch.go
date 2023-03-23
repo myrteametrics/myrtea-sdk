@@ -9,6 +9,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/myrteametrics/myrtea-sdk/v4/models"
 	"github.com/olivere/elastic"
+
 	zap "go.uber.org/zap"
 )
 
@@ -61,7 +62,7 @@ func (executor *EsExecutor) ClientHealthCheck(ctx context.Context) bool {
 }
 
 // PutTemplate initializes given template if it doesn't already exists.
-func (executor *EsExecutor) PutTemplate(ctx context.Context, templateName string, templateBody *models.Template) error {
+func (executor *EsExecutor) PutTemplate(ctx context.Context, templateName string, templateBody *models.TemplateV6) error {
 	templateExists, err := executor.Client.
 		IndexTemplateExists(templateName).
 		Do(ctx)
