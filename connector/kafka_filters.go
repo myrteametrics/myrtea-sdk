@@ -35,8 +35,8 @@ func FilterHeaders(filters []FilterHeaderOption, headers []*sarama.RecordHeader)
 			}
 		case "equals_atleastone":
 			isValid := false
-			for _, value := range filter.Values {
-				if value == value {
+			for _, val := range filter.Values {
+				if val == value {
 					isValid = true
 					break
 				}
