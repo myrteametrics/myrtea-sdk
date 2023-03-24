@@ -25,6 +25,7 @@ type Restitution struct{}
 type Fact struct {
 	ID               int64                `json:"id"`
 	Name             string               `json:"name"`
+	Description      string               `json:"description"`
 	IsObject         bool                 `json:"isObject"`
 	Model            string               `json:"model"`
 	CalculationDepth int64                `json:"calculationDepth,omitempty"`
