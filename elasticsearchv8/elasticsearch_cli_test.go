@@ -290,20 +290,29 @@ func TestESv8QueryDocument(t *testing.T) {
 	}
 	defer res.Body.Close()
 
-	var sr map[string]interface{}
-	err = json.NewDecoder(res.Body).Decode(&sr)
+	// var sr map[string]interface{}
+	// err = json.NewDecoder(res.Body).Decode(&sr)
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+
+	// t.Log(sr)
+	// t.Log(sr["hits"].(map[string]interface{}))
+	// t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{}))
+	// t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
+
+	// t.Log(sr["aggregations"].(map[string]interface{}))
+	// t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{}))
+	// t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{})["value"].(float64))
+
+	// var sr2 = NewResponse()
+	var sr2 SearchResponse
+	err = json.NewDecoder(res.Body).Decode(&sr2)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	t.Log(sr)
-	t.Log(sr["hits"].(map[string]interface{}))
-	t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{}))
-	t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
-
-	t.Log(sr["aggregations"].(map[string]interface{}))
-	t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{}))
-	t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{})["value"].(float64))
+	t.Log(sr2.Hits.Total.Value)
+	t.Log(sr2.Aggregations["total_prices"])
 
 	// type SearchResult struct {
 	// 	Hits struct {
