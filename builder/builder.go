@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/elasticsearch"
+	"github.com/myrteametrics/myrtea-sdk/v4/elasticsearchv6"
 	"github.com/myrteametrics/myrtea-sdk/v4/utils"
 	"github.com/olivere/elastic"
 )
@@ -33,7 +33,7 @@ func NewQuerySourceJSON(query interface{}, aggs interface{}, size int, from int,
 	}
 }
 
-// BuildEsSearchSource returns a json representation of an elasticsearch query clause
+// BuildEsSearchSource returns a json representation of an elasticsearchv6 query clause
 func BuildEsSearchSource(esSearch *EsSearch) (*QuerySourceJSON, error) {
 	var err error
 	var queriesSource interface{}
@@ -57,14 +57,14 @@ func BuildEsSearchSource(esSearch *EsSearch) (*QuerySourceJSON, error) {
 	return source, nil
 }
 
-// BuildEsSearchFromSource builds a backend elasticsearch query definition for advanced source fact definition
-func BuildEsSearchFromSource(esExec *elasticsearch.EsExecutor, esSearch *EsSearch) (*elastic.SearchService, error) {
+// BuildEsSearchFromSource builds a backend elasticsearchv6 query definition for advanced source fact definition
+func BuildEsSearchFromSource(esExec *elasticsearchv6.EsExecutor, esSearch *EsSearch) (*elastic.SearchService, error) {
 	search := esExec.Client.Search(esSearch.Indices...).Source(esSearch.Source)
 	return search, nil
 }
 
-// BuildEsSearch builds a backend elasticsearch query definition
-func BuildEsSearch(esExec *elasticsearch.EsExecutor, esSearch *EsSearch) (*elastic.SearchService, error) {
+// BuildEsSearch builds a backend elasticsearchv6 query definition
+func BuildEsSearch(esExec *elasticsearchv6.EsExecutor, esSearch *EsSearch) (*elastic.SearchService, error) {
 	if esSearch.Source != "" {
 		return BuildEsSearchFromSource(esExec, esSearch)
 	}
