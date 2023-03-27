@@ -1,7 +1,6 @@
 package elasticsearchv8
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"math"
@@ -17,7 +16,6 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
 	"github.com/myrteametrics/myrtea-sdk/v4/modeler"
-	"github.com/myrteametrics/myrtea-sdk/v4/models"
 )
 
 var model = modeler.Model{
@@ -139,31 +137,47 @@ func TestESv8ExistsTemplate(t *testing.T) {
 
 }
 
-func TestESv8PutTemplate(t *testing.T) {
-	t.Fail()
+func TestES8CatIndices(t *testing.T) {
 
-	es, err := elasticsearchv8.NewClient(cfgv8)
+	es8, err := elasticsearchv8.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	// create template
-	template := models.NewTemplateV8(
-		[]string{"myindex-*"},
-		model.ToElasticsearchMappingProperties(),
-		model.ElasticsearchOptions.AdvancedSettings,
-	)
-	var bufTemplate bytes.Buffer
-	if err := json.NewEncoder(&bufTemplate).Encode(template); err != nil {
-		t.Fatalf("Error encoding query: %s", err)
+	res, err := es8.Cat.Indices().Index("myindex").Do(context.Background())
+	if err != nil {
+		t.Error(err)
 	}
-	res, err := es.Indices.PutTemplate("mytemplate", &bufTemplate)
+	defer res.Body.Close()
+	var sr []struct {
+		Index string `json:"index"`
+	}
+	err = json.NewDecoder(res.Body).Decode(&sr)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(sr)
+	t.Fail()
+}
+
+func TestESv8PutTemplate(t *testing.T) {
+	t.Fail()
+
+	req := NewTemplateV8([]string{"index-*"}, model)
+
+	es8, err := elasticsearchv8.NewTypedClient(cfgv8)
+	if err != nil {
+		t.Errorf("Error creating the client: %s", err)
+	}
+
+	res, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
 	defer res.Body.Close()
-	if res.IsError() {
-		t.Errorf("Error: %s", res.String())
+	if res.StatusCode >= 200 && res.StatusCode < 300 {
+		t.Error(res.StatusCode)
 	}
 	t.Log(res)
 }
