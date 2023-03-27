@@ -1,4 +1,4 @@
-package elasticsearch
+package elasticsearchv6
 
 import (
 	"context"
