@@ -1,8 +1,12 @@
 package elasticsearchv8
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -11,6 +15,8 @@ import (
 	"time"
 
 	elasticsearchv8 "github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8/esapi"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/core/mget"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -267,20 +273,21 @@ func TestESv8QueryDocument(t *testing.T) {
 
 	req := search.Request{
 		Query: &types.Query{
-			Bool: &types.BoolQuery{
-				Must: []types.Query{
-					{Term: map[string]types.TermQuery{
-						"f2": {Value: "testing"},
-					}},
-				},
-			},
+			MatchAll: types.NewMatchAllQuery(),
+			// Bool: &types.BoolQuery{
+			// 	Must: []types.Query{
+			// 		{Term: map[string]types.TermQuery{
+			// 			"f2": {Value: "testing"},
+			// 		}},
+			// 	},
+			// },
 		},
 		Aggregations: map[string]types.Aggregations{
-			"total_prices": {
-				Sum: &types.SumAggregation{
-					Field: some.String("price"),
-				},
-			},
+			// "total_prices": {
+			// 	Sum: &types.SumAggregation{
+			// 		Field: some.String("price"),
+			// 	},
+			// },
 		},
 	}
 
@@ -312,6 +319,13 @@ func TestESv8QueryDocument(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(sr2.Hits.Total.Value)
+	for _, hit := range sr2.Hits.Hits {
+		fields, ok := hit.Source_.(map[string]interface{})
+		if ok {
+			t.Log(hit.Id_)
+			t.Log(fields["id"])
+		}
+	}
 	t.Log(sr2.Aggregations["total_prices"])
 
 	// type SearchResult struct {
@@ -342,4 +356,99 @@ func TestESv8QueryDocument(t *testing.T) {
 	// 		}
 	// 	}
 	// }
+}
+
+func TestEs8MultiGet(t *testing.T) {
+	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	if err != nil {
+		t.Errorf("Error creating the client: %s", err)
+	}
+	// docs := make([]*models.Document, 0)
+
+	docs := make([]types.MgetOperation, 0)
+	docs = append(docs, types.MgetOperation{
+		Id_:    "1",
+		Index_: some.String("myindex"),
+	})
+	docs = append(docs, types.MgetOperation{
+		Id_:    "3",
+		Index_: some.String("myindex"),
+	})
+	docs = append(docs, types.MgetOperation{
+		Id_:    "999",
+		Index_: some.String("myindex"),
+	})
+	docs = append(docs, types.MgetOperation{
+		Id_:    "1",
+		Index_: some.String("myindexnotexists"),
+	})
+	req := mget.NewRequest()
+	req.Docs = docs
+	res, _ := es.Mget().Request(req).Do(context.Background())
+
+	var resp MGetResponse
+	_ = json.NewDecoder(res.Body).Decode(&resp)
+
+	for _, r := range resp.Docs {
+		t.Log(r.ID, r.Index, r.Found)
+	}
+	t.Fail()
+}
+
+func TestEs8BulkIndex(t *testing.T) {
+	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	if err != nil {
+		t.Errorf("Error creating the client: %s", err)
+	}
+
+	buf := bytes.NewBuffer(make([]byte, 0))
+	wr := bufio.NewWriter(buf)
+	meta := BulkIndexMeta{
+		Index: BulkIndexMetaDetail{
+			S_Index: "myindex",
+			S_Type:  "_doc",
+			S_Id:    "51",
+		},
+	}
+	bs1, _ := json.Marshal(meta)
+	_, err = wr.Write(bs1)
+	if err != nil {
+		t.Error(err)
+	}
+	wr.WriteString(fmt.Sprintln())
+
+	doc := map[string]interface{}{
+		"myfield": "helloworld",
+	}
+	bs1, _ = json.Marshal(doc)
+	_, err = wr.Write(bs1)
+	if err != nil {
+		t.Error(err)
+	}
+	wr.WriteString(fmt.Sprintln())
+
+	wr.Flush()
+	t.Log(buf.String())
+
+	req := esapi.BulkRequest{
+		Pretty: false,
+		Human:  false,
+		Body:   bytes.NewReader(buf.Bytes()),
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	res, err := req.Do(ctx, es)
+	if err != nil {
+		t.Error(err)
+	}
+	defer res.Body.Close()
+
+	bs, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(bs))
+	t.Fail()
 }
