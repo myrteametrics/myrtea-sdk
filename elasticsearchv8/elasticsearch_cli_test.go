@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"math"
 	"net/http"
 	"strconv"
@@ -445,10 +444,14 @@ func TestEs8BulkIndex(t *testing.T) {
 	}
 	defer res.Body.Close()
 
-	bs, err := io.ReadAll(res.Body)
-	if err != nil {
+	var r BulkIndexResponse
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
 		t.Error(err)
 	}
-	t.Log(string(bs))
+	if len(r.Failed()) > 0 {
+		t.Error("failed bulk index")
+	}
+	b, _ := json.Marshal(r)
+	t.Log(string(b))
 	t.Fail()
 }
