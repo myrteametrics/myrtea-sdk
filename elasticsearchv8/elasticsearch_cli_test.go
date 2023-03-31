@@ -383,11 +383,17 @@ func TestEs8MultiGet(t *testing.T) {
 	})
 	req := mget.NewRequest()
 	req.Docs = docs
-	res, _ := es.Mget().Request(req).Do(context.Background())
+	res, err := es.Mget().Request(req).Do(context.Background())
+	if err != nil {
+		t.Error(err)
+	}
 
 	var resp MGetResponse
-	_ = json.NewDecoder(res.Body).Decode(&resp)
-
+	err = json.NewDecoder(res.Body).Decode(&resp)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(resp)
 	for _, r := range resp.Docs {
 		t.Log(r.ID, r.Index, r.Found)
 	}
@@ -441,6 +447,7 @@ func TestEs8BulkIndex(t *testing.T) {
 	res, err := req.Do(ctx, es)
 	if err != nil {
 		t.Error(err)
+		t.FailNow()
 	}
 	defer res.Body.Close()
 

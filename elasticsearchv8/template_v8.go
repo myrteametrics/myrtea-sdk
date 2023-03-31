@@ -1,10 +1,13 @@
 package elasticsearchv8
 
 import (
+	"encoding/json"
+
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/puttemplate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v4/modeler"
+	"go.uber.org/zap"
 )
 
 //TemplateMapping embedded in template
@@ -22,7 +25,17 @@ type TemplateV8 struct {
 //NewTemplate constructor the ES template
 func NewTemplateV8(indexPatterns []string, model modeler.Model) *puttemplate.Request {
 	mappings := modelToMappingV8(model)
-	settings := model.ElasticsearchOptions.AdvancedSettings
+	rawSettings := model.ElasticsearchOptions.AdvancedSettings
+
+	settings := make(map[string]json.RawMessage)
+	for k, v := range rawSettings {
+		b, err := json.Marshal(v)
+		if err != nil {
+			zap.L().Warn("Cannot marshal setting", zap.String("key", k), zap.Any("value", v))
+			continue
+		}
+		settings[k] = json.RawMessage(b)
+	}
 
 	req := puttemplate.NewRequest()
 	req.IndexPatterns = indexPatterns

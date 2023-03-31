@@ -77,7 +77,7 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 			agg.Aggregations[name] = output
 
 		case engine.Histogram:
-			var interval float64 = frag.Interval
+			var interval types.Float64 = types.Float64(frag.Interval)
 			if interval == 0 {
 				interval = 100 // default ?
 			}
@@ -214,8 +214,9 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 		case engine.From:
 			var rangeQuery types.RangeQuery
 			if value, ok := f.Value.(float64); ok {
+				var tvalue types.Float64 = types.Float64(value)
 				rangeQuery = types.NumberRangeQuery{
-					Gte: some.Float64(value),
+					Gte: &tvalue,
 				}
 			}
 			if value, ok := f.Value.(string); ok {
@@ -231,8 +232,9 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 		case engine.To:
 			var rangeQuery types.RangeQuery
 			if value, ok := f.Value.(float64); ok {
+				var tvalue types.Float64 = types.Float64(value)
 				rangeQuery = types.NumberRangeQuery{
-					Lt: some.Float64(value),
+					Lt: &tvalue,
 				}
 			}
 			if value, ok := f.Value.(string); ok {
@@ -250,9 +252,11 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 			value, ok := f.Value.(float64)
 			value2, ok2 := f.Value2.(float64)
 			if ok && ok2 {
+				var tvalue types.Float64 = types.Float64(value)
+				var tvalue2 types.Float64 = types.Float64(value2)
 				rangeQuery = types.NumberRangeQuery{
-					Gte: some.Float64(value),
-					Lt:  some.Float64(value2),
+					Gte: &tvalue,
+					Lt:  &tvalue2,
 				}
 			}
 
