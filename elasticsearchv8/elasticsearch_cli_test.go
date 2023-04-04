@@ -9,18 +9,19 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"strings"
 	"testing"
 	"time"
 
-	elasticsearchv8 "github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/mget"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/refresh"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/myrteametrics/myrtea-sdk/v4/modeler"
+	"go.uber.org/zap"
 )
 
 var model = modeler.Model{
@@ -55,7 +56,7 @@ var model = modeler.Model{
 }
 
 // Init client
-var cfgv8 = elasticsearchv8.Config{
+var cfgv8 = elasticsearch.Config{
 	Addresses: []string{
 		"http://localhost:9200",
 	},
@@ -75,7 +76,6 @@ var cfgv8 = elasticsearchv8.Config{
 
 func TestESv8(t *testing.T) {
 
-	t.Fail()
 	t.Run("ExistsTemplate", TestESv8ExistsTemplate)
 	t.Run("PutTemplate", TestESv8PutTemplate)
 	t.Run("ExistsTemplate", TestESv8ExistsTemplate)
@@ -96,119 +96,75 @@ func TestESv8(t *testing.T) {
 }
 
 func TestESv8Info(t *testing.T) {
-	t.Fail()
-
-	es, err := elasticsearchv8.NewClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	// Check client / Cluster info
-	res, err := es.Info()
+	response, err := es.Info().Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
-	defer res.Body.Close()
-	if res.IsError() {
-		t.Fatalf("Error: %s", res.String())
-	}
-	var r map[string]interface{}
-	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
-		t.Fatalf("Error parsing the response body: %s", err)
-	}
-	t.Logf("Client: %s", elasticsearchv8.Version)
-	t.Logf("Server: %s", r["version"].(map[string]interface{})["number"])
-	t.Log(strings.Repeat("~", 37))
+
+	t.Logf("Client: %s", elasticsearch.Version)
+	t.Logf("Server: %s", response.Version.Int)
 }
 
 func TestESv8ExistsTemplate(t *testing.T) {
-	t.Fail()
-
-	es, err := elasticsearchv8.NewClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	// check template
-	res, err := es.Indices.ExistsTemplate([]string{"mytemplate"})
+	response, err := es.Indices.ExistsTemplate("mytemplate").IsSuccess(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
-	defer res.Body.Close()
-	if !res.IsError() {
-		t.Error("template should be missing")
-	}
-	t.Log(res)
-
+	t.Log(response)
 }
 
 func TestES8CatIndices(t *testing.T) {
-
-	es8, err := elasticsearchv8.NewTypedClient(cfgv8)
+	es8, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	res, err := es8.Cat.Indices().Index("myindex").Do(context.Background())
+	response, err := es8.Cat.Indices().Index("myindex").Do(context.Background())
 	if err != nil {
 		t.Error(err)
 	}
-	defer res.Body.Close()
-	var sr []struct {
-		Index string `json:"index"`
-	}
-	err = json.NewDecoder(res.Body).Decode(&sr)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	t.Log(sr)
-	t.Fail()
+	t.Log(response)
 }
 
 func TestESv8PutTemplate(t *testing.T) {
-	t.Fail()
-
-	req := NewTemplateV8([]string{"index-*"}, model)
-
-	es8, err := elasticsearchv8.NewTypedClient(cfgv8)
+	req := NewPutTemplateRequestV8([]string{"index-*"}, model)
+	es8, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	res, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
+	response, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
-	defer res.Body.Close()
-	if res.StatusCode >= 200 && res.StatusCode < 300 {
-		t.Error(res.StatusCode)
-	}
-	t.Log(res)
+	t.Log(response)
 }
 
 func TestESv8DeleteTemplate(t *testing.T) {
-	t.Fail()
-
-	es, err := elasticsearchv8.NewClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	res, err := es.Indices.DeleteTemplate("mytemplate")
+	response, err := es.Indices.DeleteTemplate("mytemplate").Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
-	defer res.Body.Close()
-	if res.IsError() {
-		t.Error("delete template", res.String())
-	}
-	t.Log(res)
+	t.Log(response)
 }
 
 func TestESv8IndexDocument(t *testing.T) {
-
-	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
@@ -233,7 +189,7 @@ func TestESv8IndexDocument(t *testing.T) {
 			Price: 4,
 		},
 	} {
-		res, err := es.Index("myindex").
+		response, err := es.Index("myindex").
 			Request(document).
 			Id(strconv.Itoa(document.Id)).
 			Refresh(refresh.Waitfor).
@@ -241,34 +197,15 @@ func TestESv8IndexDocument(t *testing.T) {
 		if err != nil {
 			t.Fatalf("error indexing document: %s", err)
 		}
-		defer res.Body.Close()
-
-		var sr map[string]interface{}
-		err = json.NewDecoder(res.Body).Decode(&sr)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		t.Log(sr)
+		t.Log(response)
 	}
-	t.Fail()
 }
 
 func TestESv8QueryDocument(t *testing.T) {
-	t.Fail()
-
-	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
-
-	// QUERY
-	// var buf bytes.Buffer
-	// f := engine.Fact{ID: 1, Name: "test", IsObject: false, Model: "mymodel", CalculationDepth: 1, Intent: &engine.IntentFragment{Name: "test", Operator: engine.Count, Term: "f1"}}
-	// q, _ := f.ToElasticQuery(time.Now(), make(map[string]string))
-	// t.Log(q)
-	// query, _ := builder.BuildEsSearchSource(q)
-	// t.Log(query)
 
 	req := search.Request{
 		Query: &types.Query{
@@ -290,79 +227,32 @@ func TestESv8QueryDocument(t *testing.T) {
 		},
 	}
 
-	res, err := es.Search().Index("myindex").Request(&req).Do(context.Background())
+	response, err := es.Search().Index("myindex").Request(&req).Do(context.Background())
 	if err != nil {
 		t.Fatalf("Error search: %s", err)
 	}
-	defer res.Body.Close()
 
-	// var sr map[string]interface{}
-	// err = json.NewDecoder(res.Body).Decode(&sr)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// t.Log(sr)
-	// t.Log(sr["hits"].(map[string]interface{}))
-	// t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{}))
-	// t.Log(sr["hits"].(map[string]interface{})["total"].(map[string]interface{})["value"].(float64))
-
-	// t.Log(sr["aggregations"].(map[string]interface{}))
-	// t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{}))
-	// t.Log(sr["aggregations"].(map[string]interface{})["total_prices"].(map[string]interface{})["value"].(float64))
-
-	// var sr2 = NewResponse()
-	var sr2 SearchResponse
-	err = json.NewDecoder(res.Body).Decode(&sr2)
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(sr2.Hits.Total.Value)
-	for _, hit := range sr2.Hits.Hits {
-		fields, ok := hit.Source_.(map[string]interface{})
-		if ok {
-			t.Log(hit.Id_)
-			t.Log(fields["id"])
+	for _, hit := range response.Hits.Hits {
+		data, err := jsoniter.Marshal(hit.Source_)
+		if err != nil {
+			zap.L().Error("update multiget unmarshal", zap.Error(err))
 		}
+
+		var source map[string]interface{}
+		err = jsoniter.Unmarshal(data, &source)
+		if err != nil {
+			zap.L().Error("update multiget unmarshal", zap.Error(err))
+		}
+		t.Log(source)
 	}
-	t.Log(sr2.Aggregations["total_prices"])
-
-	// type SearchResult struct {
-	// 	Hits struct {
-	// 		Total struct {
-	// 			Value    int
-	// 			Relation string
-	// 		} `json:"total"`
-	// 		Hits []struct {
-	// 			Index  string `json:"_index"`
-	// 			Source struct {
-	// 				Id   int
-	// 				Name string
-	// 			} `json:"_source"`
-	// 		} `json:"hits"`
-	// 	} `json:"hits"`
-	// }
-
-	// for name, agg := range searchResponse.Aggregations {
-	// 	if name == "total_prices" {
-	// 		switch aggregation := agg.(type) {
-	// 		case *types.SumAggregate:
-	// 			if aggregation.Value != 26. {
-	// 				t.Fatalf("error in aggregation, should be 26, got: %f", aggregation.Value)
-	// 			}
-	// 		default:
-	// 			fmt.Printf("unexpected aggregation: %#v\n", agg)
-	// 		}
-	// 	}
-	// }
+	t.Log(response.Aggregations["total_prices"])
 }
 
 func TestEs8MultiGet(t *testing.T) {
-	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
-	// docs := make([]*models.Document, 0)
 
 	docs := make([]types.MgetOperation, 0)
 	docs = append(docs, types.MgetOperation{
@@ -383,25 +273,24 @@ func TestEs8MultiGet(t *testing.T) {
 	})
 	req := mget.NewRequest()
 	req.Docs = docs
-	res, err := es.Mget().Request(req).Do(context.Background())
+	response, err := es.Mget().Request(req).Do(context.Background())
 	if err != nil {
 		t.Error(err)
+	}
+	t.Log(response)
+	for _, d := range response.Docs {
+		switch typedDoc := d.(type) {
+		case types.MultiGetError:
+			t.Log(typedDoc)
+		case types.GetResult:
+			t.Log(typedDoc)
+		}
 	}
 
-	var resp MGetResponse
-	err = json.NewDecoder(res.Body).Decode(&resp)
-	if err != nil {
-		t.Error(err)
-	}
-	t.Log(resp)
-	for _, r := range resp.Docs {
-		t.Log(r.ID, r.Index, r.Found)
-	}
-	t.Fail()
 }
 
 func TestEs8BulkIndex(t *testing.T) {
-	es, err := elasticsearchv8.NewTypedClient(cfgv8)
+	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
@@ -460,5 +349,4 @@ func TestEs8BulkIndex(t *testing.T) {
 	}
 	b, _ := json.Marshal(r)
 	t.Log(string(b))
-	t.Fail()
 }

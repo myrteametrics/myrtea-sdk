@@ -1,9 +1,11 @@
 package elasticsearchv8
 
 import (
+	"context"
 	"sync"
 
 	"github.com/elastic/go-elasticsearch/v8"
+	"go.uber.org/zap"
 )
 
 var (
@@ -35,5 +37,17 @@ func ReplaceGlobals(config elasticsearch.Config) error {
 	}
 	_globalConfig = config
 	_globalC = client
+	CheckVersion()
+	return nil
+}
+
+func CheckVersion() error {
+	response, err := _globalC.Info().Do(context.Background())
+	if err != nil {
+		zap.L().Error("Cannot get elasticsearch infos")
+		return err
+	}
+	zap.L().Info("Elasticsearch Client", zap.String("version", elasticsearch.Version))
+	zap.L().Info("Elasticsearch Server", zap.String("version", response.Version.Int))
 	return nil
 }
