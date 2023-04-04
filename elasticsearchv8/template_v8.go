@@ -10,20 +10,8 @@ import (
 	"go.uber.org/zap"
 )
 
-//TemplateMapping embedded in template
-type TemplateMappingV8 struct {
-	Properties map[string]interface{} `json:"properties"`
-}
-
-// Template is the ES template
-type TemplateV8 struct {
-	IndexPatterns []string               `json:"index_patterns"` // Keep the snake_case for elasticsearch template generation
-	Settings      map[string]interface{} `json:"settings,omitempty"`
-	Mappings      TemplateMappingV8      `json:"mappings,omitempty"`
-}
-
-//NewTemplate constructor the ES template
-func NewTemplateV8(indexPatterns []string, model modeler.Model) *puttemplate.Request {
+// NewPutTemplateRequestV8 constructor the ES template
+func NewPutTemplateRequestV8(indexPatterns []string, model modeler.Model) *puttemplate.Request {
 	mappings := modelToMappingV8(model)
 	rawSettings := model.ElasticsearchOptions.AdvancedSettings
 
