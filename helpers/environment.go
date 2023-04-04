@@ -34,6 +34,7 @@ var (
 	}
 
 	ElasticsearchConfigKeys = []ConfigKey{
+		{Type: StringFlag, Name: "ELASTICSEARCH_VERSION", DefaultValue: "6", Description: "Elasticsearch major version"},
 		{Type: StringSliceFlag, Name: "ELASTICSEARCH_URLS", DefaultValue: []string{"http://localhost:9200"}, Description: "Elasticsearch URLS"},
 	}
 

@@ -100,7 +100,7 @@ func (agg *TermAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *TermAgg) AggSource() elastic.Aggregation {
 	esAgg := elastic.NewTermsAggregation().Field(agg.Field).Size(agg.Size)
 	for _, subAggs := range agg.SubAggs {
@@ -175,7 +175,7 @@ func (agg *HistogramAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *HistogramAgg) AggSource() elastic.Aggregation {
 	esAgg := elastic.NewHistogramAggregation().Field(agg.Field).Interval(agg.Interval)
 	for _, subAggs := range agg.SubAggs {
@@ -251,7 +251,7 @@ func (agg *DateHistogramAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *DateHistogramAgg) AggSource() elastic.Aggregation {
 	esAgg := elastic.NewDateHistogramAggregation().Field(agg.Field).Interval(agg.Interval)
 	for _, subAggs := range agg.SubAggs {
@@ -328,7 +328,7 @@ func (agg *CardinalityAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *CardinalityAgg) AggSource() elastic.Aggregation {
 	if agg.Script {
 		return elastic.NewCardinalityAggregation().Script(elastic.NewScriptInline(agg.Field))
@@ -349,7 +349,7 @@ func (agg *AvgAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *AvgAgg) AggSource() elastic.Aggregation {
 	if agg.Script {
 		return elastic.NewAvgAggregation().Script(elastic.NewScriptInline(agg.Field))
@@ -370,7 +370,7 @@ func (agg *SumAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *SumAgg) AggSource() elastic.Aggregation {
 	if agg.Script {
 		return elastic.NewSumAggregation().Script(elastic.NewScriptInline(agg.Field))
@@ -391,7 +391,7 @@ func (agg *MinAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *MinAgg) AggSource() elastic.Aggregation {
 	if agg.Script {
 		return elastic.NewMinAggregation().Script(elastic.NewScriptInline(agg.Field))
@@ -412,7 +412,7 @@ func (agg *MaxAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *MaxAgg) AggSource() elastic.Aggregation {
 	if agg.Script {
 		return elastic.NewMaxAggregation().Script(elastic.NewScriptInline(agg.Field))
@@ -432,7 +432,7 @@ func (agg *FilterAgg) GetName() string {
 	return agg.Name
 }
 
-// AggSource returns a standard olivere elasticsearch aggregation
+// AggSource returns a standard elasticsearch aggregation
 func (agg *FilterAgg) AggSource() elastic.Aggregation {
 	return nil
 }
