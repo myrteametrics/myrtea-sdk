@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v4/engine"
 )
 
@@ -95,8 +94,48 @@ func TestBuildAgg(t *testing.T) {
 	t.Log(name2, string(b))
 	t.Fail()
 
-	search := buildSearchRequest(query, map[string]types.Aggregations{name2: agg2})
-	b, _ = json.MarshalIndent(search, "", " ")
+	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), make(map[string]string))
+	if err != nil {
+		t.Error(err)
+	}
+
+	b, _ = json.MarshalIndent(search2, "", " ")
+	t.Log(string(b))
+	t.Fail()
+}
+
+func TestBuildSelect(t *testing.T) {
+	f1 := engine.Fact{
+		ID:   1,
+		Name: "test",
+		Intent: &engine.IntentFragment{
+			Name:     "myintent",
+			Operator: engine.Select,
+			Term:     "myintentterm",
+		},
+		Condition: &engine.BooleanFragment{
+			Operator: engine.And,
+			Fragments: []engine.ConditionFragment{
+				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: "myvalue"},
+			},
+		},
+	}
+
+	b, err := json.Marshal(f1)
+	if err != nil {
+		t.Error(err)
+	}
+	var f engine.Fact
+	err = json.Unmarshal(b, &f)
+	if err != nil {
+		t.Error(err)
+	}
+
+	query, err := buildElasticFilter(f.Condition, make(map[string]interface{}))
+	if err != nil {
+		t.Error(err)
+	}
+	b, _ = json.MarshalIndent(query, "", " ")
 	t.Log(string(b))
 	t.Fail()
 

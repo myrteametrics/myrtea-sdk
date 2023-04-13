@@ -22,35 +22,30 @@ func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[st
 		variables[k] = v
 	}
 
+	request := search.NewRequest()
 	query, err := buildElasticFilter(f.Condition, variables)
 	if err != nil {
 		zap.L().Warn("buildElasticFilter", zap.Error(err))
 		return nil, err
 	}
-
-	mainAggName, mainAgg, err := buildElasticAgg(f.Intent)
-	if err != nil {
-		zap.L().Warn("buildElasticAgg", zap.Error(err))
-		return nil, err
-	}
-
-	aggName, agg, err := buildElasticBucket(mainAggName, mainAgg, f.Dimensions)
-	if err != nil {
-		zap.L().Warn("buildElasticBucket", zap.Error(err))
-		return nil, err
-	}
-
-	aggregations := map[string]types.Aggregations{aggName: agg}
-
-	request := buildSearchRequest(query, aggregations)
-	return request, nil
-}
-
-func buildSearchRequest(query *types.Query, aggregations map[string]types.Aggregations) *search.Request {
-	request := search.NewRequest()
 	request.Query = query
-	request.Aggregations = aggregations
-	return request
+
+	if f.Intent.Operator != engine.Select {
+		mainAggName, mainAgg, err := buildElasticAgg(f.Intent)
+		if err != nil {
+			zap.L().Warn("buildElasticAgg", zap.Error(err))
+			return nil, err
+		}
+		aggName, agg, err := buildElasticBucket(mainAggName, mainAgg, f.Dimensions)
+		if err != nil {
+			zap.L().Warn("buildElasticBucket", zap.Error(err))
+			return nil, err
+		}
+		aggregations := map[string]types.Aggregations{aggName: agg}
+		request.Aggregations = aggregations
+	}
+
+	return request, nil
 }
 
 // // buildElasticBucket
