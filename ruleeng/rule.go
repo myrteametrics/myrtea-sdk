@@ -38,17 +38,26 @@ func (r DefaultRule) Execute(k KnowledgeBase) []Action {
 	k.SetDefaultValues(r.Parameters)
 
 	for _, c := range r.Cases {
+
+		// if case is disabled ?
+		//    continue
+
 		actions := c.evaluate(k)
 		if actions != nil {
 			for _, a := range actions {
+				// if action is disabled ?
+				// 	   continue
+
 				a.MetaData["ruleID"] = r.ID
 				a.MetaData["ruleVersion"] = r.Version
 				result = append(result, a)
 			}
+			// if !r.EvaluateAllCase
 			return result
 		}
 	}
-
+	// if len(result) > 0
+	// return result
 	return nil
 }
 
@@ -96,6 +105,9 @@ func resolve(c Case, k KnowledgeBase) []DefaultAction {
 	resolvedActions := make([]DefaultAction, 0)
 
 	for _, a := range c.Actions {
+		// if action is disabled ?
+		// 	   continue
+
 		rAction, err := a.Resolve(k)
 		if err == nil {
 			rAction.MetaData["caseName"] = c.Name

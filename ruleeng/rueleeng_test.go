@@ -37,7 +37,87 @@ func TestRuleEng(t *testing.T) {
 		actions[2].GetParameters()["description"].(string) != "my_description" {
 		t.Errorf("The engine actins are not as expected")
 	}
+	t.Fail()
+	t.Log(actions)
+}
 
+func TestRule(t *testing.T) {
+
+	data := map[string]interface{}{
+		"fact_test_1": map[string]interface{}{
+			"aggs": map[string]interface{}{
+				"doc_count": map[string]interface{}{
+					"value": 100,
+				},
+			},
+		},
+	}
+
+	rule := DefaultRule{
+		ID:         1,
+		Version:    1,
+		Parameters: make(map[string]interface{}),
+		// EvaluateAllCases: true,
+		// EvaluateAllCases: false,
+		Cases: []Case{
+			{
+				Name:      "case1",
+				Condition: "fact_test_1.aggs.doc_count.value > 25",
+				// Enabled: true,
+				// Enabled: false,
+				Actions: []ActionDef{
+					{
+						Name: `"action1"`,
+						// Enabled: true
+						Parameters: map[string]Expression{
+							"val": `"myvalue"`,
+						},
+					},
+					{
+						Name: `"action2"`,
+						// Enabled: false,
+						Parameters: map[string]Expression{
+							"val2": `"myvalue2"`,
+						},
+					},
+				},
+			},
+			{
+				Name:      "case2",
+				Condition: "fact_test_1.aggs.doc_count.value > 25",
+				// Enabled: true,
+				// Enabled: false,
+				Actions: []ActionDef{
+					{
+						Name: `"action1"`,
+						// Enabled: true
+						Parameters: map[string]Expression{
+							"val": `"myvalue"`,
+						},
+					},
+					{
+						Name: `"action2"`,
+						// Enabled: false,
+						Parameters: map[string]Expression{
+							"val2": `"myvalue2"`,
+						},
+					},
+				},
+			},
+		},
+	}
+	t.Log(rule)
+
+	engine := NewRuleEngine()
+
+	engine.InsertRule(&rule)
+	engine.knowledgeBase.SetFacts(data)
+	engine.ExecuteRules([]int64{1})
+
+	actions := engine.GetResults()
+
+	t.Fail()
+	t.Log(actions)
 }
 
 var ruleStr = `{	
