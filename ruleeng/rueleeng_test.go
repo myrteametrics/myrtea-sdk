@@ -41,22 +41,254 @@ func TestRuleEng(t *testing.T) {
 	t.Log(actions)
 }
 
-func TestRule(t *testing.T) {
+type ruleTest_Type struct {
+	name string
+	rule DefaultRule
+	expected []Action
+}
 
-	data := map[string]interface{}{
-		"fact_test_1": map[string]interface{}{
-			"aggs": map[string]interface{}{
-				"doc_count": map[string]interface{}{
-					"value": 100,
-				},
-				"doc_count_2": map[string]interface{}{
-					"value": 1,
-				},
+var data = map[string]interface{}{
+	"fact_test_1": map[string]interface{}{
+		"aggs": map[string]interface{}{
+			"doc_count": map[string]interface{}{
+				"value": 100,
+			},
+			"doc_count_2": map[string]interface{}{
+				"value": 1,
 			},
 		},
+	},
+}
+
+
+func TestRuleCaseEnable(t *testing.T) {
+
+	rulesTests := []ruleTest_Type {
+		{
+			name: "rule 1",
+			rule: DefaultRule{
+				ID:         1,
+				Version:    1,
+				Parameters: make(map[string]interface{}),
+				EvaluateAllCases: true,
+				Cases: []Case{
+					{
+						Name:      "case1",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: false,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case1_Rule1"`,
+								Enabled: true,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case1_Rule1"`,
+								 Enabled: true,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+					{
+						Name:      "case2",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: true,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case2_Rule1"`,
+								 Enabled: false,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case2_Rule1"`,
+								Enabled: false,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+					{
+						Name:      "case3",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: true,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case3_Rule1"`,
+								 Enabled: true,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case3_Rule1"`,
+								Enabled: true,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: []Action{
+				DefaultAction{
+					Name:       "action1_Case3_Rule1",
+					Parameters: map[string]interface{}{"val": "myvalue"},
+					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
+				},
+				DefaultAction{
+					Name:       "action2_Case3_Rule1",
+					Parameters: map[string]interface{}{"val2": "myvalue2"},
+					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
+				},
+			},
+		  },
 	}
 
-    
+	for _, ruleTest := range rulesTests{
+
+		engine := NewRuleEngine()
+
+		engine.InsertRule(&ruleTest.rule)
+		engine.knowledgeBase.SetFacts(data)
+		engine.ExecuteRules([]int64{1})
+	
+		actions := engine.GetResults()
+	
+		if !CompareActionArrays(ruleTest.expected,actions) {
+				t.Fail()
+				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		}
+       
+	}
+	
+}
+
+
+func TestRuleCaseActionEnable(t *testing.T) {
+	
+	rulesTests := []ruleTest_Type {
+		{
+			name: "rule 1",
+			rule: DefaultRule{
+				ID:         1,
+				Version:    1,
+				Parameters: make(map[string]interface{}),
+				EvaluateAllCases: true,
+				Cases: []Case{
+					{
+						Name:      "case1",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: true,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case1_Rule1"`,
+								Enabled: false,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case1_Rule1"`,
+								 Enabled: false,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+					{
+						Name:      "case2",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: true,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case2_Rule1"`,
+								 Enabled: true,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case2_Rule1"`,
+								Enabled: true,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+					{
+						Name:      "case3",
+						Condition: "fact_test_1.aggs.doc_count.value > 25",
+						Enabled: true,
+						Actions: []ActionDef{
+							{
+								Name: `"action1_Case3_Rule1"`,
+								 Enabled: false,
+								Parameters: map[string]Expression{
+									"val": `"myvalue"`,
+								},
+							},
+							{
+								Name: `"action2_Case3_Rule1"`,
+								Enabled: true,
+								Parameters: map[string]Expression{
+									"val2": `"myvalue2"`,
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: []Action{
+				DefaultAction{
+					Name:       "action1_Case2_Rule1",
+					Parameters: map[string]interface{}{"val": "myvalue"},
+					MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
+				},
+				DefaultAction{
+					Name:       "action2_Case2_Rule1",
+					Parameters: map[string]interface{}{"val2": "myvalue2"},
+					MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
+				},
+				DefaultAction{
+					Name:       "action2_Case3_Rule1",
+					Parameters: map[string]interface{}{"val2": "myvalue2"},
+					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
+				},
+			},
+		  },
+	}
+
+	for _, ruleTest := range rulesTests{
+
+		engine := NewRuleEngine()
+
+		engine.InsertRule(&ruleTest.rule)
+		engine.knowledgeBase.SetFacts(data)
+		engine.ExecuteRules([]int64{1})
+	
+		actions := engine.GetResults()
+	
+		if !CompareActionArrays(ruleTest.expected,actions) {
+				t.Fail()
+				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		}
+       
+	}
+	
+}
+
+
+func TestRuleEvaluateAllCase(t *testing.T) {
 	rule1 := DefaultRule{
 		ID:         1,
 		Version:    1,
@@ -77,7 +309,7 @@ func TestRule(t *testing.T) {
 					},
 					{
 						Name: `"action2_Case1_Rule1"`,
-						 Enabled: false,
+						 Enabled: true,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
 						},
@@ -91,7 +323,7 @@ func TestRule(t *testing.T) {
 				Actions: []ActionDef{
 					{
 						Name: `"action1_Case2_Rule1"`,
-						 Enabled: true,
+						 Enabled: false,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
@@ -128,14 +360,8 @@ func TestRule(t *testing.T) {
 			},
 		},
 	}
-    
-	Actions_Rule1_Expected := []Action{
-		DefaultAction{
-			Name:       "action1_Case2_Rule1",
-			Parameters: map[string]interface{}{"val": "myvalue"},
-			MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
-		},
-	}
+
+
 	rule2 := DefaultRule{
 		ID:         1,
 		Version:    1,
@@ -170,7 +396,7 @@ func TestRule(t *testing.T) {
 				Actions: []ActionDef{
 					{
 						Name: `"action1_Case2_Rule2"`,
-						 Enabled: true,
+						 Enabled: false,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
@@ -228,52 +454,60 @@ func TestRule(t *testing.T) {
 			},
 		},
 	}
+    
 
-	Actions_Rule2_Expected := []Action{
-		DefaultAction{
-			Name:       "action1_Case1_Rule2",
-			Parameters: map[string]interface{}{"val": "myvalue"},
-			MetaData:   map[string]interface{}{"caseName": "case1", "ruleID": "1", "ruleVersion": "1"},
+	rulesTests := []ruleTest_Type {
+		{
+			name: "rule 1",
+			rule: rule1,
+			expected: []Action{
+				DefaultAction{
+					Name:       "action1_Case3_Rule1",
+					Parameters: map[string]interface{}{"val": "myvalue"},
+					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
+				},
+				DefaultAction{
+					Name:       "action2_Case3_Rule1",
+					Parameters: map[string]interface{}{"val2": "myvalue2"},
+					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
+				},
+			},
 		},
-		DefaultAction{
-			Name:       "action1_Case2_Rule2",
-			Parameters: map[string]interface{}{"val": "myvalue"},
-			MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
-		},
-		DefaultAction{
-			Name:       "action2_Case2_Rule2",
-			Parameters: map[string]interface{}{"val2": "myvalue2"},
-			MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
+		{
+			name: "rule 2",
+			rule: rule2,
+			expected: []Action{
+				DefaultAction{
+					Name:       "action1_Case1_Rule2",
+					Parameters: map[string]interface{}{"val": "myvalue"},
+					MetaData:   map[string]interface{}{"caseName": "case1", "ruleID": "1", "ruleVersion": "1"},
+				},
+				DefaultAction{
+					Name:       "action2_Case2_Rule2",
+					Parameters: map[string]interface{}{"val2": "myvalue2"},
+					MetaData:   map[string]interface{}{"caseName": "case2", "ruleID": "1", "ruleVersion": "1"},
+				},
+			},
 		},
 	}
-	rules := []DefaultRule{rule1, rule2}
-	
-	for i, rule := range rules{
-		//t.Log(rule)
 
+	for _, ruleTest := range rulesTests{
 
 		engine := NewRuleEngine()
 
-		engine.InsertRule(&rule)
+		engine.InsertRule(&ruleTest.rule)
 		engine.knowledgeBase.SetFacts(data)
 		engine.ExecuteRules([]int64{1})
-
+	
 		actions := engine.GetResults()
-
-		if i ==0 {
-            if !CompareActionArrays(Actions_Rule1_Expected,actions) {
+	
+		if !CompareActionArrays(ruleTest.expected,actions) {
 				t.Fail()
-				t.Log("\n Expected : \n",Actions_Rule1_Expected, "\nBut find : \n ",actions)
-			}
-		}else{
-			if !CompareActionArrays(Actions_Rule2_Expected,actions) {
-				t.Fail()
-				t.Log("\n Expected : \n",Actions_Rule2_Expected, "\nBut find : \n",actions)
-			}
+				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
 		}
-
-		
+       
 	}
+
 }
 // compare two tab of actions 
 func CompareActionArrays(actions1, actions2 []Action) bool {
@@ -336,3 +570,4 @@ var ruleStr = `{
 		"param2": "my_description"
 	}
   }`
+
