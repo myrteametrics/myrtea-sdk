@@ -51,7 +51,7 @@ func (r DefaultRule) Execute(k KnowledgeBase) []Action {
 				a.MetaData["ruleVersion"] = r.Version
 				result = append(result, a)
 			}
-			if !r.EvaluateAllCases && len(actions) > 0{
+			if !r.EvaluateAllCases{
 				return result
 			}
 			

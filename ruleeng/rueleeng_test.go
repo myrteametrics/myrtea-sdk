@@ -41,7 +41,7 @@ func TestRuleEng(t *testing.T) {
 	t.Log(actions)
 }
 
-type ruleTest_Type struct {
+type ruleTestCase struct {
 	name string
 	rule DefaultRule
 	expected []Action
@@ -63,7 +63,7 @@ var data = map[string]interface{}{
 
 func TestRuleCaseEnable(t *testing.T) {
 
-	rulesTests := []ruleTest_Type {
+	rulesTests := []ruleTestCase {
 		{
 			name: "rule 1",
 			rule: DefaultRule{
@@ -162,9 +162,9 @@ func TestRuleCaseEnable(t *testing.T) {
 	
 		actions := engine.GetResults()
 	
-		if !CompareActionArrays(ruleTest.expected,actions) {
-				t.Fail()
-				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		if !compareActionArrays(ruleTest.expected,actions) {
+
+				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
 		}
        
 	}
@@ -174,7 +174,7 @@ func TestRuleCaseEnable(t *testing.T) {
 
 func TestRuleCaseActionEnable(t *testing.T) {
 	
-	rulesTests := []ruleTest_Type {
+	rulesTests := []ruleTestCase {
 		{
 			name: "rule 1",
 			rule: DefaultRule{
@@ -278,9 +278,9 @@ func TestRuleCaseActionEnable(t *testing.T) {
 	
 		actions := engine.GetResults()
 	
-		if !CompareActionArrays(ruleTest.expected,actions) {
-				t.Fail()
-				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		if !compareActionArrays(ruleTest.expected,actions) {
+				
+				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
 		}
        
 	}
@@ -456,21 +456,12 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 	}
     
 
-	rulesTests := []ruleTest_Type {
+	rulesTests := []ruleTestCase {
 		{
 			name: "rule 1",
 			rule: rule1,
 			expected: []Action{
-				DefaultAction{
-					Name:       "action1_Case3_Rule1",
-					Parameters: map[string]interface{}{"val": "myvalue"},
-					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
-				},
-				DefaultAction{
-					Name:       "action2_Case3_Rule1",
-					Parameters: map[string]interface{}{"val2": "myvalue2"},
-					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
-				},
+			
 			},
 		},
 		{
@@ -501,22 +492,22 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 	
 		actions := engine.GetResults()
 	
-		if !CompareActionArrays(ruleTest.expected,actions) {
-				t.Fail()
-				t.Log("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		if !compareActionArrays(ruleTest.expected,actions) {
+				
+				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
 		}
        
 	}
 
 }
 // compare two tab of actions 
-func CompareActionArrays(actions1, actions2 []Action) bool {
+func compareActionArrays(actions1, actions2 []Action) bool {
 	if len(actions1) != len(actions2) {
 		return false
 	}
 
 	for i := range actions1 {
-		if !CompareActions(actions1[i], actions2[i]) {
+		if !compareActions(actions1[i], actions2[i]) {
 			return false
 		}
 	}
@@ -525,7 +516,7 @@ func CompareActionArrays(actions1, actions2 []Action) bool {
 }
 
 // compare two actions 
-func CompareActions(action1, action2 Action) bool {
+func compareActions(action1, action2 Action) bool {
 	return action1.GetName() == action2.GetName();
 }
 
