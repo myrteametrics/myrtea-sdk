@@ -19,6 +19,7 @@ type DefaultRule struct {
 	Cases      []Case                 `json:"cases"`
 	Version    int64                  `json:"version"`
 	Parameters map[string]interface{} `json:"parameters"`
+	EvaluateAllCases  bool             `json:"evaluateallcase"`
 }
 
 // GetID returns the rule id
@@ -38,17 +39,28 @@ func (r DefaultRule) Execute(k KnowledgeBase) []Action {
 	k.SetDefaultValues(r.Parameters)
 
 	for _, c := range r.Cases {
+
+		if !c.Enabled{
+			continue
+		}
 		actions := c.evaluate(k)
 		if actions != nil {
 			for _, a := range actions {
+
 				a.MetaData["ruleID"] = r.ID
 				a.MetaData["ruleVersion"] = r.Version
 				result = append(result, a)
 			}
-			return result
+			if !r.EvaluateAllCases{
+				return result
+			}
+			
 		}
 	}
 
+	if len(result) > 0 {
+		return result
+	}
 	return nil
 }
 
@@ -80,6 +92,7 @@ type Case struct {
 	Name      string      `json:"name"`
 	Condition Expression  `json:"condition"`
 	Actions   []ActionDef `json:"actions"`
+	Enabled  bool          `json:"enabled"`
 }
 
 func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
@@ -96,6 +109,10 @@ func resolve(c Case, k KnowledgeBase) []DefaultAction {
 	resolvedActions := make([]DefaultAction, 0)
 
 	for _, a := range c.Actions {
+        
+        if !a.Enabled{
+			continue
+		}
 		rAction, err := a.Resolve(k)
 		if err == nil {
 			rAction.MetaData["caseName"] = c.Name
@@ -138,6 +155,7 @@ func (c *Case) UnmarshalJSON(data []byte) error {
 type ActionDef struct {
 	Name       Expression            `json:"name"`
 	Parameters map[string]Expression `json:"parameters"`
+	Enabled    bool                  `json:"enabled"`
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
