@@ -89,14 +89,14 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 					case "uuid_from_longs":
 						rawMostSig, _ := lookupNestedMap(fieldConfig.Paths[0], data)
 						rawLeastSig, _ := lookupNestedMap(fieldConfig.Paths[1], data)
-						if mostSig, ok := rawMostSig.(float64); !ok || mostSig == 0 {
+						if mostSig, ok := rawMostSig.(int64); !ok || mostSig == 0 {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
-						} else if leastSig, ok := rawLeastSig.(float64); !ok || leastSig == 0 {
+						} else if leastSig, ok := rawLeastSig.(int64); !ok || leastSig == 0 {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
 						} else {
-							strings[fieldKey] = utils.NewUUIDFromBits(int64(mostSig), int64(leastSig))
+							strings[fieldKey] = utils.NewUUIDFromBits(mostSig, leastSig)
 						}
 					}
 
