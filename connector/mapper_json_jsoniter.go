@@ -1,6 +1,8 @@
 package connector
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"strconv"
 	"time"
@@ -37,9 +39,15 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 	case KafkaMessage:
 
 		var data map[string]interface{}
-		err := jsoni.Unmarshal(message.Data, &data)
-		if err != nil {
-			zap.L().Error("unmarshall", zap.Error(err))
+		// if err := jsoni.Unmarshal(message.Data, &data) ; err != nil {
+		// 	zap.L().Error("unmarshall", zap.Error(err))
+		// }
+
+		d := jsoni.NewDecoder(bytes.NewBuffer(message.Data))
+		d.UseNumber()
+
+		if err := d.Decode(&data); err != nil {
+			zap.L().Error("decode", zap.Error(err))
 		}
 
 		strings := make(map[string]string, 0)
@@ -89,15 +97,46 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 					case "uuid_from_longs":
 						rawMostSig, _ := lookupNestedMap(fieldConfig.Paths[0], data)
 						rawLeastSig, _ := lookupNestedMap(fieldConfig.Paths[1], data)
-						if mostSig, ok := rawMostSig.(float64); !ok || mostSig == 0 {
+						if mostSigN, ok := rawMostSig.(json.Number); !ok {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
-						} else if leastSig, ok := rawLeastSig.(float64); !ok || leastSig == 0 {
+							zap.L().Warn("not json.Number")
+						} else if leastSigN, ok := rawLeastSig.(json.Number); !ok {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
+							zap.L().Warn("not json.Number")
 						} else {
-							strings[fieldKey] = utils.NewUUIDFromBits(int64(mostSig), int64(leastSig))
+							if mostSig, err := mostSigN.Int64(); err != nil {
+								// TODO: handle this case !
+								// strings[fieldKey] = uuid.UUID{}.String()
+								zap.L().Warn("cannot convert to int64", zap.Error(err))
+							} else if leastSig, err := leastSigN.Int64(); err != nil {
+								// TODO: handle this case !
+								// strings[fieldKey] = uuid.UUID{}.String()
+								zap.L().Warn("cannot convert to int64", zap.Error(err))
+							} else {
+								strings[fieldKey] = utils.NewUUIDFromBits(mostSig, leastSig)
+							}
 						}
+					}
+
+				case json.Number:
+					switch fieldConfig.FieldType {
+					case "int":
+						if i, err := v.Int64(); err != nil {
+							switch di := fieldConfig.DefaultValue.(type) {
+							case int64:
+								ints[fieldKey] = di
+							}
+						} else {
+							ints[fieldKey] = i
+						}
+					}
+
+				case bool:
+					switch fieldConfig.FieldType {
+					case "boolean":
+						bools[fieldKey] = v
 					}
 
 				case string:
@@ -114,16 +153,6 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 							}
 						} else {
 							bools[fieldKey] = i
-						}
-					case "int":
-						i, err := strconv.ParseInt(v, 10, 0)
-						if err != nil {
-							switch di := fieldConfig.DefaultValue.(type) {
-							case int64:
-								ints[fieldKey] = di
-							}
-						} else {
-							ints[fieldKey] = i
 						}
 
 					case "date":
@@ -151,6 +180,7 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 			Ints:    ints,
 			Strings: strings,
 			Times:   times,
+			Bools:   bools,
 		}
 		return filteredMsg, nil
 	default:

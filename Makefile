@@ -24,40 +24,45 @@ help:
 GO_PACKAGE ?= go list ./... | \
 	grep $(PROJECT_PATH)/v4/ | \
 	grep -v -e "$(PROJECT_PATH)/v4/docs" | \
-	grep -v -e "$(PROJECT_PATH)/v4/internals/tests"
+	grep -v -e "$(PROJECT_PATH)/v4/tests"
 
 .PHONY: download ## Download all dependencies
 download:
-	GO111MODULE=$(GO111MODULE) go mod download
+	go mod download
 
 .PHONY: test-integration-lw ## Test the code
 test-integration-lw:
-	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go test -p=1 $$($(GO_PACKAGE))
+	go test -p=1 $$($(GO_PACKAGE))
 
 .PHONY: test-integration ## Test the code
 test-integration:
-	mkdir -p coverage
-	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go test -cover -coverpkg=$$(go list ./... | grep $(PROJECT_PATH)/v4/ | tr '\n' ',') -coverprofile=coverage/profile.out $$(go list ./... | grep $(PROJECT_PATH)/v4/)
-	go tool cover -html=coverage/profile.out -o coverage/coverage.html
-	go tool cover -func=coverage/profile.out -o coverage/coverage.txt
+	rm -rf coverage
+	mkdir -p coverage/unit
+	go test -cover -coverpkg=$$($(GO_PACKAGE) | tr '\n' ',') $$($(GO_PACKAGE)) -args -test.gocoverdir="$(PWD)/coverage/unit"
+	go tool covdata percent -i=./coverage/unit
+	go tool covdata textfmt -i=./coverage/unit -o coverage/profile.out
+	go tool cover -html coverage/profile.out -o coverage/coverage.html
+	go tool cover -func coverage/profile.out -o coverage/coverage.txt
 	cat coverage/coverage.txt
 
 .PHONY: test-unit ## Test the code
 test-unit:
-	mkdir -p coverage
-	GO111MODULE=$(GO111MODULE) CGO_ENABLED=0 go test -short -cover -coverpkg=$$(go list ./... | grep $(PROJECT_PATH)/v4/ | tr '\n' ',') -coverprofile=coverage/profile.out $$(go list ./... | grep $(PROJECT_PATH)/v4/)
-	go tool cover -html=coverage/profile.out -o coverage/coverage.html
-	go tool cover -func=coverage/profile.out -o coverage/coverage.txt
+	rm -rf coverage
+	mkdir -p coverage/unit
+	go test -short -cover -coverpkg=$$($(GO_PACKAGE) | tr '\n' ',') $$($(GO_PACKAGE)) -args -test.gocoverdir="$(PWD)/coverage/unit"
+	go tool covdata percent -i=./coverage/unit
+	go tool covdata textfmt -i=./coverage/unit -o coverage/profile.out
+	go tool cover -html coverage/profile.out -o coverage/coverage.html
+	go tool cover -func coverage/profile.out -o coverage/coverage.txt
 	cat coverage/coverage.txt
-
 
 .PHONY: test-race
 test-race:
-	GO111MODULE=$(GO111MODULE) go test -short -race $$(go list ./... | grep -v /vendor/)
+	go test -short -race $$(go list ./... | grep -v /vendor/)
 
 .PHONY: test-memory
 test-memory:
-	GO111MODULE=$(GO111MODULE) go test -msan -short $$(go list ./... | grep -v /vendor/)
+	go test -msan -short $$(go list ./... | grep -v /vendor/)
 
 $(lint):
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
@@ -65,7 +70,13 @@ $(lint):
 .PHONY: lint ## Lint the code
 lint: $(lint)
 	go mod tidy
-	golangci-lint run
+	golangci-lint run --fast=false
+
+.PHONY: lint-stats
+lint-stats: $(lint)
+	go mod tidy
+	golangci-lint run --fast=false --out-format=json | jq -r '.Issues[] | .FromLinter' | sort | uniq -c | sort -nr
+	golangci-lint run --fast=false --out-format=json | jq -r '.Issues[] | .FromLinter' | sort | wc
 
 .PHONY: swag ## Generate swagger documentation
 swag:
