@@ -1,6 +1,50 @@
 package connector
 
-import "testing"
+import (
+	"testing"
+)
+
+func TestMapMessage(t *testing.T) {
+	message := KafkaMessage{Data: []byte(
+		`{"uuid":{"least":-5360973783440353337,"most":-814119054879674195},"fields":{"mystring":"helloworld","myint":1234567,"mybool":true}}`,
+	)}
+	mapper := JSONMapperJsoniter{
+		filters: make(map[string]JSONMapperFilterItem),
+		mapping: map[string]map[string]JSONMapperConfigItem{
+			"record": {
+				"uuid": {
+					FieldType: "uuid_from_longs",
+					Paths: [][]string{
+						{"uuid", "most"},
+						{"uuid", "least"},
+					},
+				},
+				"mystring": {
+					FieldType: "string",
+					Paths:     [][]string{{"fields", "mystring"}},
+				},
+				"myint": {
+					FieldType: "int",
+					Paths:     [][]string{{"fields", "myint"}},
+				},
+				"mybool": {
+					FieldType: "boolean",
+					Paths:     [][]string{{"fields", "mybool"}},
+				},
+			},
+		},
+	}
+	msg, err := mapper.MapToDocument(message)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	output := msg.(TypedDataMessage)
+	t.Log(output.Strings)
+	t.Log(output.Ints)
+	t.Log(output.Bools)
+	t.Log(output.Times)
+}
 
 func TestLookupNestedMapWithSlice(t *testing.T) {
 	data := map[string]interface{}{

@@ -27,6 +27,11 @@ func TestRuleEng(t *testing.T) {
 
 	actions := engine.GetResults()
 
+	if len(actions) != 3 {
+		t.Errorf("Invalid number of actions returned %d", len(actions))
+		t.FailNow()
+	}
+
 	if actions[0].GetName() != "set" || actions[0].GetParameters()["status.A"].(float64) != 3 {
 		t.Errorf("The engine actins are not as expected")
 	}
@@ -37,13 +42,11 @@ func TestRuleEng(t *testing.T) {
 		actions[2].GetParameters()["description"].(string) != "my_description" {
 		t.Errorf("The engine actins are not as expected")
 	}
-	t.Fail()
-	t.Log(actions)
 }
 
 type ruleTestCase struct {
-	name string
-	rule DefaultRule
+	name     string
+	rule     DefaultRule
 	expected []Action
 }
 
@@ -60,33 +63,32 @@ var data = map[string]interface{}{
 	},
 }
 
-
 func TestRuleCaseEnable(t *testing.T) {
 
-	rulesTests := []ruleTestCase {
+	rulesTests := []ruleTestCase{
 		{
 			name: "rule 1",
 			rule: DefaultRule{
-				ID:         1,
-				Version:    1,
-				Parameters: make(map[string]interface{}),
+				ID:               1,
+				Version:          1,
+				Parameters:       make(map[string]interface{}),
 				EvaluateAllCases: true,
 				Cases: []Case{
 					{
 						Name:      "case1",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: false,
+						Enabled:   false,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case1_Rule1"`,
+								Name:    `"action1_Case1_Rule1"`,
 								Enabled: true,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case1_Rule1"`,
-								 Enabled: true,
+								Name:    `"action2_Case1_Rule1"`,
+								Enabled: true,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
 								},
@@ -96,17 +98,17 @@ func TestRuleCaseEnable(t *testing.T) {
 					{
 						Name:      "case2",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: true,
+						Enabled:   true,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case2_Rule1"`,
-								 Enabled: false,
+								Name:    `"action1_Case2_Rule1"`,
+								Enabled: false,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case2_Rule1"`,
+								Name:    `"action2_Case2_Rule1"`,
 								Enabled: false,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
@@ -117,17 +119,17 @@ func TestRuleCaseEnable(t *testing.T) {
 					{
 						Name:      "case3",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: true,
+						Enabled:   true,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case3_Rule1"`,
-								 Enabled: true,
+								Name:    `"action1_Case3_Rule1"`,
+								Enabled: true,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case3_Rule1"`,
+								Name:    `"action2_Case3_Rule1"`,
 								Enabled: true,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
@@ -149,55 +151,53 @@ func TestRuleCaseEnable(t *testing.T) {
 					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
 				},
 			},
-		  },
+		},
 	}
 
-	for _, ruleTest := range rulesTests{
+	for _, ruleTest := range rulesTests {
 
 		engine := NewRuleEngine()
 
 		engine.InsertRule(&ruleTest.rule)
 		engine.knowledgeBase.SetFacts(data)
 		engine.ExecuteRules([]int64{1})
-	
-		actions := engine.GetResults()
-	
-		if !compareActionArrays(ruleTest.expected,actions) {
 
-				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+		actions := engine.GetResults()
+
+		if !compareActionArrays(ruleTest.expected, actions) {
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
 		}
-       
+
 	}
-	
+
 }
 
-
 func TestRuleCaseActionEnable(t *testing.T) {
-	
-	rulesTests := []ruleTestCase {
+
+	rulesTests := []ruleTestCase{
 		{
 			name: "rule 1",
 			rule: DefaultRule{
-				ID:         1,
-				Version:    1,
-				Parameters: make(map[string]interface{}),
+				ID:               1,
+				Version:          1,
+				Parameters:       make(map[string]interface{}),
 				EvaluateAllCases: true,
 				Cases: []Case{
 					{
 						Name:      "case1",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: true,
+						Enabled:   true,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case1_Rule1"`,
+								Name:    `"action1_Case1_Rule1"`,
 								Enabled: false,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case1_Rule1"`,
-								 Enabled: false,
+								Name:    `"action2_Case1_Rule1"`,
+								Enabled: false,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
 								},
@@ -207,17 +207,17 @@ func TestRuleCaseActionEnable(t *testing.T) {
 					{
 						Name:      "case2",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: true,
+						Enabled:   true,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case2_Rule1"`,
-								 Enabled: true,
+								Name:    `"action1_Case2_Rule1"`,
+								Enabled: true,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case2_Rule1"`,
+								Name:    `"action2_Case2_Rule1"`,
 								Enabled: true,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
@@ -228,17 +228,17 @@ func TestRuleCaseActionEnable(t *testing.T) {
 					{
 						Name:      "case3",
 						Condition: "fact_test_1.aggs.doc_count.value > 25",
-						Enabled: true,
+						Enabled:   true,
 						Actions: []ActionDef{
 							{
-								Name: `"action1_Case3_Rule1"`,
-								 Enabled: false,
+								Name:    `"action1_Case3_Rule1"`,
+								Enabled: false,
 								Parameters: map[string]Expression{
 									"val": `"myvalue"`,
 								},
 							},
 							{
-								Name: `"action2_Case3_Rule1"`,
+								Name:    `"action2_Case3_Rule1"`,
 								Enabled: true,
 								Parameters: map[string]Expression{
 									"val2": `"myvalue2"`,
@@ -265,51 +265,50 @@ func TestRuleCaseActionEnable(t *testing.T) {
 					MetaData:   map[string]interface{}{"caseName": "case3", "ruleID": "1", "ruleVersion": "1"},
 				},
 			},
-		  },
+		},
 	}
 
-	for _, ruleTest := range rulesTests{
+	for _, ruleTest := range rulesTests {
 
 		engine := NewRuleEngine()
 
 		engine.InsertRule(&ruleTest.rule)
 		engine.knowledgeBase.SetFacts(data)
 		engine.ExecuteRules([]int64{1})
-	
-		actions := engine.GetResults()
-	
-		if !compareActionArrays(ruleTest.expected,actions) {
-				
-				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
-		}
-       
-	}
-	
-}
 
+		actions := engine.GetResults()
+
+		if !compareActionArrays(ruleTest.expected, actions) {
+
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
+		}
+
+	}
+
+}
 
 func TestRuleEvaluateAllCase(t *testing.T) {
 	rule1 := DefaultRule{
-		ID:         1,
-		Version:    1,
-		Parameters: make(map[string]interface{}),
+		ID:               1,
+		Version:          1,
+		Parameters:       make(map[string]interface{}),
 		EvaluateAllCases: false,
 		Cases: []Case{
 			{
 				Name:      "case1",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: false,
+				Enabled:   false,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case1_Rule1"`,
+						Name:    `"action1_Case1_Rule1"`,
 						Enabled: true,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case1_Rule1"`,
-						 Enabled: true,
+						Name:    `"action2_Case1_Rule1"`,
+						Enabled: true,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
 						},
@@ -319,17 +318,17 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			{
 				Name:      "case2",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case2_Rule1"`,
-						 Enabled: false,
+						Name:    `"action1_Case2_Rule1"`,
+						Enabled: false,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case2_Rule1"`,
+						Name:    `"action2_Case2_Rule1"`,
 						Enabled: false,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
@@ -340,17 +339,17 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			{
 				Name:      "case3",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case3_Rule1"`,
-						 Enabled: true,
+						Name:    `"action1_Case3_Rule1"`,
+						Enabled: true,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case3_Rule1"`,
+						Name:    `"action2_Case3_Rule1"`,
 						Enabled: true,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
@@ -361,28 +360,27 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 		},
 	}
 
-
 	rule2 := DefaultRule{
-		ID:         1,
-		Version:    1,
-		Parameters: make(map[string]interface{}),
+		ID:               1,
+		Version:          1,
+		Parameters:       make(map[string]interface{}),
 		EvaluateAllCases: true,
 		Cases: []Case{
 			{
 				Name:      "case1",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case1_Rule2"`,
+						Name:    `"action1_Case1_Rule2"`,
 						Enabled: true,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case1_Rule2"`,
-						 Enabled: false,
+						Name:    `"action2_Case1_Rule2"`,
+						Enabled: false,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
 						},
@@ -392,17 +390,17 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			{
 				Name:      "case2",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case2_Rule2"`,
-						 Enabled: false,
+						Name:    `"action1_Case2_Rule2"`,
+						Enabled: false,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case2_Rule2"`,
+						Name:    `"action2_Case2_Rule2"`,
 						Enabled: true,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
@@ -413,17 +411,17 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			{
 				Name:      "case3",
 				Condition: "fact_test_1.aggs.doc_count.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case3_Rule2"`,
-						 Enabled: false,
+						Name:    `"action1_Case3_Rule2"`,
+						Enabled: false,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case3_Rule2"`,
+						Name:    `"action2_Case3_Rule2"`,
 						Enabled: false,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
@@ -434,17 +432,17 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			{
 				Name:      "case4",
 				Condition: "fact_test_1.aggs.doc_count2.value > 25",
-				Enabled: true,
+				Enabled:   true,
 				Actions: []ActionDef{
 					{
-						Name: `"action1_Case4_Rule2"`,
-						 Enabled: true,
+						Name:    `"action1_Case4_Rule2"`,
+						Enabled: true,
 						Parameters: map[string]Expression{
 							"val": `"myvalue"`,
 						},
 					},
 					{
-						Name: `"action2_Case4_Rule2"`,
+						Name:    `"action2_Case4_Rule2"`,
 						Enabled: true,
 						Parameters: map[string]Expression{
 							"val2": `"myvalue2"`,
@@ -454,15 +452,12 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 			},
 		},
 	}
-    
 
-	rulesTests := []ruleTestCase {
+	rulesTests := []ruleTestCase{
 		{
-			name: "rule 1",
-			rule: rule1,
-			expected: []Action{
-			
-			},
+			name:     "rule 1",
+			rule:     rule1,
+			expected: []Action{},
 		},
 		{
 			name: "rule 2",
@@ -482,25 +477,26 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 		},
 	}
 
-	for _, ruleTest := range rulesTests{
+	for _, ruleTest := range rulesTests {
 
 		engine := NewRuleEngine()
 
 		engine.InsertRule(&ruleTest.rule)
 		engine.knowledgeBase.SetFacts(data)
 		engine.ExecuteRules([]int64{1})
-	
+
 		actions := engine.GetResults()
-	
-		if !compareActionArrays(ruleTest.expected,actions) {
-				
-				t.Error("\n Expected : \n",ruleTest.expected, "\nBut find : \n ",actions)
+
+		if !compareActionArrays(ruleTest.expected, actions) {
+
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
 		}
-       
+
 	}
 
 }
-// compare two tab of actions 
+
+// compare two tab of actions
 func compareActionArrays(actions1, actions2 []Action) bool {
 	if len(actions1) != len(actions2) {
 		return false
@@ -515,34 +511,36 @@ func compareActionArrays(actions1, actions2 []Action) bool {
 	return true
 }
 
-// compare two actions 
+// compare two actions
 func compareActions(action1, action2 Action) bool {
-	return action1.GetName() == action2.GetName();
+	return action1.GetName() == action2.GetName()
 }
 
-
-
-
-var ruleStr = `{	
+var ruleStr = `{
+	"evaluateallcase": true,
 	"cases": [
 	  {
 		"name": "case1",
+		"enabled": true,
 		"condition": "fact_test_1.aggs.agg0.value == fact_test_1.aggs.doc_count.value",
 		"actions": [
 		  {
 			"name": "\"set\"",
+			"enabled": true,
 			"parameters": {
 			  "status.A": "param1"
 			}
 		  },
 		  {
 			"name": "\"set\"",
+			"enabled": true,
 			"parameters": {
 			  "status.B": "2 + param1"
 			}
 		  },
 		  {
 			"name": "\"notify\"",
+			"enabled": true,
 			"parameters": {
 			  "id": "\"notify-1\"",
 			  "level": "\"info\"",
@@ -561,4 +559,3 @@ var ruleStr = `{
 		"param2": "my_description"
 	}
   }`
-

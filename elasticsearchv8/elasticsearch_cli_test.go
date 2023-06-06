@@ -75,6 +75,9 @@ var cfgv8 = elasticsearch.Config{
 }
 
 func TestESv8(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
 
 	t.Run("ExistsTemplate", TestESv8ExistsTemplate)
 	t.Run("PutTemplate", TestESv8PutTemplate)
@@ -96,6 +99,10 @@ func TestESv8(t *testing.T) {
 }
 
 func TestESv8Info(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -111,6 +118,10 @@ func TestESv8Info(t *testing.T) {
 }
 
 func TestESv8ExistsTemplate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -124,6 +135,10 @@ func TestESv8ExistsTemplate(t *testing.T) {
 }
 
 func TestES8CatIndices(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es8, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -137,6 +152,10 @@ func TestES8CatIndices(t *testing.T) {
 }
 
 func TestESv8PutTemplate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	req := NewPutTemplateRequestV8([]string{"index-*"}, model)
 	es8, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
@@ -151,6 +170,10 @@ func TestESv8PutTemplate(t *testing.T) {
 }
 
 func TestESv8DeleteTemplate(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -164,6 +187,10 @@ func TestESv8DeleteTemplate(t *testing.T) {
 }
 
 func TestESv8IndexDocument(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -202,6 +229,10 @@ func TestESv8IndexDocument(t *testing.T) {
 }
 
 func TestESv8QueryDocument(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -249,6 +280,10 @@ func TestESv8QueryDocument(t *testing.T) {
 }
 
 func TestEs8MultiGet(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
@@ -290,6 +325,10 @@ func TestEs8MultiGet(t *testing.T) {
 }
 
 func TestEs8BulkIndex(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping postgresql test in short mode")
+	}
+
 	es, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)

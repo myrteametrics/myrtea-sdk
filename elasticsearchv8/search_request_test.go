@@ -75,24 +75,25 @@ func TestBuildAgg(t *testing.T) {
 		t.Error(err)
 	}
 	b, _ = json.MarshalIndent(query, "", " ")
-	t.Log(string(b))
-	t.Fail()
+	// t.Log(string(b))
+	// t.Fail()
 
 	name, agg, err := buildElasticAgg(f.Intent)
 	if err != nil {
 		t.Error(err)
 	}
 	b, _ = json.MarshalIndent(agg, "", " ")
-	t.Log(string(b))
-	t.Fail()
+	// t.Log(string(b))
+	// t.Fail()
 
 	name2, agg2, err := buildElasticBucket(name, agg, f.Dimensions)
 	if err != nil {
 		t.Error(err)
 	}
+	_ = name2
 	b, _ = json.MarshalIndent(agg2, "", " ")
-	t.Log(name2, string(b))
-	t.Fail()
+	// t.Log(name2, string(b))
+	// t.Fail()
 
 	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), make(map[string]string))
 	if err != nil {
@@ -100,8 +101,8 @@ func TestBuildAgg(t *testing.T) {
 	}
 
 	b, _ = json.MarshalIndent(search2, "", " ")
-	t.Log(string(b))
-	t.Fail()
+	// t.Log(string(b))
+	// t.Fail()
 }
 
 func TestBuildSelect(t *testing.T) {
@@ -136,8 +137,8 @@ func TestBuildSelect(t *testing.T) {
 		t.Error(err)
 	}
 	b, _ = json.MarshalIndent(query, "", " ")
-	t.Log(string(b))
-	t.Fail()
+	// t.Log(string(b))
+	// t.Fail()
 
 	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), make(map[string]string))
 	if err != nil {
@@ -145,6 +146,6 @@ func TestBuildSelect(t *testing.T) {
 	}
 
 	b, _ = json.MarshalIndent(search2, "", " ")
-	t.Log(string(b))
-	t.Fail()
+	// t.Log(string(b))
+	// t.Fail()
 }
