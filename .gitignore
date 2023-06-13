@@ -6,8 +6,12 @@ Gopkg.lock
 Gopkg.toml
 /vendor
 
-# Golang test coverage
-/coverage
+# Golang test and lint reporting
+/reporting
+.scannerwork
+
+# Certificates
+/certs
 
 # Swaggo docs
 /docs
@@ -18,10 +22,8 @@ Gopkg.toml
 # Profiling dump
 *.prof
 
-# VS Code
+# IDE
 .vscode
-
-# GoLand
 .idea/
 
 # Logs
@@ -32,3 +34,5 @@ Gopkg.toml
 
 # Version file (used in CI)
 version
+
+/certs
