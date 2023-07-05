@@ -15,11 +15,11 @@ type Rule interface {
 
 // DefaultRule default rule implementation
 type DefaultRule struct {
-	ID         int64                  `json:"id,omitempty"`
-	Cases      []Case                 `json:"cases"`
-	Version    int64                  `json:"version"`
-	Parameters map[string]interface{} `json:"parameters"`
-	EvaluateAllCases  bool             `json:"evaluateallcase"`
+	ID               int64                  `json:"id,omitempty"`
+	Cases            []Case                 `json:"cases"`
+	Version          int64                  `json:"version"`
+	Parameters       map[string]interface{} `json:"parameters"`
+	EvaluateAllCases bool                   `json:"evaluateallcase"`
 }
 
 // GetID returns the rule id
@@ -40,7 +40,7 @@ func (r DefaultRule) Execute(k KnowledgeBase) []Action {
 
 	for _, c := range r.Cases {
 
-		if !c.Enabled{
+		if !c.Enabled {
 			continue
 		}
 		actions := c.evaluate(k)
@@ -51,10 +51,10 @@ func (r DefaultRule) Execute(k KnowledgeBase) []Action {
 				a.MetaData["ruleVersion"] = r.Version
 				result = append(result, a)
 			}
-			if !r.EvaluateAllCases{
+			if !r.EvaluateAllCases {
 				return result
 			}
-			
+
 		}
 	}
 
@@ -89,10 +89,11 @@ func (r *DefaultRule) UnmarshalJSON(data []byte) error {
 
 // Case : pair condition tasks use to compose a Rule
 type Case struct {
-	Name      string      `json:"name"`
-	Condition Expression  `json:"condition"`
-	Actions   []ActionDef `json:"actions"`
-	Enabled  bool          `json:"enabled"`
+	Name                      string      `json:"name"`
+	Condition                 Expression  `json:"condition"`
+	Actions                   []ActionDef `json:"actions"`
+	Enabled                   bool        `json:"enabled"`
+	EnableDependsForALLAction bool        `json:"enableDependsForALLAction"`
 }
 
 func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
@@ -104,13 +105,13 @@ func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
 	return nil
 }
 
-// resolve creates a list of actions from the case actions Definitions
+// resolve creates a lis86t of actions from the case actions Definitions
 func resolve(c Case, k KnowledgeBase) []DefaultAction {
 	resolvedActions := make([]DefaultAction, 0)
 
 	for _, a := range c.Actions {
-        
-        if !a.Enabled{
+
+		if !a.Enabled {
 			continue
 		}
 		rAction, err := a.Resolve(k)
@@ -153,9 +154,10 @@ func (c *Case) UnmarshalJSON(data []byte) error {
 
 // ActionDef action definition
 type ActionDef struct {
-	Name       Expression            `json:"name"`
-	Parameters map[string]Expression `json:"parameters"`
-	Enabled    bool                  `json:"enabled"`
+	Name           Expression            `json:"name"`
+	Parameters     map[string]Expression `json:"parameters"`
+	Enabled        bool                  `json:"enabled"`
+	DisableDepends bool                  `json:"disableDepends"`
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
