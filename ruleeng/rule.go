@@ -114,7 +114,7 @@ func resolve(c Case, k KnowledgeBase) []DefaultAction {
 		if !a.Enabled {
 			continue
 		}
-		rAction, err := a.Resolve(k)
+		rAction, err := a.Resolve(k, c.EnableDependsForALLAction)
 		if err == nil {
 			rAction.MetaData["caseName"] = c.Name
 			resolvedActions = append(resolvedActions, rAction)
@@ -161,7 +161,7 @@ type ActionDef struct {
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
-func (a ActionDef) Resolve(k KnowledgeBase) (DefaultAction, error) {
+func (a ActionDef) Resolve(k KnowledgeBase, EnableDependsForALLAction bool) (DefaultAction, error) {
 
 	name, err := a.Name.EvaluateAsString(k)
 
@@ -170,9 +170,11 @@ func (a ActionDef) Resolve(k KnowledgeBase) (DefaultAction, error) {
 	}
 
 	rAction := DefaultAction{
-		Name:       name,
-		Parameters: make(map[string]interface{}, 0),
-		MetaData:   make(map[string]interface{}, 0),
+		Name:                      name,
+		Parameters:                make(map[string]interface{}, 0),
+		MetaData:                  make(map[string]interface{}, 0),
+		DisableDepends:            a.DisableDepends,
+		EnableDependsForALLAction: EnableDependsForALLAction,
 	}
 
 	for key, exp := range a.Parameters {
