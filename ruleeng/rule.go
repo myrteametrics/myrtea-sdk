@@ -157,7 +157,7 @@ type ActionDef struct {
 	Name           Expression            `json:"name"`
 	Parameters     map[string]Expression `json:"parameters"`
 	Enabled        bool                  `json:"enabled"`
-	DisableDepends bool                  `json:"disableDepends"`
+	EnabledDepends bool                  `json:"enabledDepends"`
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
@@ -173,7 +173,7 @@ func (a ActionDef) Resolve(k KnowledgeBase, EnableDependsForALLAction bool) (Def
 		Name:                      name,
 		Parameters:                make(map[string]interface{}, 0),
 		MetaData:                  make(map[string]interface{}, 0),
-		DisableDepends:            a.DisableDepends,
+		EnabledDependsAction:      a.EnabledDepends,
 		EnableDependsForALLAction: EnableDependsForALLAction,
 	}
 

@@ -6,7 +6,7 @@ type Action interface {
 	GetName() string
 	GetParameters() map[string]interface{}
 	GetMetaData() map[string]interface{}
-	GetDisableDepends() bool
+	GetEnabledDependsAction() bool
 	GetEnableDependsForALLAction() bool
 }
 
@@ -15,7 +15,7 @@ type DefaultAction struct {
 	Name                      string                 `json:"name"`
 	Parameters                map[string]interface{} `json:"parameters"`
 	MetaData                  map[string]interface{} `json:"metaData"`
-	DisableDepends            bool                   `json:"disableDepends"`
+	EnabledDependsAction      bool                   `json:"enabledDepends"`
 	EnableDependsForALLAction bool                   `json:"enableDependsForALLAction"`
 }
 
@@ -35,8 +35,8 @@ func (a DefaultAction) GetName() string {
 }
 
 // GetDisableDepends return if the action agrees dependency management
-func (a DefaultAction) GetDisableDepends() bool {
-	return a.DisableDepends
+func (a DefaultAction) GetEnabledDependsAction() bool {
+	return a.EnabledDependsAction
 }
 
 // GetEnableDependsForALLAction return if the case supports dependency management
