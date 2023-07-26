@@ -25,3 +25,70 @@ func TestContains(t *testing.T) {
 		}
 	}
 }
+
+
+func TestFetchValueByMatchingAttribute(t *testing.T) {
+	tests := []struct {
+		arguments []interface{}
+		expected  int
+		err       string
+	}{
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}}, "a", "b", "c"},
+			expected:  1,
+			err:       "",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}, {"a": "c", "c": 2}}, "a", "b", "c"},
+			expected:  1,
+			err:       "",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}, {"a": "b", "c": 2}}, "a", "b", "c"},
+			expected:  1,
+			err:       "",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}}, "a", "c", "c"},
+			expected:  0,
+			err:       "",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}}, "c", "b", "c"},
+			expected:  0,
+			err:       "",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}}, "a", "c"},
+			expected:  0,
+			err:       "findByAttribute() expects exactly four arguments",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": 1}}, 1, "b", "c"},
+			expected:  0,
+			err:       "findByAttribute() expects second argument to be a string",
+		},
+		{
+			arguments: []interface{}{"not a slice of map", "a", "b", "c"},
+			expected:  0,
+			err:       "findByAttribute() expects first argument to be a slice of map[string]interface{}",
+		},
+		{
+			arguments: []interface{}{[]map[string]interface{}{{"a": "b", "c": "not an int"}}, "a", "b", "c"},
+			expected:  0,
+			err:       "value of c is not int",
+		},
+	}
+	for _, test := range tests {
+		output, err := fetchValueByMatchingAttribute(test.arguments...)
+		var errMsg string
+		if err != nil {
+			errMsg = err.Error() 
+		}
+		if errMsg != test.err { 
+			t.Errorf("Expected error %v, got %v", test.err, errMsg)
+		} else if output != test.expected {
+			t.Errorf("Output %d not equal to expected %d", output, test.expected)
+		}
+	}
+}
