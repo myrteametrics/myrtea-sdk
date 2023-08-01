@@ -1,7 +1,29 @@
 package elasticsearchv8
 
+// BulkIndexResponseItem represents the Elasticsearch response item.
 type BulkIndexResponseItem struct {
-	Status int `json:"status,omitempty"`
+	Index      string `json:"_index"`
+	DocumentID string `json:"_id"`
+	Version    int64  `json:"_version"`
+	Result     string `json:"result"`
+	Status     int    `json:"status"`
+	SeqNo      int64  `json:"_seq_no"`
+	PrimTerm   int64  `json:"_primary_term"`
+
+	Shards struct {
+		Total      int `json:"total"`
+		Successful int `json:"successful"`
+		Failed     int `json:"failed"`
+	} `json:"_shards"`
+
+	Error struct {
+		Type   string `json:"type"`
+		Reason string `json:"reason"`
+		Cause  struct {
+			Type   string `json:"type"`
+			Reason string `json:"reason"`
+		} `json:"caused_by"`
+	} `json:"error,omitempty"`
 }
 
 type BulkIndexResponse struct {
