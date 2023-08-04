@@ -407,3 +407,26 @@ func TestExtractFromDateInvalid(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestFormatDate(t *testing.T) {
+	_, err := formatDate("blabla")
+	if err == nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	_, err = formatDate("blabla", "blabla")
+	if err == nil {
+		t.Error("Given date should not be parsed (bad format)")
+		t.FailNow()
+	}
+	result, err := formatDate("2023-08-04T14:57:07.923", "abcd")
+	if result != "abcd" {
+		t.Error("formatDate should return abcd")
+		t.FailNow()
+	}
+	result, err = formatDate("2023-08-04T14:57:07.923", "2006-01-02 15:04:05")
+	if result != "2023-08-04 14:57:07" {
+		t.Error("formatDate should return abcd")
+		t.FailNow()
+	}
+}

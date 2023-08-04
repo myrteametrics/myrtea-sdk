@@ -251,3 +251,25 @@ func extractFromDate(arguments ...interface{}) (interface{}, error) {
 	}
 	return nil, fmt.Errorf("extractFromDate() %s is not a valid component", s2)
 }
+
+func formatDate(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 2 {
+		return nil, fmt.Errorf("formatDate() expects exactly two string argument <date> <format>")
+	}
+
+	s1, ok := arguments[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("formatDate() expects exactly two string argument <date> <format>")
+	}
+	s2, ok := arguments[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("formatDate() expects exactly two string argument <date> <format>")
+	}
+	t, _, err := parseDateAllFormat(s1)
+	if err != nil {
+		return nil, fmt.Errorf("extractFromDate() %s", err.Error())
+	}
+
+	// if s2 layout is wrong, the format function will output given s2 string as result
+	return t.Format(s2), nil
+}
