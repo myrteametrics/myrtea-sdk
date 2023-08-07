@@ -24,6 +24,7 @@ var (
 		LangEvalMap,
 		LangEvalString,
 		LangEvalSlice,
+		LangEvalUrl,
 	)
 
 	// LangExprMath is a custom GVal evaluator for business rules and facts conditions
@@ -86,6 +87,12 @@ var (
 	LangEvalSlice = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("contains", contains),
+	)
+
+	LangEvalUrl = gval.NewLanguage(
+		gval.Full(),
+		gval.Function("url_encode", urlEncode),
+		gval.Function("url_decode", urlDecode),
 	)
 )
 
