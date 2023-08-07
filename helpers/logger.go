@@ -26,7 +26,8 @@ func InitLogger(production bool) zap.Config {
 
 	defer func() {
 		if err := logger.Sync(); err != nil {
-			log.Fatalf("Logger Sync() failed: %v", err)
+			// FIXME: sync /dev/stderr: invalid argument
+			// log.Fatalf("Logger Sync() failed: %v", err)
 		}
 	}()
 
