@@ -13,15 +13,15 @@ func replace(arguments ...interface{}) (interface{}, error) {
 	}
 	str, ok := arguments[0].(string)
 	if !ok {
-		return nil, fmt.Errorf("day() expects exactly 3 string argument")
+		return nil, fmt.Errorf("replace() expects exactly 3 string argument")
 	}
 	pattern, ok := arguments[1].(string)
 	if !ok {
-		return nil, fmt.Errorf("day() expects exactly 3 string argument")
+		return nil, fmt.Errorf("replace() expects exactly 3 string argument")
 	}
 	replacement, ok := arguments[2].(string)
 	if !ok {
-		return nil, fmt.Errorf("day() expects exactly 3 string argument")
+		return nil, fmt.Errorf("replace() expects exactly 3 string argument")
 	}
 	return strings.ReplaceAll(str, pattern, replacement), nil
 }
