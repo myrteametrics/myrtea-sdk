@@ -430,3 +430,37 @@ func TestFormatDate(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestGetValueForCurrentDay(t *testing.T) {
+	_, err := getValueForCurrentDay()
+	if err == nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	_, err = getValueForCurrentDay([]float64{}, []string{})
+	if err == nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	value, err := getValueForCurrentDay([]interface{}{}, []string{}, -1)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	AssertEqual(t, value, -1)
+
+	_, err = getValueForCurrentDay([]interface{}{}, []string{"test"}, -1)
+	if err == nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	value, err = getValueForCurrentDay([]interface{}{1, 2, 3, 4, 5, 6, 7}, GetValidDayNames(), -1)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	AssertNotEqual(t, value, -1)
+}

@@ -54,6 +54,7 @@ var (
 		gval.Function("truncate_date", truncateDate),
 		gval.Function("extract_from_date", extractFromDate),
 		gval.Function("format_date", formatDate),
+		gval.Function("get_value_current_day", getValueForCurrentDay),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions

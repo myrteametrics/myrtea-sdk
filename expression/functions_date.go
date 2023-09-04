@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/myrteametrics/myrtea-sdk/v4/utils"
@@ -272,4 +273,63 @@ func formatDate(arguments ...interface{}) (interface{}, error) {
 
 	// if s2 layout is wrong, the format function will output given s2 string as result
 	return t.Format(s2), nil
+}
+
+func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 3 {
+		return nil, fmt.Errorf("getValueForCurrentDay() expects 3 arguments, a list of values, a list of days and a default value")
+	}
+
+	values, ok := arguments[0].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("getValueForCurrentDay() list of values is not valid")
+	}
+
+	keys, ok := arguments[1].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("getValueForCurrentDay() list of days is not valid")
+	}
+
+	defaultValue := arguments[2]
+	if !ok {
+		return nil, fmt.Errorf("getValueForCurrentDay() default value is not valid")
+	}
+
+	if len(values) != len(keys) {
+		return nil, fmt.Errorf("getValueForCurrentDay() list of values and list of days should have the same size")
+	}
+
+	// maybe add French ?
+	validDayNames := GetValidDayNames()
+	result := map[string]interface{}{}
+
+	// check keys
+	for i, keyInt := range keys {
+		key, valid := keyInt.(string)
+
+		if valid {
+			valid = false
+			for _, validDay := range validDayNames {
+				if key == validDay {
+					valid = true
+					break
+				}
+			}
+		}
+
+		if !valid {
+			return nil, fmt.Errorf("getValueForCurrentDay() key in keys list not valid: \"%s\" (valid are %s)", key, strings.Join(validDayNames, ", "))
+		}
+
+		result[strings.ToLower(key)] = values[i]
+
+	}
+
+	currentDay := strings.ToLower(time.Now().Weekday().String())
+
+	if value, ok := result[currentDay]; ok {
+		return value, nil
+	}
+
+	return defaultValue, nil
 }
