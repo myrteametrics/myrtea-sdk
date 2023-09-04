@@ -17,3 +17,14 @@ func GetDateKeywords(t time.Time) map[string]interface{} {
 	}
 	return values
 }
+
+func GetValidDayNames() []string {
+	return []string{"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		"saturday",
+		"sunday",
+	}
+}

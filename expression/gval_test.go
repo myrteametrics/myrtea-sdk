@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"strings"
 	"testing"
 	"time"
 )
@@ -384,5 +385,43 @@ func TestEvalReplace(t *testing.T) {
 	}
 
 	AssertEqual(t, eval, "tset")
+
+}
+
+func TestEvalFormatDate(t *testing.T) {
+	eval, err := Process(LangEvalDate, "format_date(calendar_add(now, \"-3h\"), \"2006-01-02+15:04:05\")", GetDateKeywords(time.Now()))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	result, ok := eval.(string)
+	if !ok {
+		t.Error("Result type not as expected")
+	}
+
+	AssertEqual(t, result, "2023-09-04+10:37:04")
+
+}
+
+func TestEvalGetValueForCurrentDay(t *testing.T) {
+	// testing replace without variables
+	eval, err := Process(LangEval, "get_value_current_day([1,2,3,4,5,6,7], "+
+		"[\"monday\", \"tuesday\", \"wednesday\", \"thursday\", \"friday\", \"saturday\", \"sunday\"], -1)",
+		GetDateKeywords(time.Now()))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	AssertNotEqual(t, eval, -1)
+
+	currentDay := strings.ToLower(time.Now().Weekday().String())
+	expected := []float64{1, 2, 3, 4, 5, 6, 7}
+
+	for i, day := range GetValidDayNames() {
+		if currentDay == day {
+			AssertEqual(t, eval, expected[i])
+			break
+		}
+	}
 
 }
