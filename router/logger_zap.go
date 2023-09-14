@@ -50,7 +50,7 @@ func CustomZapRequestLogger(f chimiddleware.LogFormatter) func(next http.Handler
 
 				zapFields = append(zapFields,
 					zap.Duration("lat", time.Since(t1)),
-					zap.Int("status", ww.Status()),
+					zap.Int("http_status", ww.Status()),
 					zap.Int("size", ww.BytesWritten()),
 				)
 
