@@ -206,10 +206,7 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 			if reflect.ValueOf(f.Value).Kind() == reflect.Slice {
 				var termsQuery types.TermsQuery
 					termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
-					fmt.Println(termsQuery)
-				
-					query.Terms = &termsQuery
-				
+					query.Terms = &termsQuery			
 			} else {
 				query.Term = map[string]types.TermQuery{
 					f.Field: {Value: f.Value},
