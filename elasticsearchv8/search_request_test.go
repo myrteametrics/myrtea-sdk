@@ -122,6 +122,22 @@ func TestBuildSelect(t *testing.T) {
 		},
 	}
 
+	f2 := engine.Fact{
+		ID:   1,
+		Name: "test",
+		Intent: &engine.IntentFragment{
+			Name:     "myintent",
+			Operator: engine.Select,
+			Term:     "myintentterm",
+		},
+		Condition: &engine.BooleanFragment{
+			Operator: engine.And,
+			Fragments: []engine.ConditionFragment{
+				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: []string{"myvalue","mayvale2","myvalue3"} },
+			},
+		},
+	}
+
 	b, err := json.Marshal(f1)
 	if err != nil {
 		t.Error(err)
@@ -147,5 +163,32 @@ func TestBuildSelect(t *testing.T) {
 
 	b, _ = json.MarshalIndent(search2, "", " ")
 	// t.Log(string(b))
+	// t.Fail()
+
+	b2, err := json.Marshal(f2)
+	if err != nil {
+		t.Error(err)
+	}
+	var ff engine.Fact
+	err = json.Unmarshal(b2, &ff)
+	if err != nil {
+		t.Error(err)
+	}
+
+	query, err = buildElasticFilter(ff.Condition, make(map[string]interface{}))
+	if err != nil {
+		t.Error(err)
+	}
+	b2, _ = json.MarshalIndent(query, "", " ")
+	// t.Log(string(b))
+	// t.Fail()
+
+	search2, err = ConvertFactToSearchRequestV8(ff, time.Now(), make(map[string]string))
+	if err != nil {
+		t.Error(err)
+	}
+
+	b2, _ = json.MarshalIndent(search2, "", " ")
+	// t.Log(string(b2))
 	// t.Fail()
 }
