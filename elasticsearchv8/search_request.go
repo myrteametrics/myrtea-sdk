@@ -3,6 +3,7 @@ package elasticsearchv8
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
@@ -202,8 +203,14 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 			}
 
 		case engine.For:
-			query.Term = map[string]types.TermQuery{
-				f.Field: {Value: f.Value},
+			if reflect.ValueOf(f.Value).Kind() == reflect.Slice {
+				var termsQuery types.TermsQuery
+					termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
+					query.Terms = &termsQuery			
+			} else {
+				query.Term = map[string]types.TermQuery{
+					f.Field: {Value: f.Value},
+				}
 			}
 
 		case engine.From:
