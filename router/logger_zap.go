@@ -45,13 +45,13 @@ func CustomZapRequestLogger(f chimiddleware.LogFormatter) func(next http.Handler
 				gorillacontext.Clear(r)
 				zapFields := entry.(*customZapLogEntry).ZapFields
 				if user != nil {
-					zapFields = append(zapFields, zap.String("user", user.(string)))
+					zapFields = append(zapFields, zap.String("http_user", user.(string)))
 				}
 
 				zapFields = append(zapFields,
-					zap.Duration("lat", time.Since(t1)),
-					zap.Int("status", ww.Status()),
-					zap.Int("size", ww.BytesWritten()),
+					zap.Duration("http_lat", time.Since(t1)),
+					zap.Int("http_status", ww.Status()),
+					zap.Int("http_size", ww.BytesWritten()),
 				)
 
 				entry.(*customZapLogEntry).ZapFields = zapFields
@@ -82,7 +82,7 @@ func (l *CustomZapLogFormatter) NewLogEntry(r *http.Request) chimiddleware.LogEn
 
 	reqID := chimiddleware.GetReqID(r.Context())
 	if reqID != "" {
-		entry.ZapFields = append(entry.ZapFields, zap.String("requestid", reqID))
+		entry.ZapFields = append(entry.ZapFields, zap.String("http_requestid", reqID))
 	}
 
 	scheme := "http"
@@ -91,12 +91,12 @@ func (l *CustomZapLogFormatter) NewLogEntry(r *http.Request) chimiddleware.LogEn
 	}
 
 	entry.ZapFields = append(entry.ZapFields,
-		zap.String("method", r.Method),
-		zap.String("scheme", scheme),
-		zap.String("host", r.Host),
-		zap.String("path", r.RequestURI),
-		zap.String("proto", r.Proto),
-		zap.String("remoteaddr", r.RemoteAddr),
+		zap.String("http_method", r.Method),
+		zap.String("http_scheme", scheme),
+		zap.String("http_host", r.Host),
+		zap.String("http_path", r.RequestURI),
+		zap.String("http_proto", r.Proto),
+		zap.String("http_remoteaddr", r.RemoteAddr),
 	)
 
 	return entry
