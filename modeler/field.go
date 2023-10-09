@@ -28,6 +28,7 @@ func (field *FieldLeaf) IsValid() (bool, error) {
 	if field.Ftype == 0 {
 		return false, errors.New("Missing Ftype (or 0 value)")
 	}
+	// TODO: Should we check if format is valid ? actually it's only used for DateTime
 	return true, nil
 }
 
