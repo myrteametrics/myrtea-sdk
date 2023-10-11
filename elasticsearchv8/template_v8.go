@@ -87,7 +87,7 @@ func fieldToPropertyV8(rawField modeler.Field) (string, types.Property) {
 
 		case modeler.DateTime:
 			p := types.NewDateProperty()
-			p.Format = some.String("date_hour_minute_second_millis")
+			p.Format = some.String(field.Format)
 			property = p
 		}
 
