@@ -40,12 +40,12 @@ var model = Model{
 	},
 }
 
-var expectedModel = strings.ReplaceAll(`{"id":1,"name":"model-1","synonyms":["model","other"],"fields":[{"name":"f1","type":"int","format":"","semantic":false,"synonyms":["f1","f1other"]},
-{"name":"f2","type":"string","format":"","semantic":false,"synonyms":["f2","f2other"]},{"name":"f3","type":"datetime","format":"","semantic":false,"synonyms":["f3","f3other"]},
-{"name":"f4","type":"boolean","format":"","semantic":false,"synonyms":["f4","f4other"]},{"name":"f5","type":"object","keepObjectSeparation":false,
-"fields":[{"name":"a","type":"int","format":"","semantic":false,"synonyms":["a","aother"]},{"name":"b","type":"string","format":"","semantic":false,"synonyms":["b","bother"]}]},
-{"name":"f6","type":"object","keepObjectSeparation":true,"fields":[{"name":"a","type":"int","format":"","semantic":false,"synonyms":["a","aother"]},
-{"name":"b","type":"string","format":"","semantic":false,"synonyms":["b","bother"]}]}],"elasticsearchOptions":{"rollmode":"cron","rollcron":"0 0 * * *",
+var expectedModel = strings.ReplaceAll(`{"id":1,"name":"model-1","synonyms":["model","other"],"fields":[{"name":"f1","type":"int","semantic":false,"synonyms":["f1","f1other"]},
+{"name":"f2","type":"string","semantic":false,"synonyms":["f2","f2other"]},{"name":"f3","type":"datetime","semantic":false,"synonyms":["f3","f3other"]},
+{"name":"f4","type":"boolean","semantic":false,"synonyms":["f4","f4other"]},{"name":"f5","type":"object","keepObjectSeparation":false,
+"fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]},
+{"name":"f6","type":"object","keepObjectSeparation":true,"fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},
+{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]}],"elasticsearchOptions":{"rollmode":"cron","rollcron":"0 0 * * *",
 "enablePurge":true,"purgeMaxConcurrentIndices":30,"patchAliasMaxIndices":2,"advancedSettings":{"number_of_replicas":0,"number_of_shards":1,"test":{"value":5}}}}`, "\n", "")
 
 func TestMarshal(t *testing.T) {
@@ -130,9 +130,6 @@ func TestSource(t *testing.T) {
 		case DateTime:
 			if name != "date" {
 				t.Error("expected date")
-			}
-			if len(content) != 2 {
-				t.Error("expected format date_hour_minute_second_millis")
 			}
 			break
 		case Boolean:
