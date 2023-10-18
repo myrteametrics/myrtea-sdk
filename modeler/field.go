@@ -15,7 +15,6 @@ type Field interface {
 type FieldLeaf struct {
 	Name     string    `json:"name"`
 	Ftype    FieldType `json:"type"`
-	Format   string    `json:"format"`
 	Semantic bool      `json:"semantic"`
 	Synonyms []string  `json:"synonyms"`
 }
@@ -28,7 +27,6 @@ func (field *FieldLeaf) IsValid() (bool, error) {
 	if field.Ftype == 0 {
 		return false, errors.New("Missing Ftype (or 0 value)")
 	}
-	// TODO: Should we check if format is valid ? actually it's only used for DateTime
 	return true, nil
 }
 
@@ -61,15 +59,6 @@ func (field *FieldLeaf) Source() (string, map[string]interface{}) {
 		fieldContent = map[string]interface{}{
 			"type": "date",
 		}
-
-		// Add format when no format given
-		if field.Format == "" {
-			fieldContent["format"] = "date_hour_minute_second_millis"
-		}
-	}
-
-	if field.Format != "" {
-		fieldContent["format"] = field.Format
 	}
 
 	return field.Name, fieldContent

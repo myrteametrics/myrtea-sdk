@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/puttemplate"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v4/modeler"
 	"go.uber.org/zap"
@@ -86,9 +85,7 @@ func fieldToPropertyV8(rawField modeler.Field) (string, types.Property) {
 			property = types.NewBooleanProperty()
 
 		case modeler.DateTime:
-			p := types.NewDateProperty()
-			p.Format = some.String(field.Format)
-			property = p
+			property = types.NewDateProperty()
 		}
 
 		return field.Name, property
