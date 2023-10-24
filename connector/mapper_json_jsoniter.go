@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
+	str "strings"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -30,7 +32,66 @@ func NewJSONMapperJsoniter(name, path string) (*JSONMapperJsoniter, error) {
 }
 
 func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
-	return true, ""
+	switch message := msg.(type) {
+	case KafkaMessage:
+		for _, filter := range mapper.filters {
+			fieldExtractedValueRaw, found := lookupNestedMapFullPaths(message.Data, filter.Paths, filter.Separator)
+			fieldExtractedValue := ""
+			if !found || fieldExtractedValueRaw == "" {
+				if filter.DefaultValue != "" {
+					fieldExtractedValue = filter.DefaultValue
+				} else {
+					return false, fmt.Sprintf("Filter Field missing : %+v", filter)
+				}
+			} else {
+				var ok bool
+				fieldExtractedValue, ok = fieldExtractedValueRaw.(string)
+
+				if !ok {
+					return false, fmt.Sprintf("Filter Field could't be cast to string : %+v", filter)
+				}
+			}
+
+			switch filter.Condition {
+			case "exists":
+
+			case "equals":
+				if fieldExtractedValue != filter.Value {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
+				}
+			case "equals_atleastone":
+				isValid := false
+				for _, value := range filter.Values {
+					if fieldExtractedValue == value {
+						isValid = true
+						break
+					}
+				}
+				if !isValid {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Values)
+				}
+			case "notEquals":
+				if fieldExtractedValue == filter.Value {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
+				}
+			case "startWith":
+				if !str.HasPrefix(fieldExtractedValue, filter.Value) {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
+				}
+			case "endWith":
+				if !str.HasSuffix(fieldExtractedValue, filter.Value) {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
+				}
+			case "contains":
+				if !str.Contains(fieldExtractedValue, filter.Value) {
+					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
+				}
+			}
+		}
+		return true, ""
+	default:
+		return false, "message type not supported"
+	}
 }
 
 // MapAvroToDocument :
@@ -50,10 +111,10 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 			zap.L().Error("decode", zap.Error(err))
 		}
 
-		strings := make(map[string]string, 0)
-		ints := make(map[string]int64, 0)
-		bools := make(map[string]bool, 0)
-		times := make(map[string]time.Time, 0)
+		strings := make(map[string]string)
+		ints := make(map[string]int64)
+		bools := make(map[string]bool)
+		times := make(map[string]time.Time)
 
 		for _, groupVal := range mapper.mapping {
 			for fieldKey, fieldConfig := range groupVal {
@@ -65,29 +126,9 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 				var val interface{}
 				if fieldConfig.FieldType != "uuid_from_longs" {
 					var found bool
-					val, found = lookupNestedMap(fieldConfig.Paths[0], data)
+					val, found = lookupNestedMapFullPaths(data, fieldConfig.Paths, fieldConfig.Separator)
 					if !found {
 						continue
-					}
-
-					if len(fieldConfig.Paths) > 1 {
-						var str string = ""
-						for i, path := range fieldConfig.Paths {
-							if i > 0 {
-								str += fieldConfig.Separator
-							}
-
-							val, found := lookupNestedMap(path, data)
-							if !found {
-								continue
-							} else {
-								switch v := val.(type) {
-								case string:
-									str += v
-								}
-							}
-						}
-						val = str
 					}
 				}
 
@@ -100,20 +141,20 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 						if mostSigN, ok := rawMostSig.(json.Number); !ok {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
-							zap.L().Warn("not json.Number")
+							zap.L().Warn("rawMostSig not json.Number", zap.String("path", str.Join(fieldConfig.Paths[0], ".")))
 						} else if leastSigN, ok := rawLeastSig.(json.Number); !ok {
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
-							zap.L().Warn("not json.Number")
+							zap.L().Warn("rawLeastSig not json.Number", zap.String("path", str.Join(fieldConfig.Paths[1], ".")))
 						} else {
 							if mostSig, err := mostSigN.Int64(); err != nil {
 								// TODO: handle this case !
 								// strings[fieldKey] = uuid.UUID{}.String()
-								zap.L().Warn("cannot convert to int64", zap.Error(err))
+								zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[0], ".")), zap.Error(err))
 							} else if leastSig, err := leastSigN.Int64(); err != nil {
 								// TODO: handle this case !
 								// strings[fieldKey] = uuid.UUID{}.String()
-								zap.L().Warn("cannot convert to int64", zap.Error(err))
+								zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[1], ".")), zap.Error(err))
 							} else {
 								strings[fieldKey] = utils.NewUUIDFromBits(mostSig, leastSig)
 							}
@@ -189,6 +230,39 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 	}
 }
 
+// lookupNestedMapFullPaths Looks searches value of all paths in data and concatenates them with a separator
+func lookupNestedMapFullPaths(data interface{}, paths [][]string, separator string) (interface{}, bool) {
+	if len(paths) == 0 {
+		return nil, false
+	}
+
+	val, found := lookupNestedMap(paths[0], data)
+	if !found {
+		return nil, false
+	}
+
+	if len(paths) > 1 {
+		// don't look up twice for first element
+		result := fmt.Sprintf("%v%s", val, separator)
+
+		for i, path := range paths[1:] {
+			if i > 0 {
+				result += separator
+			}
+
+			val, found = lookupNestedMap(path, data)
+			if !found {
+				continue
+			} else {
+				result = fmt.Sprintf("%s%v", result, val)
+			}
+		}
+		val = result
+	}
+
+	return val, true
+}
+
 // lookupNestedMap lookup for a value corresponding to the exact specified path inside a map
 func lookupNestedMap(pathParts []string, data interface{}) (interface{}, bool) {
 	if len(pathParts) == 0 {
@@ -211,9 +285,21 @@ func lookupNestedMap(pathParts []string, data interface{}) (interface{}, bool) {
 			}
 		}
 	case []interface{}:
+		// this code stays here for performance improvements (0 index is mostly used)
 		if searchField == "[0]" && len(v) > 0 {
 			return lookupNestedMap(pathParts[1:], v[0])
 		}
+
+		// Check if searchField is in the form of "[...]"
+		if len(searchField) > 2 && searchField[0] == '[' && searchField[len(searchField)-1] == ']' {
+			// Extract the index as a string and convert it to an integer
+			indexStr := searchField[1 : len(searchField)-1]
+			index, err := strconv.Atoi(indexStr)
+			if err == nil && index >= 0 && index < len(v) {
+				return lookupNestedMap(pathParts[1:], v[index])
+			}
+		}
 	}
+
 	return nil, false
 }
