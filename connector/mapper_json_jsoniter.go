@@ -31,11 +31,22 @@ func NewJSONMapperJsoniter(name, path string) (*JSONMapperJsoniter, error) {
 	return &JSONMapperJsoniter{filters: filters, mapping: mapping}, nil
 }
 
+// FilterDocument checks if document is filtered or not, returns if documents valid and if invalid, the following reason
 func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
 	switch message := msg.(type) {
 	case KafkaMessage:
+
+		var data map[string]interface{}
+
+		d := jsoni.NewDecoder(bytes.NewBuffer(message.Data))
+		d.UseNumber()
+
+		if err := d.Decode(&data); err != nil {
+			zap.L().Error("decode", zap.Error(err))
+		}
+
 		for _, filter := range mapper.filters {
-			fieldExtractedValueRaw, found := lookupNestedMapFullPaths(message.Data, filter.Paths, filter.Separator)
+			fieldExtractedValueRaw, found := lookupNestedMapFullPaths(data, filter.Paths, filter.Separator)
 			fieldExtractedValue := ""
 			if !found || fieldExtractedValueRaw == "" {
 				if filter.DefaultValue != "" {
@@ -44,12 +55,7 @@ func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
 					return false, fmt.Sprintf("Filter Field missing : %+v", filter)
 				}
 			} else {
-				var ok bool
-				fieldExtractedValue, ok = fieldExtractedValueRaw.(string)
-
-				if !ok {
-					return false, fmt.Sprintf("Filter Field could't be cast to string : %+v", filter)
-				}
+				fieldExtractedValue = fmt.Sprintf("%v", fieldExtractedValueRaw)
 			}
 
 			switch filter.Condition {
