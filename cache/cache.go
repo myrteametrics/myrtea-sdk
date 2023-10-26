@@ -81,6 +81,22 @@ func (cache *Cache) Get(key string) (data interface{}, found bool) {
 	return
 }
 
+// GetSimple is a thread-safe way to lookup items
+// GetSimple works like Get but does not touch the item, hence not extending it's life
+func (cache *Cache) GetSimple(key string) (data interface{}, found bool) {
+	cache.mutex.Lock()
+	item, exists := cache.items[key]
+	if !exists || item.expired() {
+		data = ""
+		found = false
+	} else {
+		data = item.data
+		found = true
+	}
+	cache.mutex.Unlock()
+	return
+}
+
 // Count returns the number of items in the cache
 // (helpful for tracking memory leaks)
 func (cache *Cache) Count() int {
