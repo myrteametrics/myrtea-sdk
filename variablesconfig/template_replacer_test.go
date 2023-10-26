@@ -52,7 +52,7 @@ func TestReplaceKeysWithValues(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := replaceKeysWithValues(tt.input, tt.vars)
+			got := ReplaceKeysWithValues(tt.input, tt.vars)
 			if !reflect.DeepEqual(got, tt.expected) {
 				t.Errorf("replaceKeysWithValues() = %v, want %v", got, tt.expected)
 			}
