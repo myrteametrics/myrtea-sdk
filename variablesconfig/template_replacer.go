@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func replaceKeysWithValues(m map[string]string, variables map[string]string) map[string]string {
+func ReplaceKeysWithValues(m map[string]string, variables map[string]string) map[string]string {
 	result := make(map[string]string)
 
 	for key, value := range m {

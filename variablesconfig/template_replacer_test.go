@@ -36,6 +36,18 @@ func TestReplaceKeysWithValues(t *testing.T) {
 				"lien_adel": "https://+{{keyMissing}}+",
 			},
 		},
+		{
+			name: "no key",
+			input: map[string]string{
+				"lien_adel": "https://exemple",
+			},
+			vars: map[string]string{
+				"keyUnique": "url.exemple.eu/bin/view/Main/H24/FLUX/FLUX%20CLP/%F0%9F%93%82%20MYRTEA/",
+			},
+			expected: map[string]string{
+				"lien_adel": "https://exemple",
+			},
+		},
 	}
 
 	for _, tt := range tests {
