@@ -3,7 +3,7 @@ module github.com/myrteametrics/myrtea-sdk/v4
 go 1.20
 
 require (
-	github.com/PaesslerAG/gval v1.0.1
+	github.com/PaesslerAG/gval v1.2.2
 	github.com/Shopify/sarama v1.38.0
 	github.com/buger/jsonparser v1.1.1
 	github.com/cactus/go-statsd-client/statsd v0.0.0-20191106001114-12b4e2b38748
@@ -87,6 +87,7 @@ require (
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/spf13/afero v1.1.2 // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.0.0 // indirect

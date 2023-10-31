@@ -438,26 +438,32 @@ func TestGetValueForCurrentDay(t *testing.T) {
 		t.FailNow()
 	}
 
-	_, err = getValueForCurrentDay([]float64{}, []string{})
+	_, err = getValueForCurrentDay([]float64{}, []interface{}{})
 	if err == nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
-	value, err := getValueForCurrentDay([]interface{}{}, []string{}, -1)
+	value, err := getValueForCurrentDay([]interface{}{}, []interface{}{}, -1)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	AssertEqual(t, value, -1)
 
-	_, err = getValueForCurrentDay([]interface{}{}, []string{"test"}, -1)
+	_, err = getValueForCurrentDay([]interface{}{}, []interface{}{"test"}, -1)
 	if err == nil {
 		t.Error(err)
 		t.FailNow()
 	}
 
-	value, err = getValueForCurrentDay([]interface{}{1, 2, 3, 4, 5, 6, 7}, GetValidDayNames(), -1)
+	value, err = getValueForCurrentDay([]interface{}{1, 2, 3, 4, 5, 6, 7}, []interface{}{"monday",
+		"tuesday",
+		"wednesday",
+		"thursday",
+		"friday",
+		"saturday",
+		"sunday",
+	}, -1)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

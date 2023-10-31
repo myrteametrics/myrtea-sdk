@@ -31,12 +31,12 @@ func advancedOperation(a, b interface{}, operator string) (interface{}, error) {
 			return mapMapOperation(operand1, operand2, operator)
 		case int, int32, int64, float32, float64:
 			return mapNumberOperation(operand1, operand2, operator)
-		case string: 
+		case string:
 			val, err := strconv.ParseFloat(b.(string), 64)
 			if err != nil {
 				return nil, err
 			}
-			return mapNumberOperation(operand1,val,operator)
+			return mapNumberOperation(operand1, val, operator)
 		}
 	}
 

@@ -6,9 +6,7 @@ import (
 	"github.com/myrteametrics/myrtea-sdk/v4/utils"
 )
 
-
-
-func flattenFact(arguments ...interface{})(map[string]interface{}, error){
+func flattenFact(arguments ...interface{}) (map[string]interface{}, error) {
 	if len(arguments) != 3 {
 		return nil, fmt.Errorf("flatMap() expects exactly three arguments")
 	}
