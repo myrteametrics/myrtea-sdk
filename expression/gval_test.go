@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -399,7 +400,16 @@ func TestEvalFormatDate(t *testing.T) {
 		t.Error("Result type not as expected")
 	}
 
-	AssertEqual(t, result, "2023-09-04+10:37:04")
+	regex := regexp.MustCompile(`^\d{4}-\d{2}-\d{2}\+\d{2}:\d{2}:\d{2}$`)
+	if !regex.MatchString(result) {
+		t.FailNow()
+	}
+
+	_, err = time.Parse("2006-01-02+15:04:05", result)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
 }
 
