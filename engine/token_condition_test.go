@@ -27,6 +27,9 @@ func TestGetTokenCondition(t *testing.T) {
 	if Script != *GetConditionToken("script") {
 		t.Error("Invalid get condition token script")
 	}
+	if Regexp != *GetConditionToken("regexp") {
+		t.Error("Invalid regexp condition token script")
+	}
 }
 
 func TestGetTokenConditionInvalid(t *testing.T) {

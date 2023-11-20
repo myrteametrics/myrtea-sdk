@@ -133,7 +133,7 @@ func TestBuildSelect(t *testing.T) {
 		Condition: &engine.BooleanFragment{
 			Operator: engine.And,
 			Fragments: []engine.ConditionFragment{
-				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: []string{"myvalue","mayvale2","myvalue3"} },
+				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: []string{"myvalue", "mayvale2", "myvalue3"}},
 			},
 		},
 	}
@@ -149,7 +149,7 @@ func TestBuildSelect(t *testing.T) {
 		Condition: &engine.BooleanFragment{
 			Operator: engine.And,
 			Fragments: []engine.ConditionFragment{
-				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: []string{"myvalue"} },
+				&engine.LeafConditionFragment{Operator: engine.For, Field: "myfield", Value: []string{"myvalue"}},
 			},
 		},
 	}
@@ -234,4 +234,66 @@ func TestBuildSelect(t *testing.T) {
 	b, _ = json.MarshalIndent(search3, "", " ")
 	t.Log(string(b))
 	// t.Fail()
+}
+
+func TestBuildElasticFilterWithRegexp(t *testing.T) {
+	fact := engine.Fact{
+		ID:   1,
+		Name: "test",
+		Intent: &engine.IntentFragment{
+			Name:     "myintent",
+			Operator: engine.Select,
+			Term:     "myintentterm",
+		},
+		Condition: &engine.BooleanFragment{
+			Operator: engine.And,
+			Fragments: []engine.ConditionFragment{
+				&engine.LeafConditionFragment{
+					Operator: engine.Regexp,
+					Field:    "monChamp",
+					Value:    "ma.*expression",
+				},
+			},
+		},
+	}
+
+	b, err := json.Marshal(fact)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var deserializedFact engine.Fact
+	err = json.Unmarshal(b, &deserializedFact)
+	if err != nil {
+		t.Error(err)
+	}
+
+	query, err := buildElasticFilter(deserializedFact.Condition, make(map[string]interface{}))
+	if err != nil {
+		t.Error(err)
+	}
+
+	b, _ = json.MarshalIndent(query, "", " ")
+	//t.Log(string(b))
+
+	mustQueries := query.Bool.Must
+	if len(mustQueries) == 0 {
+		t.Errorf("No must queries found")
+		return
+	}
+
+	found := false
+	for _, q := range mustQueries {
+		if regexpQuery, ok := q.Regexp["monChamp"]; ok {
+			found = true
+			if regexpQuery.Value != "ma.*expression" {
+				t.Errorf("Expected regexp value 'ma.*expression', got '%s'", regexpQuery.Value)
+			}
+			break 
+		}
+	}
+
+	if !found {
+		t.Errorf("Regexp query for 'monChamp' not found")
+	}
 }

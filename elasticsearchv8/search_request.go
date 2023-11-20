@@ -282,6 +282,12 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 			query.Term = map[string]types.TermQuery{
 				f.Field: {Value: f.Value},
 			}
+		case engine.Regexp:
+			if value, ok := f.Value.(string); ok {
+				query.Regexp = map[string]types.RegexpQuery{
+					f.Field: {Value: value},
+				}
+			}
 
 		default:
 			return nil, errors.New("Invalid filter kind: " + f.Operator.String())

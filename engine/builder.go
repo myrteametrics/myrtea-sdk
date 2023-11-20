@@ -264,6 +264,13 @@ func buildElasticFilter(frag ConditionFragment, variables map[string]interface{}
 				Value: f.Value,
 			}
 			output = &q
+		case Regexp:
+			q := builder.TermQuery{
+				Type:  "regexp",
+				Field: f.Field,
+				Value: f.Value,
+			}
+			output = &q
 
 		default:
 			return nil, errors.New("Invalid filter kind")
