@@ -36,3 +36,18 @@ func Test_NewEsQuery2(t *testing.T) {
 	}
 	t.Log("after", esS)
 }
+
+func Test_NewEsQueryRegexp(t *testing.T) {
+	RegexpQuery := &RegexpQuery{"regexp", "in-channel", "kifkif"}
+	b := []Query{RegexpQuery}
+	boolQuery := &BoolQuery{Type: "bool", Filter: b, Must: nil, Should: nil, MustNot: nil}
+	esSearch := &EsSearch{Indices: []string{"index-1"}, Size: 10, Offset: 0, Order: true, Query: boolQuery, Aggs: nil}
+	es, _ := json.Marshal(esSearch)
+	var esS *EsSearch
+	err := json.Unmarshal(es, &esS)
+
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(es))
+}

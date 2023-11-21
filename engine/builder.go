@@ -265,7 +265,7 @@ func buildElasticFilter(frag ConditionFragment, variables map[string]interface{}
 			}
 			output = &q
 		case Regexp:
-			q := builder.TermQuery{
+			q := builder.RegexpQuery{
 				Type:  "regexp",
 				Field: f.Field,
 				Value: f.Value,
