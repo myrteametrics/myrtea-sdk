@@ -31,6 +31,21 @@ func TestBuildElasticFilterValidIf(t *testing.T) {
 				},
 			},
 		},
+		&BooleanFragment{
+			Operator:   If,
+			Expression: "2 > 1",
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{
+					Operator: Regexp,
+					Field:    "monChamp",
+					Value:    "ma.*expression",
+				},
+				&LeafConditionFragment{
+					Operator: Exists,
+					Field:    "test",
+				},
+			},
+		},
 	}
 
 	for _, frag := range frags {

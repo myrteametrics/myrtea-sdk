@@ -50,6 +50,10 @@ func (frag *LeafConditionFragment) IsValid() (bool, error) {
 		if frag.Value == nil {
 			return false, errors.New("Missing Value")
 		}
+	case Regexp:
+		if frag.Value == nil {
+			return false, errors.New("Missing Value")
+		}
 	}
 	return true, nil
 }
@@ -75,6 +79,9 @@ var leafConditionMap = map[ConditionToken]func() *LeafConditionFragment{
 	},
 	OptionalFor: func() *LeafConditionFragment {
 		return &LeafConditionFragment{OptionalFor, "", nil, nil, ""}
+	},
+	Regexp: func() *LeafConditionFragment {
+		return &LeafConditionFragment{Regexp, "", nil, nil, ""}
 	},
 }
 

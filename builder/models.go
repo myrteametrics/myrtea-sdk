@@ -126,6 +126,13 @@ func (es *EsSearch) UnmarshalJSON(b []byte) error {
 				return err
 			}
 			es.Query = &sq
+		case "regexp":
+			var reg RegexpQuery
+			err := json.Unmarshal(*queryRawMessage, &reg)
+			if err != nil {
+				return err
+			}
+			es.Query = &reg
 		}
 	}
 	return nil

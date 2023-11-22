@@ -64,6 +64,15 @@ func unMarshallQueries(queriesJSON []*json.RawMessage) ([]Query, error) {
 				return nil, err
 			}
 			queries = append(queries, &sq)
+
+		case "regexp":
+			var t RegexpQuery
+			err := json.Unmarshal(*raw, &t)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &t)
+
 		}
 	}
 	return queries, nil
@@ -210,6 +219,20 @@ func (q *TermQuery) Source() elastic.Query {
 
 // Contextualize contextualize the current query filter with key-value system
 func (q *TermQuery) Contextualize(key string, value string) {}
+
+type RegexpQuery struct {
+	Type  string      `json:"type"`
+	Field string      `json:"field"`
+	Value interface{} `json:"value"`
+}
+
+func (q *RegexpQuery) Source() elastic.Query {
+	return elastic.NewRegexpQuery(q.Field, q.Value.(string))
+}
+
+
+// Contextualize contextualize the current query filter with key-value system
+func (q *RegexpQuery) Contextualize(key string, value string) {}
 
 // RangeQuery represents an elasticsearch range query clause
 type RangeQuery struct {
