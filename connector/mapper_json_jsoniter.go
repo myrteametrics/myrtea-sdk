@@ -2,7 +2,7 @@ package connector
 
 import (
 	"bytes"
-	"encoding/json"
+	"encoding/json" // for json types
 	"errors"
 	"fmt"
 	"strconv"

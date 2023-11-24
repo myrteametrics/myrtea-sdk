@@ -59,11 +59,11 @@ func DeleteNestedMap(pathParts []string, data map[string]interface{}) bool {
 }
 
 func buildNestedMap(pathParts []string, newValue interface{}) map[string]interface{} {
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	mElement := m
 	for i, pathPart := range pathParts {
 		if i < len(pathParts)-1 {
-			newMap := make(map[string]interface{}, 0)
+			newMap := make(map[string]interface{})
 			mElement[pathPart] = newMap
 			mElement = newMap
 		} else {
@@ -73,8 +73,8 @@ func buildNestedMap(pathParts []string, newValue interface{}) map[string]interfa
 	return m
 }
 
-func FlattenFact(dataArray []interface{}, pathKey string, pathValue string) map[string]interface{}{
-	m := make(map[string]interface{}, 0)
+func FlattenFact(dataArray []interface{}, pathKey string, pathValue string) map[string]interface{} {
+	m := make(map[string]interface{})
 	for _, data := range dataArray {
 		val, ok := data.(map[string]interface{})
 		if !ok {

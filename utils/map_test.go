@@ -85,8 +85,8 @@ func TestUpdateNestedMap(t *testing.T) {
 		map[string]interface{}{"a": map[string]interface{}{"b": map[string]interface{}{"e": map[string]interface{}{"f": map[string]interface{}{"g": 50}}}}},
 	)
 }
-func TestFlattenMap(t *testing.T){
-	data := make([]interface{},0)
+func TestFlattenMap(t *testing.T) {
+	data := make([]interface{}, 0)
 	data = append(data, map[string]interface{}{
 		"key": "2022-02-24T05:00:00.000",
 		"aggs": map[string]interface{}{
@@ -108,8 +108,8 @@ func TestFlattenMap(t *testing.T){
 		"key",
 		"aggs.doc_count.value",
 		map[string]interface{}{
-			"2022-02-24T05:00:00.000":2,
-			"2022-02-24T08:00:00.000":12,
+			"2022-02-24T05:00:00.000": 2,
+			"2022-02-24T08:00:00.000": 12,
 		},
 	)
 
@@ -128,7 +128,7 @@ func TestFlattenMap(t *testing.T){
 		nil,
 	)
 
-	dataS := append(data, map[string]int{"a" : 12})
+	dataS := append(data, map[string]int{"a": 12})
 	testFlattenMap(t,
 		dataS,
 		"key",
@@ -137,26 +137,24 @@ func TestFlattenMap(t *testing.T){
 
 }
 
-
-func TestDeleteNestedMap(t *testing.T){
-		
+func TestDeleteNestedMap(t *testing.T) {
 
 	testDeleteNestedMap(t,
 		strings.Split("a.b", "."),
-		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+		map[string]interface{}{"c": map[string]interface{}{"b": 16, "a": "12"}},
 		false,
-		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+		map[string]interface{}{"c": map[string]interface{}{"b": 16, "a": "12"}},
 	)
 
 	testDeleteNestedMap(t,
 		strings.Split("a.b", "."),
 		map[string]interface{}{},
 		false,
-		map[string]interface{}{"c": map[string]interface{}{"b":16, "a":"12"}},
+		map[string]interface{}{"c": map[string]interface{}{"b": 16, "a": "12"}},
 	)
 
 	testDeleteNestedMap(t,
-		strings.Split("a","."),
+		strings.Split("a", "."),
 		map[string]interface{}{"a": 12},
 		true,
 		map[string]interface{}{},
@@ -184,7 +182,7 @@ func TestDeleteNestedMap(t *testing.T){
 	)
 }
 
-func testDeleteNestedMap(t *testing.T, path []string, data map[string]interface{}, expected bool, expectedData map[string]interface{}){
+func testDeleteNestedMap(t *testing.T, path []string, data map[string]interface{}, expected bool, expectedData map[string]interface{}) {
 	success := DeleteNestedMap(path, data)
 	if success != expected {
 		t.Log(success)
@@ -226,7 +224,7 @@ func testUpdateNestedMap(t *testing.T, path []string, data map[string]interface{
 	}
 }
 
-func testFlattenMap(t *testing.T, data []interface{}, pathKey string, pathValue string, expectedData map[string]interface{}){
+func testFlattenMap(t *testing.T, data []interface{}, pathKey string, pathValue string, expectedData map[string]interface{}) {
 	flatMap := FlattenFact(data, pathKey, pathValue)
 	dataJSON, _ := json.Marshal(flatMap)
 	expectedDataJSON, _ := json.Marshal(expectedData)
@@ -235,4 +233,21 @@ func testFlattenMap(t *testing.T, data []interface{}, pathKey string, pathValue 
 		t.Log(string(expectedDataJSON))
 	}
 
+}
+
+func BenchmarkLookupNestedMapRecursive(b *testing.B) {
+	// Set up a sample nested map for testing
+	nestedMap := map[string]interface{}{
+		"key1": map[string]interface{}{
+			"key2": map[string]interface{}{
+				"key3": "value",
+			},
+		},
+	}
+
+	// Run the function and measure its performance
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_, _ = LookupNestedMap([]string{"key1", "key2", "key3"}, nestedMap)
+	}
 }

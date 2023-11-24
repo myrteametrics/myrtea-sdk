@@ -1,7 +1,6 @@
 package connector
 
 import (
-	"encoding/json"
 	"strings"
 	"time"
 
@@ -65,10 +64,10 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 		return newDoc
 	}
 	if newDoc.Source == nil {
-		newDoc.Source = make(map[string]interface{}, 0)
+		newDoc.Source = make(map[string]interface{})
 	}
 	if existingDoc.Source == nil {
-		existingDoc.Source = make(map[string]interface{}, 0)
+		existingDoc.Source = make(map[string]interface{})
 	}
 
 	// Select "master" output document (new one vs existing one)
@@ -90,9 +89,9 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 	// zap.L().Debug("start", zap.Any("source", outputSource))
 
 	//copy exitingDoc source and add missing keys for conditions evaluation
-	data, _ := json.Marshal(existingDoc.Source)
-	existingCopy := make(map[string]interface{}, 0)
-	json.Unmarshal(data, &existingCopy)
+	data, _ := jsoni.Marshal(existingDoc.Source)
+	existingCopy := make(map[string]interface{})
+	jsoni.Unmarshal(data, &existingCopy)
 
 	addKeys(newDoc.Source.(map[string]interface{}), existingCopy)
 
@@ -213,7 +212,7 @@ func ApplyFieldReplace(fieldReplace []string, enricherSource map[string]interfac
 	}
 }
 
-//ApplyFieldForceUpdate applies FieldForceUpdate merging configuration on input documents
+// ApplyFieldForceUpdate applies FieldForceUpdate merging configuration on input documents
 func ApplyFieldForceUpdate(fieldUpdate []string, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
 	for _, field := range fieldUpdate {
 		if val, ok := enricherSource[field]; ok {
@@ -341,7 +340,7 @@ func addKeys(source map[string]interface{}, target map[string]interface{}) {
 		if _, found := target[key]; !found {
 			switch v := value.(type) {
 			case map[string]interface{}:
-				target[key] = make(map[string]interface{}, 0)
+				target[key] = make(map[string]interface{})
 				addKeys(v, target[key].(map[string]interface{}))
 			default:
 				target[key] = nil

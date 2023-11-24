@@ -3,7 +3,6 @@ package connector
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"time"
@@ -69,7 +68,7 @@ func (sink *BatchSink) Sender(ctx context.Context) {
 }
 
 func (sink *BatchSink) SendToIngester(ctx context.Context, bir *BulkIngestRequest) error {
-	json, err := json.Marshal(bir)
+	json, err := jsoni.Marshal(bir)
 	if err != nil {
 		zap.L().Error("cannot marshall bulkIngestRequest", zap.Error(err))
 		return err
