@@ -72,28 +72,20 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 
 	// Select "master" output document (new one vs existing one)
 	var output, enricher *models.Document
-	if config.ExistingAsMaster {
+	if config.ExistingAsMaster { // existingDoc is now master
 		enricher = newDoc
 		output = existingDoc
-	} else {
+	} else { // newDoc is now master
 		output = newDoc
 		enricher = existingDoc
 	}
 
-	outputSource, okOutput := output.Source.(map[string]interface{})
-	enricherSource, okEnricher := enricher.Source.(map[string]interface{})
-	if !okOutput || !okEnricher {
-		return output
-	}
-
-	// zap.L().Debug("start", zap.Any("source", outputSource))
-
-	//copy exitingDoc source and add missing keys for conditions evaluation
+	// copy exitingDoc source and add missing keys for conditions evaluation
 	data, _ := jsoni.Marshal(existingDoc.Source)
 	existingCopy := make(map[string]interface{})
 	jsoni.Unmarshal(data, &existingCopy)
 
-	addKeys(newDoc.Source.(map[string]interface{}), existingCopy)
+	addKeys(newDoc.Source, existingCopy)
 
 	for _, mergeGroup := range config.Groups {
 		var applyMergeGroup bool
@@ -126,28 +118,28 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 		}
 
 		if mergeGroup.Condition == "" || applyMergeGroup {
-			ApplyFieldMath(mergeGroup.FieldMath, newDoc, existingDoc, outputSource)
+			ApplyFieldMath(mergeGroup.FieldMath, newDoc, existingDoc, output.Source)
 			// zap.L().Debug("math", zap.Any("source", outputSource))
 
-			ApplyFieldReplaceIfMissing(mergeGroup.FieldReplaceIfMissing, enricherSource, outputSource)
+			ApplyFieldReplaceIfMissing(mergeGroup.FieldReplaceIfMissing, enricher.Source, output.Source)
 			// zap.L().Debug("replace", zap.Any("source", outputSource))
 
-			ApplyFieldReplace(mergeGroup.FieldReplace, enricherSource, outputSource)
+			ApplyFieldReplace(mergeGroup.FieldReplace, enricher.Source, output.Source)
 			// zap.L().Debug("replace", zap.Any("source", outputSource))
 
-			ApplyFieldKeepLatest(mergeGroup.FieldKeepLatest, enricherSource, outputSource)
+			ApplyFieldKeepLatest(mergeGroup.FieldKeepLatest, enricher.Source, output.Source)
 			// zap.L().Debug("KeepLatest", zap.Any("source", outputSource))
 
-			ApplyFieldKeepEarliest(mergeGroup.FieldKeepEarliest, enricherSource, outputSource)
+			ApplyFieldKeepEarliest(mergeGroup.FieldKeepEarliest, enricher.Source, output.Source)
 			// zap.L().Debug("KeepEarliest", zap.Any("source", outputSource))
 
-			ApplyFieldMerge(mergeGroup.FieldMerge, enricherSource, outputSource)
+			ApplyFieldMerge(mergeGroup.FieldMerge, enricher.Source, output.Source)
 
 			// keepBigger + keepMostrecent etc...
 			// keepSmaller + keepOlder etc...
 			// ...
 
-			ApplyFieldForceUpdate(mergeGroup.FieldForceUpdate, enricherSource, outputSource)
+			ApplyFieldForceUpdate(mergeGroup.FieldForceUpdate, enricher.Source, output.Source)
 			// zap.L().Debug("update", zap.Any("source", outputSource))
 		}
 	}

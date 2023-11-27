@@ -13,8 +13,8 @@ type BulkIngestRequest struct {
 
 // Document represent an es document
 type Document struct {
-	ID        string      `json:"id"`
-	Index     string      `json:"index"`
-	IndexType string      `json:"type"`
-	Source    interface{} `json:"source"`
+	ID        string                 `json:"id"`
+	Index     string                 `json:"index"`
+	IndexType string                 `json:"type"`
+	Source    map[string]interface{} `json:"source"`
 }
