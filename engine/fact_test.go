@@ -471,3 +471,19 @@ func TestContextualizeForSlice(t *testing.T) {
 	// t.Fail()
 
 }
+
+func TestContextualizeInvalidShouldNotParse(t *testing.T) {
+	facts := []Fact{
+		{Condition: &LeafConditionFragment{Operator: Between, Field: "myfield", Value: `2023-11-20T00:00:00.000`, Value2: "now"}},
+	}
+	ts := time.Now()
+	placeholders := map[string]string{}
+
+	for _, f := range facts {
+		err := f.ContextualizeCondition(ts, placeholders, false)
+		if err != nil {
+			t.Error("Expression should be invalid")
+			t.FailNow()
+		}
+	}
+}

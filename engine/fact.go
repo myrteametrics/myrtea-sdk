@@ -132,11 +132,14 @@ func (f *Fact) ContextualizeDimensions(t time.Time, placeholders map[string]stri
 }
 
 // ContextualizeCondition contextualize fact condition tree placeholders (standard or custom) and set the right timezone if needed
-func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]string) error {
-	return contextualizeCondition(f.Condition, t, placeholders)
+func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]string, parse ...bool) error {
+	return contextualizeCondition(f.Condition, t, placeholders, parse...)
 }
 
-func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string) error {
+func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string, parse ...bool) error {
+
+	shouldParse := shouldParse(parse...)
+
 	variables := make(map[string]interface{}, 0)
 	for k, v := range placeholders {
 		variables[k] = v
@@ -155,30 +158,34 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 		}
 	case *LeafConditionFragment:
 		if c.Value != nil && reflect.TypeOf(c.Value).Kind() == reflect.String {
-			exp := c.Value.(string)
-			result, err := expression.Process(expression.LangEval, exp, variables)
-			if err != nil {
-				if c.Operator == OptionalFor {
-					c.Field = ""
-					c.Value = ""
-				} else {
-					zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value.(string)), zap.Error(err))
-					return err
+			if shouldParse {
+				exp := c.Value.(string)
+				result, err := expression.Process(expression.LangEval, exp, variables)
+				if err != nil {
+					if c.Operator == OptionalFor {
+						c.Field = ""
+						c.Value = ""
+					} else {
+						zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value.(string)), zap.Error(err))
+						return err
+					}
 				}
-			}
-			if result != nil {
-				c.Value = result
+				if result != nil {
+					c.Value = result
+				}
 			}
 		}
 		if c.Value2 != nil && reflect.TypeOf(c.Value2).Kind() == reflect.String {
-			exp := c.Value2.(string)
-			result, err := expression.Process(expression.LangEval, exp, variables)
-			if err != nil {
-				zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value2.(string)), zap.Error(err))
-				return err
-			}
-			if result != nil {
-				c.Value2 = result
+			if shouldParse {
+				exp := c.Value2.(string)
+				result, err := expression.Process(expression.LangEval, exp, variables)
+				if err != nil {
+					zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value2.(string)), zap.Error(err))
+					return err
+				}
+				if result != nil {
+					c.Value2 = result
+				}
 			}
 		}
 		if c.TimeZone == "" && (c.Operator == From || c.Operator == To || c.Operator == Between) {
@@ -275,4 +282,11 @@ func (f *Fact) ToElasticQuery(t time.Time, placeholders map[string]string) (*bui
 	}
 
 	return &output, nil
+}
+
+func shouldParse(translateOpt ...bool) bool {
+	if len(translateOpt) > 0 {
+		return translateOpt[0]
+	}
+	return true
 }
