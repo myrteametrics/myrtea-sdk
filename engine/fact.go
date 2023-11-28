@@ -132,13 +132,13 @@ func (f *Fact) ContextualizeDimensions(t time.Time, placeholders map[string]stri
 }
 
 // ContextualizeCondition contextualize fact condition tree placeholders (standard or custom) and set the right timezone if needed
-func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]string, parse ...bool) error {
-	return contextualizeCondition(f.Condition, t, placeholders, parse...)
+func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]string, processGval ...bool) error {
+	return contextualizeCondition(f.Condition, t, placeholders, processGval...)
 }
 
-func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string, parse ...bool) error {
+func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string, processGval ...bool) error {
 
-	shouldParse := shouldParse(parse...)
+	shouldProcess := shouldProcess(processGval...)
 
 	variables := make(map[string]interface{}, 0)
 	for k, v := range placeholders {
@@ -151,14 +151,14 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 	switch c := condition.(type) {
 	case *BooleanFragment:
 		for _, cond := range c.Fragments {
-			err := contextualizeCondition(cond, t, placeholders, parse...)
+			err := contextualizeCondition(cond, t, placeholders, processGval...)
 			if err != nil {
 				return err
 			}
 		}
 	case *LeafConditionFragment:
 		if c.Value != nil && reflect.TypeOf(c.Value).Kind() == reflect.String {
-			if shouldParse {
+			if shouldProcess {
 				exp := c.Value.(string)
 				result, err := expression.Process(expression.LangEval, exp, variables)
 				if err != nil {
@@ -176,7 +176,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 			}
 		}
 		if c.Value2 != nil && reflect.TypeOf(c.Value2).Kind() == reflect.String {
-			if shouldParse {
+			if shouldProcess {
 				exp := c.Value2.(string)
 				result, err := expression.Process(expression.LangEval, exp, variables)
 				if err != nil {
@@ -284,9 +284,9 @@ func (f *Fact) ToElasticQuery(t time.Time, placeholders map[string]string) (*bui
 	return &output, nil
 }
 
-func shouldParse(translateOpt ...bool) bool {
-	if len(translateOpt) > 0 {
-		return translateOpt[0]
+func shouldProcess(processGval ...bool) bool {
+	if len(processGval) > 0 {
+		return processGval[0]
 	}
 	return true
 }
