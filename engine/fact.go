@@ -151,7 +151,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 	switch c := condition.(type) {
 	case *BooleanFragment:
 		for _, cond := range c.Fragments {
-			err := contextualizeCondition(cond, t, placeholders)
+			err := contextualizeCondition(cond, t, placeholders, parse...)
 			if err != nil {
 				return err
 			}
