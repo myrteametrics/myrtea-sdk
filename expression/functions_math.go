@@ -184,13 +184,23 @@ func averageFloats(input []float64) float64 {
 }
 
 // roundToDecimal rounds a number to a specific number of decimal places
-func roundToDecimal(input interface{}, decimalPlaces int) (interface{}, error) {
-	switch v := input.(type) {
-	case float64:
-		shifted := v * math.Pow(10, float64(decimalPlaces))
-		rounded := math.Round(shifted)
-		return rounded / math.Pow(10, float64(decimalPlaces)), nil
-	default:
-		return nil, errors.New("not supported input type in function roundToDecimal")
+func roundToDecimal(input interface{}, decimalPlaces interface{}) (interface{}, error) {
+	floatInput, ok := input.(float64)
+	if !ok {
+		return nil, errors.New("first argument must be a float64")
 	}
+
+	var intDecimalPlaces int
+	switch dp := decimalPlaces.(type) {
+	case float64:
+		intDecimalPlaces = int(dp)
+	case int:
+		intDecimalPlaces = dp
+	default:
+		return nil, errors.New("second argument must be an int or a float64 representing an int")
+	}
+
+	shifted := floatInput * math.Pow(10, float64(intDecimalPlaces))
+	rounded := math.Round(shifted)
+	return rounded / math.Pow(10, float64(intDecimalPlaces)), nil
 }

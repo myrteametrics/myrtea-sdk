@@ -435,3 +435,49 @@ func TestEvalGetValueForCurrentDay(t *testing.T) {
 	}
 
 }
+
+func TestEvalRoundToDecimal(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expression     string
+		variables      map[string]interface{}
+		expectedResult float64
+	}{
+		{
+			name:           "Round float to 2 decimal places",
+			expression:     "roundToDecimal(123.4567, 2)",
+			variables:      map[string]interface{}{},
+			expectedResult: 123.46,
+		},
+		{
+			name:           "Round float to 0 decimal places",
+			expression:     "roundToDecimal(123.4567, 0)",
+			variables:      map[string]interface{}{},
+			expectedResult: 123,
+		},
+		{
+			name:           "Round variable to 1 decimal place",
+			expression:     "roundToDecimal(a, 1)",
+			variables:      map[string]interface{}{"a": 123.4567},
+			expectedResult: 123.5,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Process(LangEval, tc.expression, tc.variables)
+			if err != nil {
+				t.Error(err)
+			}
+
+			roundedResult, ok := result.(float64)
+			if !ok {
+				t.Errorf("Result type is not as expected: got %T, want float64", result)
+			}
+			if roundedResult != tc.expectedResult {
+				t.Errorf("Result value is not as expected: got %v, want %v", roundedResult, tc.expectedResult)
+			}
+		})
+	}
+
+}
