@@ -308,3 +308,31 @@ func TestAverage(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestRoundToDecimal(t *testing.T) {
+	testCases := []struct {
+		name     string
+		input    float64
+		decimals int
+		want     float64
+	}{
+		{"Round to 2 decimals", 3.14159, 2, 3.14},
+		{"Round to 0 decimals", 2.5, 0, 3},
+		{"Round to 3 decimals", 3.14159, 3, 3.142},
+		{"Round to 1 decimal", 1.25, 1, 1.3},
+		{"Round negative number to 2 decimals", -3.14159, 2, -3.14},
+		{"No rounding needed", 2.00, 2, 2.00},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := roundToDecimal(tc.input, tc.decimals)
+			if err != nil {
+				t.Fatalf("roundToDecimal(%v, %d) returned an unexpected error: %v", tc.input, tc.decimals, err)
+			}
+			if got != tc.want {
+				t.Errorf("roundToDecimal(%v, %d) = %v, want %v", tc.input, tc.decimals, got, tc.want)
+			}
+		})
+	}
+}

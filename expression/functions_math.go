@@ -2,6 +2,7 @@ package expression
 
 import (
 	"errors"
+	"math"
 )
 
 // Usage: <value> [<value>...]
@@ -180,4 +181,30 @@ func averageFloats(input []float64) float64 {
 		return 0
 	}
 	return sumFloats(input) / (float64)(len(input))
+}
+
+// roundToDecimal rounds a number to a specific number of decimal places
+func roundToDecimal(input interface{}, decimalPlaces interface{}) (interface{}, error) {
+	floatInput, ok := input.(float64)
+	if !ok {
+		return nil, errors.New("first argument must be a float64")
+	}
+
+	var intDecimalPlaces int
+	switch dp := decimalPlaces.(type) {
+	case float64:
+		intDecimalPlaces = int(dp)
+	case int:
+		intDecimalPlaces = dp
+	default:
+		return nil, errors.New("second argument must be an int or a float64 representing an int")
+	}
+
+	if intDecimalPlaces < 0 {
+		return nil, errors.New("decimal places must be non-negative")
+	}
+
+	shifted := floatInput * math.Pow(10, float64(intDecimalPlaces))
+	rounded := math.Round(shifted)
+	return rounded / math.Pow(10, float64(intDecimalPlaces)), nil
 }
