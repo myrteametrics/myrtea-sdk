@@ -200,6 +200,10 @@ func roundToDecimal(input interface{}, decimalPlaces interface{}) (interface{}, 
 		return nil, errors.New("second argument must be an int or a float64 representing an int")
 	}
 
+	if intDecimalPlaces < 0 {
+		return nil, errors.New("decimal places must be non-negative")
+	}
+
 	shifted := floatInput * math.Pow(10, float64(intDecimalPlaces))
 	rounded := math.Round(shifted)
 	return rounded / math.Pow(10, float64(intDecimalPlaces)), nil
