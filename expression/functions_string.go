@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -24,4 +25,21 @@ func replace(arguments ...interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("replace() expects exactly 3 string argument")
 	}
 	return strings.ReplaceAll(str, pattern, replacement), nil
+}
+
+// Atoi converts a string to an integer.
+// Usage: <string>
+func atoi(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 1 {
+		return nil, fmt.Errorf("Atoi() expects exactly 1 string argument")
+	}
+	str, ok := arguments[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("Atoi() argument must be a string")
+	}
+	result, err := strconv.Atoi(str)
+	if err != nil {
+		return nil, fmt.Errorf("Atoi() error converting string to int: %s", err)
+	}
+	return result, nil
 }
