@@ -23,8 +23,10 @@ const (
 	Script
 	// OptionalFor condition token
 	OptionalFor
-	//
+	// Regexp condition token
 	Regexp
+	// OptionalRegexp condition token
+	OptionalRegexp
 )
 
 func (s ConditionToken) String() string {
@@ -32,28 +34,30 @@ func (s ConditionToken) String() string {
 }
 
 // ConditionTokens list every supported condition token
-var ConditionTokens = []ConditionToken{For, From, To, Between, Exists, Script, OptionalFor, Regexp}
+var ConditionTokens = []ConditionToken{For, From, To, Between, Exists, Script, OptionalFor, Regexp, OptionalRegexp}
 
 var conditionToString = map[ConditionToken]string{
-	For:         "for",
-	From:        "from",
-	To:          "to",
-	Between:     "between",
-	Exists:      "exists",
-	Script:      "script",
-	OptionalFor: "optionalfor",
-	Regexp:      "regexp",
+	For:            "for",
+	From:           "from",
+	To:             "to",
+	Between:        "between",
+	Exists:         "exists",
+	Script:         "script",
+	OptionalFor:    "optionalfor",
+	Regexp:         "regexp",
+	OptionalRegexp: "optionalregexp",
 }
 
 var conditionToID = map[string]ConditionToken{
-	"for":         For,
-	"from":        From,
-	"to":          To,
-	"between":     Between,
-	"exists":      Exists,
-	"script":      Script,
-	"optionalfor": OptionalFor,
-	"regexp":      Regexp,
+	"for":            For,
+	"from":           From,
+	"to":             To,
+	"between":        Between,
+	"exists":         Exists,
+	"script":         Script,
+	"optionalfor":    OptionalFor,
+	"regexp":         Regexp,
+	"optionalregexp": OptionalRegexp,
 }
 
 // GetConditionToken search and return a condition token from the standard supported operator list

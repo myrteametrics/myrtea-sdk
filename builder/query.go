@@ -72,6 +72,20 @@ func unMarshallQueries(queriesJSON []*json.RawMessage) ([]Query, error) {
 				return nil, err
 			}
 			queries = append(queries, &t)
+		case "optionalregexp":
+			var t RegexpQuery
+			err := json.Unmarshal(*raw, &t)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &t)
+		case "optionalfor":
+			var t TermQuery
+			err := json.Unmarshal(*raw, &t)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &t)
 
 		}
 	}

@@ -41,6 +41,11 @@ func TestBuildElasticFilterValidIf(t *testing.T) {
 					Value:    "ma.*expression",
 				},
 				&LeafConditionFragment{
+					Operator: OptionalRegexp,
+					Field:    "monChamp",
+					Value:    "",
+				},
+				&LeafConditionFragment{
 					Operator: Exists,
 					Field:    "test",
 				},
@@ -211,6 +216,30 @@ func TestBuildElasticFilterOptionalFor(t *testing.T) {
 
 	if query == nil {
 		t.Error("query must not be nil")
+		t.FailNow()
+	}
+}
+
+func TestBuildElasticFilterOptionalRegexp(t *testing.T) {
+	frag := &BooleanFragment{
+		Operator: And,
+		Fragments: []ConditionFragment{
+			&LeafConditionFragment{
+				Operator: OptionalRegexp,
+				Field:    "hh",
+				Value:    "",
+			},
+		},
+	}
+
+	query, err := buildElasticFilter(frag, map[string]interface{}{"zz": 2})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	if query != nil {
+		t.Error("query must be nil")
 		t.FailNow()
 	}
 }

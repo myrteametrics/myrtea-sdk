@@ -30,6 +30,9 @@ func TestGetTokenCondition(t *testing.T) {
 	if Regexp != *GetConditionToken("regexp") {
 		t.Error("Invalid regexp condition token script")
 	}
+	if OptionalRegexp != *GetConditionToken("optionalregexp") {
+		t.Error("Invalid optionalregexp condition token script")
+	}
 }
 
 func TestGetTokenConditionInvalid(t *testing.T) {

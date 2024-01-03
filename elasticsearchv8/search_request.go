@@ -288,7 +288,16 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 					f.Field: {Value: value},
 				}
 			}
-
+		case engine.OptionalRegexp:
+			if f.Field == "" || f.Value == "" {
+				return nil, nil
+			}
+			if value, ok := f.Value.(string); ok {
+				query.Regexp = map[string]types.RegexpQuery{
+					f.Field: {Value: value},
+				}
+			}
+			
 		default:
 			return nil, errors.New("Invalid filter kind: " + f.Operator.String())
 		}
