@@ -158,7 +158,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 			exp := c.Value.(string)
 			result, err := expression.Process(expression.LangEval, exp, variables)
 			if err != nil {
-				if c.Operator == OptionalFor {
+				if c.Operator == OptionalFor  || c.Operator == OptionalRegexp{
 					c.Field = ""
 					c.Value = ""
 				} else {
