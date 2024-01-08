@@ -359,3 +359,69 @@ func TestBuildElasticFilterWithOptionalRegexp(t *testing.T) {
 		t.Errorf("Regexp query for 'monChamp' not found")
 	}
 }
+func TestBuildElasticFilterWithWildCard(t *testing.T) {
+	fact := engine.Fact{
+		ID:   1,
+		Name: "test",
+		Intent: &engine.IntentFragment{
+			Name:     "myintent",
+			Operator: engine.Select,
+			Term:     "myintentterm",
+		},
+		Condition: &engine.BooleanFragment{
+			Operator: engine.And,
+			Fragments: []engine.ConditionFragment{
+				&engine.LeafConditionFragment{
+					Operator: engine.OptionalWildcard,
+					Field:    "monChamp",
+					Value:    "",
+				},
+				&engine.LeafConditionFragment{
+					Operator: engine.Wildcard,
+					Field:    "monChamp",
+					Value:    "ma.*expression",
+				},
+			},
+		},
+	}
+
+	b, err := json.Marshal(fact)
+	if err != nil {
+		t.Error(err)
+	}
+
+	var deserializedFact engine.Fact
+	err = json.Unmarshal(b, &deserializedFact)
+	if err != nil {
+		t.Error(err)
+	}
+
+	query, err := buildElasticFilter(deserializedFact.Condition, make(map[string]interface{}))
+	if err != nil {
+		t.Error(err)
+	}
+
+	b, _ = json.MarshalIndent(query, "", " ")
+	t.Log(string(b))
+
+	mustQueries := query.Bool.Must
+	if len(mustQueries) == 0 {
+		t.Errorf("No must queries found")
+		return
+	}
+
+	found := false
+	for _, q := range mustQueries {
+		if wildcardQuery, ok := q.Wildcard["monChamp"]; ok {
+			found = true
+			if *wildcardQuery.Value != "ma.*expression" {
+				t.Errorf("Expected Wildcard value 'ma.*expression', got '%s'", *wildcardQuery.Value)
+			}
+			break 
+		}
+	}
+
+	if !found {
+		t.Errorf("Wildcard query for 'monChamp' not found")
+	}
+}

@@ -281,6 +281,23 @@ func buildElasticFilter(frag ConditionFragment, variables map[string]interface{}
 				Value: f.Value,
 			}
 			output = &q
+		case Wildcard:
+			q := builder.WildcardQuery{
+				Type:  "wildcard",
+				Field: f.Field,
+				Value: f.Value,
+			}
+			output = &q
+		case OptionalWildcard:
+			if f.Field == "" || f.Value == "" {
+				return nil, nil
+			}
+			q := builder.WildcardQuery{
+				Type:  "wildcard",
+				Field: f.Field,
+				Value: f.Value,
+			}
+			output = &q
 
 		default:
 			return nil, errors.New("Invalid filter kind")

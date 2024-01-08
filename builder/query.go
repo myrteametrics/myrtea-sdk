@@ -86,6 +86,20 @@ func unMarshallQueries(queriesJSON []*json.RawMessage) ([]Query, error) {
 				return nil, err
 			}
 			queries = append(queries, &t)
+		case "wildcard":
+			var wild WildcardQuery
+			err := json.Unmarshal(*raw, &wild)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &wild)
+		case "optionalwildcard":
+			var wild WildcardQuery
+			err := json.Unmarshal(*raw, &wild)
+			if err != nil {
+				return nil, err
+			}
+			queries = append(queries, &wild)
 
 		}
 	}
@@ -247,6 +261,21 @@ func (q *RegexpQuery) Source() elastic.Query {
 
 // Contextualize contextualize the current query filter with key-value system
 func (q *RegexpQuery) Contextualize(key string, value string) {}
+
+type WildcardQuery struct {
+	Type  string      `json:"type"`
+	Field string      `json:"field"`
+	Value interface{} `json:"value"`
+}
+
+func (q *WildcardQuery) Source() elastic.Query {
+	return elastic.NewWildcardQuery(q.Field, q.Value.(string))
+}
+
+
+// Contextualize contextualize the current query filter with key-value system
+func (q *WildcardQuery) Contextualize(key string, value string) {}
+
 
 // RangeQuery represents an elasticsearch range query clause
 type RangeQuery struct {

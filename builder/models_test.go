@@ -68,3 +68,34 @@ func Test_NewEsQueryOptionalRegexp(t *testing.T) {
 	}
 	
 }
+
+func Test_NewEsQueryWildCard(t *testing.T) {
+	WildcardQuery := &WildcardQuery{"wildcard", "parcel_number", "dz*fr"}
+	b := []Query{WildcardQuery}
+	boolQuery := &BoolQuery{Type: "bool", Filter: b, Must: nil, Should: nil, MustNot: nil}
+	esSearch := &EsSearch{Indices: []string{"index-1"}, Size: 10, Offset: 0, Order: true, Query: boolQuery, Aggs: nil}
+	es, _ := json.Marshal(esSearch)
+	var esS *EsSearch
+	err := json.Unmarshal(es, &esS)
+
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(es))
+}
+
+func Test_NewEsQueryOptionalWildCard(t *testing.T) {
+	WildcardQuery := &WildcardQuery{"optionalwildcard", "parcel_number", "dz*fr"}
+	b := []Query{WildcardQuery}
+	boolQuery := &BoolQuery{Type: "bool", Filter: b, Must: nil, Should: nil, MustNot: nil}
+	esSearch := &EsSearch{Indices: []string{"index-1"}, Size: 10, Offset: 0, Order: true, Query: boolQuery, Aggs: nil}
+	es, _ := json.Marshal(esSearch)
+	var esS *EsSearch
+	err := json.Unmarshal(es, &esS)
+
+	if err != nil {
+		t.Error(err)
+	}
+	t.Log(string(es))
+}
+

@@ -243,3 +243,32 @@ func TestBuildElasticFilterOptionalRegexp(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestBuildElasticFilterOptionalWildcard(t *testing.T) {
+	frag := &BooleanFragment{
+		Operator: And,
+		Fragments: []ConditionFragment{
+			&LeafConditionFragment{
+				Operator: OptionalWildcard,
+				Field:    "hh",
+				Value:    "",
+			},
+			&LeafConditionFragment{
+				Operator: Wildcard,
+				Field:    "hhuu",
+				Value:    "D*FR",
+			},
+		},
+	}
+
+	query, err := buildElasticFilter(frag, map[string]interface{}{"zz": 2})
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	if query == nil {
+		t.Error("query must not be nil")
+		t.FailNow()
+	}
+}

@@ -33,6 +33,12 @@ func TestGetTokenCondition(t *testing.T) {
 	if OptionalRegexp != *GetConditionToken("optionalregexp") {
 		t.Error("Invalid optionalregexp condition token script")
 	}
+	if Wildcard != *GetConditionToken("wildcard") {
+		t.Error("Invalid Wildcard condition token script")
+	}
+	if OptionalWildcard != *GetConditionToken("optionalwildcard") {
+		t.Error("Invalid OptionalWildcard condition token script")
+	}
 }
 
 func TestGetTokenConditionInvalid(t *testing.T) {
