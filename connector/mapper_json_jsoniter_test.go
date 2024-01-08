@@ -1,8 +1,9 @@
 package connector
 
 import (
-	"github.com/myrteametrics/myrtea-sdk/v4/expression"
 	"testing"
+
+	"github.com/myrteametrics/myrtea-sdk/v4/expression"
 )
 
 func TestMapMessage(t *testing.T) {
@@ -320,6 +321,23 @@ func TestFilterDocument(t *testing.T) {
 
 	// test not contains
 	mapper = createTestJSONMapperJsoniter([][]string{{"fields", "mystring"}}, "test", nil, "contains")
+	keep, _ = mapper.FilterDocument(message)
+	expression.AssertEqual(t, keep, false)
+
+}
+
+func TestFilterNotEqualAny(t *testing.T) {
+	message := KafkaMessage{Data: []byte(
+		`{"uuid":{"least":-5360973783440353337,"most":-814119054879674195},"fields":{"mystring":"NN","mystring2":"NI","mybool":true}}`,
+	)}
+	
+	// test equals_atleastone
+	mapper := createTestJSONMapperJsoniter([][]string{{"fields", "mystring"}}, "", []string{"NI", "IN"}, "notEquals_any")
+	keep, _ := mapper.FilterDocument(message)
+	expression.AssertEqual(t, keep, true)
+
+	// test not equals_atleastone
+	mapper = createTestJSONMapperJsoniter([][]string{{"fields", "mystring2"}}, "", []string{"NI", "IN"}, "notEquals_any")
 	keep, _ = mapper.FilterDocument(message)
 	expression.AssertEqual(t, keep, false)
 
