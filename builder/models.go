@@ -133,6 +133,34 @@ func (es *EsSearch) UnmarshalJSON(b []byte) error {
 				return err
 			}
 			es.Query = &reg
+		case "optionalregexp":
+			var reg RegexpQuery
+			err := json.Unmarshal(*queryRawMessage, &reg)
+			if err != nil {
+				return err
+			}
+			es.Query = &reg
+		case "optionalfor":
+			var t TermQuery
+			err := json.Unmarshal(*queryRawMessage, &t)
+			if err != nil {
+				return err
+			}
+			es.Query = &t
+		case "wildcard":
+			var wild WildcardQuery
+			err := json.Unmarshal(*queryRawMessage, &wild)
+			if err != nil {
+				return err
+			}
+			es.Query = &wild
+		case "optionalwildcard":
+			var wild WildcardQuery
+			err := json.Unmarshal(*queryRawMessage, &wild)
+			if err != nil {
+				return err
+			}
+			es.Query = &wild
 		}
 	}
 	return nil

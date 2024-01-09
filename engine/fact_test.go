@@ -471,3 +471,77 @@ func TestContextualizeForSlice(t *testing.T) {
 	// t.Fail()
 
 }
+
+func TestContextualizeOptionalRegexp(t *testing.T) {
+	f := Fact{
+		ID:     1,
+		Name:   "1",
+		Model:  "model",
+		Intent: &IntentFragment{Operator: Count, Term: "myintent"},
+		Condition: &BooleanFragment{
+			Operator: And,
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{Operator: Exists, Field: "myfield"},
+				&LeafConditionFragment{Operator: OptionalFor, Field: "myfield", Value: "myvariable"},
+			},
+		},
+	}
+
+	placeholders := map[string]string{
+		"myvariable": "**a*a",
+	}
+
+	ts := time.Now()
+
+	err := f.ContextualizeCondition(ts, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	c1 := f.Condition.(*BooleanFragment)
+	if c1.Fragments[1].(*LeafConditionFragment).Field == "" {
+		t.Error("Fragment 2 Field should have not been removed (OptionalRegexp)")
+	}
+	if c1.Fragments[1].(*LeafConditionFragment).Value == "" {
+		t.Error("Fragment 2 Value should have not been removed (OptionalRegexp)")
+	}
+}
+
+func TestContextualizeWildCard(t *testing.T) {
+	f := Fact{
+		ID:     1,
+		Name:   "1",
+		Model:  "model",
+		Intent: &IntentFragment{Operator: Count, Term: "myintent"},
+		Condition: &BooleanFragment{
+			Operator: And,
+			Fragments: []ConditionFragment{
+				&LeafConditionFragment{Operator: Exists, Field: "myfield"},
+				&LeafConditionFragment{Operator: OptionalWildcard, Field: "myfield1", Value: ""},
+				&LeafConditionFragment{Operator: Wildcard, Field: "myfield", Value: "myvariable"},
+			},
+		},
+	}
+
+	placeholders := map[string]string{
+		"myvariable": "**a*a",
+	}
+
+	ts := time.Now()
+
+	err := f.ContextualizeCondition(ts, placeholders)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	c1 := f.Condition.(*BooleanFragment)
+
+	if c1.Fragments[2].(*LeafConditionFragment).Field == "" {
+		t.Error("Fragment 2 Field should have not been removed (Wildcard)")
+	}
+	if c1.Fragments[2].(*LeafConditionFragment).Value == "" {
+		t.Error("Fragment 2 Value should have not been removed (Wildcard)")
+	}
+}

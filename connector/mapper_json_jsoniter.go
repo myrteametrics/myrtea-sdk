@@ -76,6 +76,12 @@ func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
 				if !isValid {
 					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Values)
 				}
+			case "notEquals_any":
+				for _, value := range filter.Values {
+					if fieldExtractedValue == value {
+						return false, fmt.Sprintf("%s matches with one of the values in Condition=%s, Values=%s", fieldExtractedValue, filter.Condition, filter.Values)
+					}
+				}		
 			case "notEquals":
 				if fieldExtractedValue == filter.Value {
 					return false, fmt.Sprintf("%s not match with Condition=%s, Value=%s", fieldExtractedValue, filter.Condition, filter.Value)
