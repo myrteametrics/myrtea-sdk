@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth"
 	"github.com/myrteametrics/myrtea-sdk/v4/handlers"
