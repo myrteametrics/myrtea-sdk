@@ -7,13 +7,13 @@ import (
 )
 
 type Reloader struct {
-	action   func()
+	action   func(string)
 	last     time.Time
 	cooldown time.Duration
 }
 
 // NewReloader Reload the action
-func NewReloader(action func(), cooldown time.Duration) *Reloader {
+func NewReloader(action func(string), cooldown time.Duration) *Reloader {
 	return &Reloader{
 		action:   action,
 		cooldown: cooldown,
@@ -23,7 +23,7 @@ func NewReloader(action func(), cooldown time.Duration) *Reloader {
 // CreateEndpoint Create a new endpoint for the reloader
 func (re *Reloader) CreateEndpoint() *chi.Mux {
 	router := chi.NewRouter()
-	router.Get("/reload", re.reload)
+	router.Get("/reload/{id}", re.reload)
 	return router
 }
 
@@ -34,8 +34,14 @@ func (re *Reloader) reload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	re.last = time.Now()
-	re.action()
+	re.action(id)
 
 	w.WriteHeader(http.StatusOK)
 }
