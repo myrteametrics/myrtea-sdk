@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/myrteametrics/myrtea-sdk/v4/connector"
 	"net/http"
 	"time"
 
@@ -26,6 +27,8 @@ type ConfigSimple struct {
 	CORS                    bool
 	GatewayMode             bool
 	VerboseError            bool
+	Reloader                *connector.Reloader
+	Restarter               *connector.Restarter
 	AuthenticationMode      string
 	LogLevel                zap.AtomicLevel
 	MetricsNamespace        string
@@ -108,6 +111,14 @@ func NewChiRouterSimple(config ConfigSimple) *chi.Mux {
 			rg.Get("/isalive", handlers.IsAlive)
 			rg.Post("/login", securityMiddleware.GetToken())
 			rg.Get("/swagger/*", httpSwagger.WrapHandler)
+
+			if config.Reloader != nil {
+				rg.Mount("", config.Reloader.CreateEndpoint())
+			}
+
+			if config.Restarter != nil {
+				rg.Mount("", config.Restarter.CreateEndpoint())
+			}
 
 			for path, handler := range config.PublicRoutes {
 				rg.Mount(path, handler)
