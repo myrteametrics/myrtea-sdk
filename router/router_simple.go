@@ -1,11 +1,11 @@
 package router
 
 import (
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/myrteametrics/myrtea-sdk/v4/connector"
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
