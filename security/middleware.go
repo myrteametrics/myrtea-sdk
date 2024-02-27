@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/jwtauth/v5"
-	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v4"
 
 	"go.uber.org/zap"
 )

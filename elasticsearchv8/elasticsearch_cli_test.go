@@ -162,7 +162,7 @@ func TestESv8PutTemplate(t *testing.T) {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	response, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
+	response, err := es8.Indices.PutTemplate("mytemplate").Timeout("15s").Request(req).Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
@@ -179,7 +179,7 @@ func TestESv8DeleteTemplate(t *testing.T) {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	response, err := es.Indices.DeleteTemplate("mytemplate").Do(context.Background())
+	response, err := es.Indices.DeleteTemplate("mytemplate").Timeout("15s").Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
@@ -220,6 +220,7 @@ func TestESv8IndexDocument(t *testing.T) {
 			Request(document).
 			Id(strconv.Itoa(document.Id)).
 			Refresh(refresh.Waitfor).
+			Timeout("15s").
 			Do(context.Background())
 		if err != nil {
 			t.Fatalf("error indexing document: %s", err)

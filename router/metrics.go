@@ -2,10 +2,10 @@ package router
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
