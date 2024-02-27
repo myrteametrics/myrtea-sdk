@@ -17,8 +17,8 @@ const (
 	All
 )
 
-func (s Depth) String() string {
-	return toString[s]
+func (s *Depth) String() string {
+	return toString[*s]
 }
 
 var toString = map[Depth]string{
@@ -34,9 +34,9 @@ var toID = map[string]Depth{
 }
 
 // MarshalJSON marshals the enum as a quoted json string
-func (s Depth) MarshalJSON() ([]byte, error) {
+func (s *Depth) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
-	buffer.WriteString(toString[s])
+	buffer.WriteString(toString[*s])
 	buffer.WriteString(`"`)
 	return buffer.Bytes(), nil
 }
