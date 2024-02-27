@@ -179,6 +179,15 @@ func GetMetricsConfigKeys() []ConfigKey {
 	}
 }
 
+func GetConnectorConfigKeys() []ConfigKey {
+	return []ConfigKey{
+		{
+			Type: StringFlag, Name: "ENGINE_API_KEY", DefaultValue: "",
+			Description: "API Key that the engine uses to interact with this component",
+		},
+	}
+}
+
 // ConfigKey represents the definition of a config flag.
 type ConfigKey struct {
 	Type         ConfigKeyType
