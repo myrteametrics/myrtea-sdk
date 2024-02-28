@@ -84,6 +84,7 @@ var (
 	LangEvalString = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("replace", replace),
+		gval.Function("atoi",atoi),
 	)
 
 	LangEvalSlice = gval.NewLanguage(
