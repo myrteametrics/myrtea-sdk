@@ -26,21 +26,20 @@ func NewReloader(action func(string) error, cooldown time.Duration, apiKey strin
 	}
 }
 
-// CreateEndpoint Create a new endpoint for the reloader
-func (re *Reloader) CreateEndpoint() *chi.Mux {
-	router := chi.NewRouter()
-	router.Post("/reload/{id}", re.reload)
-	return router
+// BindEndpoint Binds the reload endpoint to a existing router
+func (re *Reloader) BindEndpoint(rg chi.Router) {
+	rg.Post("/reload/{id}", re.reload)
 }
 
 // reload the action, if the cooldown has passed, otherwise return 429
 func (re *Reloader) reload(w http.ResponseWriter, r *http.Request) {
 	body := struct {
-		apiKey string
+		ApiKey string `json:"key"`
 	}{}
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
+		zap.L().Error("reloader: could not unmarshall body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

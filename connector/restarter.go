@@ -23,31 +23,25 @@ func NewRestarter(doneChan chan os.Signal, apiKey string) *Restarter {
 	}
 }
 
-// CreateEndpoint Create a new endpoint for the restarter
-func (re *Restarter) CreateEndpoint() *chi.Mux {
-	router := chi.NewRouter()
-	router.Post("/restart", re.restart)
-	return router
+// BindEndpoint Binds the restart endpoint to an existing router
+func (re *Restarter) BindEndpoint(rg chi.Router) {
+	rg.Post("/restart", re.restart)
 }
 
 func (re *Restarter) restart(w http.ResponseWriter, r *http.Request) {
 	if re.restarting {
+		zap.L().Info("Received a restart request, but service is already in a restart state")
 		w.WriteHeader(http.StatusTooManyRequests)
 		return
 	}
 
 	body := struct {
-		apiKey string
+		ApiKey string `json:"key"`
 	}{}
 
 	err := json.NewDecoder(r.Body).Decode(&body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	id := chi.URLParam(r, "id")
-	if id == "" {
+		zap.L().Error("restarter: could not unmarshall body", zap.Error(err))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}

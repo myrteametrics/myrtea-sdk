@@ -64,7 +64,7 @@ func (config *ConfigSimple) Check() {
 	}
 }
 
-// NewChiRouter initialize a chi.Mux router with all required default middleware (logger, security, recovery, etc.)
+// NewChiRouterSimple initialize a chi.Mux router with all required default middleware (logger, security, recovery, etc.)
 func NewChiRouterSimple(config ConfigSimple) *chi.Mux {
 	config.Check()
 
@@ -113,11 +113,11 @@ func NewChiRouterSimple(config ConfigSimple) *chi.Mux {
 			rg.Get("/swagger/*", httpSwagger.WrapHandler)
 
 			if config.Reloader != nil {
-				rg.Mount("", config.Reloader.CreateEndpoint())
+				config.Reloader.BindEndpoint(rg)
 			}
 
 			if config.Restarter != nil {
-				rg.Mount("", config.Restarter.CreateEndpoint())
+				config.Restarter.BindEndpoint(rg)
 			}
 
 			for path, handler := range config.PublicRoutes {
