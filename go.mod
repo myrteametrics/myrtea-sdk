@@ -10,8 +10,7 @@ require (
 	github.com/elastic/go-elasticsearch/v8 v8.7.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/go-chi/cors v1.2.1
-	github.com/go-chi/jwtauth v1.2.0
-	github.com/go-chi/jwtauth/v5 v5.0.2
+	github.com/go-chi/jwtauth/v5 v5.3.1
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis v6.15.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.4.3
@@ -19,7 +18,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/json-iterator/go v1.1.12
-	github.com/lestrrat-go/jwx v1.2.28
+	github.com/lestrrat-go/jwx/v2 v2.0.21
 	github.com/lib/pq v1.0.0
 	github.com/linkedin/goavro v2.1.0+incompatible
 	github.com/mitchellh/mapstructure v1.4.2
@@ -93,9 +92,9 @@ require (
 	github.com/swaggo/swag v1.8.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/crypto v0.19.0 // indirect
+	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
-	golang.org/x/sys v0.17.0 // indirect
+	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

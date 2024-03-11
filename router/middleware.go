@@ -2,10 +2,10 @@ package router
 
 import (
 	"errors"
+	"github.com/go-chi/jwtauth/v5"
 	"net/http"
 
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/lestrrat-go/jwx/jwt"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/myrteametrics/myrtea-sdk/v4/handlers/render"
 	"go.uber.org/zap"
 )
