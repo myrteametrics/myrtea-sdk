@@ -60,7 +60,7 @@ func getConfig(name, path string) (map[string]JSONMapperFilterItem, map[string]m
 			mapConfig[groupKey] = make(map[string]JSONMapperConfigItem)
 			for fieldKey, fieldConfig := range viperMapper.GetStringMap(groupKey) {
 				itemConfig := JSONMapperConfigItem{}
-				err := mapstructure.Decode(fieldConfig, &itemConfig)
+				err = mapstructure.Decode(fieldConfig, &itemConfig)
 				if err != nil {
 					zap.L().Fatal("Cannot decode config file ", zap.Error(err))
 					return nil, nil, err

@@ -21,6 +21,14 @@ func (kMessage KafkaMessage) GetData() []byte {
 	return kMessage.Data
 }
 
+// DecodedKafkaMessage holds a json decoded version of the kafka message
+// It can be used to avoid decoding data multiple time (which is very consuming)
+type DecodedKafkaMessage struct {
+	Data map[string]interface{}
+}
+
+func (msg DecodedKafkaMessage) String() string { return "" }
+
 // FilteredJsonMessage output once we've filtered the myrtea fields from the kafka messages
 type FilteredJsonMessage struct {
 	Data map[string]interface{}
