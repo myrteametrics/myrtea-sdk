@@ -1,6 +1,8 @@
 package connector
 
 import (
+	"fmt"
+	"github.com/google/go-cmp/cmp"
 	"testing"
 
 	"github.com/myrteametrics/myrtea-sdk/v4/expression"
@@ -46,6 +48,64 @@ func TestMapMessage(t *testing.T) {
 	t.Log(output.Ints)
 	t.Log(output.Bools)
 	t.Log(output.Times)
+}
+
+func TestMapMessageWithCachedData(t *testing.T) {
+	message := KafkaMessage{Data: []byte(
+		`{"uuid":{"least":-5360973783440353337,"most":-814119054879674195},"fields":{"mystring":"helloworld","myint":1234567,"mybool":true}}`,
+	)}
+	mapper := JSONMapperJsoniter{
+		filters: make(map[string]JSONMapperFilterItem),
+		mapping: map[string]map[string]JSONMapperConfigItem{
+			"record": {
+				"uuid": {
+					FieldType: "uuid_from_longs",
+					Paths: [][]string{
+						{"uuid", "most"},
+						{"uuid", "least"},
+					},
+				},
+				"mystring": {
+					FieldType: "string",
+					Paths:     [][]string{{"fields", "mystring"}},
+				},
+				"myint": {
+					FieldType: "int",
+					Paths:     [][]string{{"fields", "myint"}},
+				},
+				"mybool": {
+					FieldType: "boolean",
+					Paths:     [][]string{{"fields", "mybool"}},
+				},
+			},
+		},
+	}
+
+	decodedMsg, err := mapper.DecodeDocument(message)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	_, ok := decodedMsg.(DecodedKafkaMessage)
+	expression.AssertEqual(t, ok, true, "message should be of type DecodedKafkaMessage")
+
+	dMsg, err := mapper.MapToDocument(decodedMsg)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	msg, err := mapper.MapToDocument(message)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	dOutput := dMsg.(TypedDataMessage)
+	output := msg.(TypedDataMessage)
+
+	expression.AssertEqual(t, cmp.Equal(dOutput, output), true, "output and dOutput should match")
+
 }
 
 func TestLookupNestedMapWithSlice(t *testing.T) {
@@ -199,6 +259,28 @@ func createTestJSONMapperJsoniter(Paths [][]string, Value string, Values []strin
 	}
 }
 
+func TestFilterDocument_EmptyFilters(t *testing.T) {
+	mapper := &JSONMapperJsoniter{
+		filters: map[string]JSONMapperFilterItem{},
+		mapping: make(map[string]map[string]JSONMapperConfigItem),
+	}
+	expression.AssertEqual(t, len(mapper.filters), 0)
+
+	var doc Message
+	doc = DecodedKafkaMessage{Data: map[string]interface{}{}}
+
+	keep, reason := mapper.FilterDocument(doc)
+	expression.AssertEqual(t, keep, true, fmt.Sprintf("No filters: msg should be keeped (DecodedKafkaMessage), reason: %s", reason))
+	expression.AssertEqual(t, reason, "")
+
+	doc = KafkaMessage{Data: []byte{}}
+
+	keep, reason = mapper.FilterDocument(doc)
+	expression.AssertEqual(t, keep, true, "No filters: msg should be keeped (KafkaMessage)")
+	expression.AssertEqual(t, reason, "")
+
+}
+
 // Create tests for FilterDocument
 func TestFilterDocument(t *testing.T) {
 	message := KafkaMessage{Data: []byte(
@@ -213,6 +295,20 @@ func TestFilterDocument(t *testing.T) {
 	keep, reason := mapper.FilterDocument(&MessageWithOptions{})
 	expression.AssertEqual(t, keep, false)
 	expression.AssertEqual(t, reason, "message type not supported")
+
+	// test filter with decoded message
+	decoded, err := mapper.DecodeDocument(message)
+	if err != nil {
+		t.Error()
+		t.FailNow()
+	}
+	_, ok := decoded.(DecodedKafkaMessage)
+	expression.AssertEqual(t, ok, true, "message should be of type DecodedKafkaMessage")
+
+	// we run the filter function with any filter to see whether it runs fine
+	mapper = createTestJSONMapperJsoniter([][]string{{"uuid", "most"}}, "", nil, "exists")
+	keep, _ = mapper.FilterDocument(decoded)
+	expression.AssertEqual(t, keep, true)
 
 	// test exists
 	mapper = createTestJSONMapperJsoniter([][]string{{"uuid", "most"}}, "", nil, "exists")
@@ -330,7 +426,7 @@ func TestFilterNotEqualAny(t *testing.T) {
 	message := KafkaMessage{Data: []byte(
 		`{"uuid":{"least":-5360973783440353337,"most":-814119054879674195},"fields":{"mystring":"NN","mystring2":"NI","mybool":true}}`,
 	)}
-	
+
 	// test equals_atleastone
 	mapper := createTestJSONMapperJsoniter([][]string{{"fields", "mystring"}}, "", []string{"NI", "IN"}, "notEquals_any")
 	keep, _ := mapper.FilterDocument(message)
