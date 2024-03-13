@@ -14,32 +14,38 @@ import (
 )
 
 // EsExecutor wraps and exposes all elasticsearch tasks
+// Deprecated use elasticsearchv8 package since 4.5.6
 type EsExecutor struct {
 	ctx    context.Context
 	Client *elastic.Client
 }
 
 // SearchResult wraps elasticsearch SearchResult
+// Deprecated use elasticsearchv8 package since 4.5.6
 type SearchResult struct {
 	SResult *elastic.SearchResult
 }
 
 // SearchService wraps elasticsearch SearchService
+// Deprecated use elasticsearchv8 package since 4.5.6
 type SearchService struct {
 	SService *elastic.SearchService
 }
 
 // BulkResponse wraps elasticsearch BulkResponse
+// Deprecated use elasticsearchv8 package since 4.5.6
 type BulkResponse struct {
 	BResponse *elastic.BulkResponse
 }
 
 // MGetResponse wraps elasticsearch MGetResponse
+// Deprecated use elasticsearchv8 package since 4.5.6
 type MGetResponse struct {
 	MgetResponse *elastic.MgetResponse
 }
 
 // NewEsExecutor returns a pointer to an EsExecutor
+// Deprecated use elasticsearchv8 package since 4.5.6
 func NewEsExecutor(ctx context.Context, urls []string) (*EsExecutor, error) {
 	client, err := elastic.NewClient(elastic.SetSniff(false),
 		elastic.SetHealthcheckTimeoutStartup(60*time.Second),
@@ -53,6 +59,7 @@ func NewEsExecutor(ctx context.Context, urls []string) (*EsExecutor, error) {
 }
 
 // ClientHealthCheck checks if an elasticsearch cluster is up and running
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) ClientHealthCheck(ctx context.Context) bool {
 	health, err := executor.Client.ClusterHealth().Do(ctx)
 	if err != nil && health != nil && health.Status != "red" {
@@ -62,6 +69,7 @@ func (executor *EsExecutor) ClientHealthCheck(ctx context.Context) bool {
 }
 
 // PutTemplate initializes given template if it doesn't already exists.
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) PutTemplate(ctx context.Context, templateName string, templateBody *models.TemplateV6) error {
 	templateExists, err := executor.Client.
 		IndexTemplateExists(templateName).
@@ -91,6 +99,7 @@ func (executor *EsExecutor) PutTemplate(ctx context.Context, templateName string
 }
 
 // ExecuteSearch execute a search
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) ExecuteSearch(ctx context.Context, search *elastic.SearchService) (*elastic.SearchResult, error) {
 	response, err := search.Do(ctx)
 	if err != nil {
@@ -100,6 +109,7 @@ func (executor *EsExecutor) ExecuteSearch(ctx context.Context, search *elastic.S
 }
 
 // GetIndicesByAlias returns a slice of string containing all indices related to an alias
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) GetIndicesByAlias(ctx context.Context, alias string) ([]string, error) {
 	aliasResult, err := executor.Client.Aliases().Alias(alias).Do(ctx)
 	if err != nil {
@@ -109,6 +119,7 @@ func (executor *EsExecutor) GetIndicesByAlias(ctx context.Context, alias string)
 }
 
 // DeleteIndices deletes an ensemble of indices
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) DeleteIndices(ctx context.Context, indices []string) error {
 	deletedResponses, err := executor.Client.DeleteIndex(indices...).Do(ctx)
 	if err != nil {
@@ -122,6 +133,7 @@ func (executor *EsExecutor) DeleteIndices(ctx context.Context, indices []string)
 
 // PutAlias put a new index alias
 // TODO: Must check if alias doesn't already exists
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) PutAlias(ctx context.Context, patternIndex string, alias string) error {
 	aliasResult, err := executor.Client.Alias().Add(patternIndex, alias).Do(ctx)
 	if err != nil {
@@ -135,6 +147,7 @@ func (executor *EsExecutor) PutAlias(ctx context.Context, patternIndex string, a
 }
 
 // RollOver execute a full index rollover
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) RollOver(ctx context.Context, alias string, ageCondition string, docsCondition int64) (string, string, error) {
 	indicesRolloverResult, err := executor.Client.RolloverIndex(alias).
 		AddMaxIndexAgeCondition(ageCondition).
@@ -154,6 +167,7 @@ func (executor *EsExecutor) RollOver(ctx context.Context, alias string, ageCondi
 }
 
 // IndexExists check if at least one index exists based on a pattern
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) IndexExists(ctx context.Context, patternIndexExists string) (bool, error) {
 	zap.L().Info("Check if index exists", zap.String("pattern", patternIndexExists))
 	indices, err := executor.Client.IndexGet(patternIndexExists).Do(ctx)
@@ -165,6 +179,7 @@ func (executor *EsExecutor) IndexExists(ctx context.Context, patternIndexExists 
 
 // PutIndex initializes a new index if it doesn't already exists.
 // If no pattern is specified, the default pattern will be the index name
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) PutIndex(ctx context.Context, patternIndexExists string, indexName string) error {
 	if patternIndexExists == "" {
 		patternIndexExists = indexName
@@ -187,6 +202,7 @@ func (executor *EsExecutor) PutIndex(ctx context.Context, patternIndexExists str
 }
 
 // BulkIndex inserts documents in bulk into an elasticsearch index, with a specific type.
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) BulkIndex(ctx context.Context, docs []*models.Document) (*elastic.BulkResponse, error) {
 	bulkRequest := executor.Client.Bulk()
 	for _, doc := range docs {
@@ -199,6 +215,7 @@ func (executor *EsExecutor) BulkIndex(ctx context.Context, docs []*models.Docume
 }
 
 // MultiGet executes multiple get queries and return all results in a single response
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) MultiGet(ctx context.Context, docs []*models.Document) (*elastic.MgetResponse, error) {
 	if len(docs) == 0 {
 		return nil, errors.New("docs[] is empty")
@@ -216,6 +233,7 @@ func (executor *EsExecutor) MultiGet(ctx context.Context, docs []*models.Documen
 }
 
 // MultiSearch executes multiple search queries and return all results in a single response
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) MultiSearch(ctx context.Context, docs []*models.Document) (*elastic.MultiSearchResult, error) {
 	if len(docs) == 0 {
 		return nil, errors.New("docs[] is empty")
@@ -236,6 +254,7 @@ func (executor *EsExecutor) MultiSearch(ctx context.Context, docs []*models.Docu
 // following the provided merge function.
 // Be careful, this method is not thread-safe
 // TODO: A revoir la notion de merge
+// Deprecated use elasticsearchv8 package since 4.5.6
 func (executor *EsExecutor) BulkUpdate(ctx context.Context, docs []*models.Document, fmerge func(*models.Document, *models.Document)) (*elastic.BulkResponse, error) {
 	response, err := executor.MultiGet(ctx, docs)
 	if err != nil {

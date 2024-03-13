@@ -26,6 +26,11 @@ func NewJSONMapper(name, path string) (*JSONMapper, error) {
 	return &JSONMapper{filters: filters, mapping: mapping}, nil
 }
 
+// DecodeDocument not implemented here, it only uses msg
+func (mapper JSONMapper) DecodeDocument(msg Message) (Message, error) {
+	return msg, nil
+}
+
 func (mapper JSONMapper) FilterDocument(msg Message) (bool, string) {
 	switch message := msg.(type) {
 	case KafkaMessage:

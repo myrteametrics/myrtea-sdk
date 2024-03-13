@@ -15,11 +15,13 @@ var (
 )
 
 // Credentials is used to store the elasticsearch credentials
+// Deprecated use elasticsearchv8 package since 4.5.6
 type Credentials struct {
 	URLs []string
 }
 
 // C returns the elasticsearch client singleton
+// Deprecated use elasticsearchv8 package since 4.5.6
 func C() *EsExecutor {
 	_globalMu.RLock()
 	c := _globalC
@@ -28,6 +30,7 @@ func C() *EsExecutor {
 }
 
 // Backoff returns the elasticsearch backoff singleton
+// Deprecated use elasticsearchv8 package since 4.5.6
 func Backoff() *connection.Backoff {
 	_globalMu.RLock()
 	b := _gloablBackoff
@@ -36,6 +39,7 @@ func Backoff() *connection.Backoff {
 }
 
 // InitializeBackoff initialize the global elasticsearch backoff policy singleton
+// Deprecated use elasticsearchv8 package since 4.5.6
 func InitializeBackoff(backoff *connection.Backoff) {
 	_globalMu.RLock()
 	_gloablBackoff = backoff
@@ -43,6 +47,7 @@ func InitializeBackoff(backoff *connection.Backoff) {
 }
 
 // InitializeGlobal initialize the global elasticsearch client singleton
+// Deprecated use elasticsearchv8 package since 4.5.6
 func InitializeGlobal(credentials *Credentials) error {
 	_globalMu.RLock()
 	_gloablCredentials = credentials
@@ -58,6 +63,7 @@ func InitializeGlobal(credentials *Credentials) error {
 }
 
 // ReplaceGlobals affect new elasticsearch credentials and connection to the global repository singleton
+// Deprecated use elasticsearchv8 package since 4.5.6
 func ReplaceGlobals(credentials *Credentials) error {
 	_globalMu.Lock()
 	_gloablCredentials = credentials
@@ -73,6 +79,7 @@ func ReplaceGlobals(credentials *Credentials) error {
 }
 
 // Reconnect build a new ES connection and replace the existing singleton with it
+// Deprecated use elasticsearchv8 package since 4.5.6
 func Reconnect() error {
 	_globalMu.Lock()
 	ctx := context.Background()
