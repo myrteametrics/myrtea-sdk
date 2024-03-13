@@ -18,9 +18,8 @@ var jsoni = jsoniter.ConfigCompatibleWithStandardLibrary
 
 // JSONMapperJsoniter :
 type JSONMapperJsoniter struct {
-	filters          map[string]JSONMapperFilterItem
-	mapping          map[string]map[string]JSONMapperConfigItem
-	cacheDecodedData bool
+	filters map[string]JSONMapperFilterItem
+	mapping map[string]map[string]JSONMapperConfigItem
 }
 
 // NewJSONMapperJsoniter :
