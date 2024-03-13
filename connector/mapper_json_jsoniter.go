@@ -23,7 +23,6 @@ type JSONMapperJsoniter struct {
 }
 
 // NewJSONMapperJsoniter :
-// if you enable cacheDecodedData, the
 func NewJSONMapperJsoniter(name, path string) (*JSONMapperJsoniter, error) {
 	filters, mapping, err := getConfig(name, path)
 	if err != nil {
