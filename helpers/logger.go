@@ -17,7 +17,6 @@ func InitLogger(production bool) zap.Config {
 	}
 
 	zapConfig.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	zapConfig.Level.SetLevel(zap.InfoLevel)
 
 	logger, err := zapConfig.Build(zap.AddStacktrace(zap.ErrorLevel))
 	if err != nil {
