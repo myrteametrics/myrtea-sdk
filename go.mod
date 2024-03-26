@@ -14,6 +14,7 @@ require (
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis v6.15.1+incompatible
 	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/context v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.1
 	github.com/jmoiron/sqlx v1.2.0
@@ -51,7 +52,6 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -99,7 +99,7 @@ require (
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.9.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/protobuf v1.28.1 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/linkedin/goavro.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
