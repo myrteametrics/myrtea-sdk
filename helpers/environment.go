@@ -148,15 +148,15 @@ func GetSinkIngesterConfigKeys() []ConfigKey {
 			Description: "Ingester-API port",
 		},
 		{
-			Type: StringFlag, Name: "SINK_HTTP_TIMEOUT", DefaultValue: "",
+			Type: StringFlag, Name: "SINK_HTTP_TIMEOUT", DefaultValue: "10s",
 			Description: "HTTP client timeout for the Ingester sink",
 		},
 		{
-			Type: StringFlag, Name: "SINK_BUFFER_SIZE", DefaultValue: "",
+			Type: StringFlag, Name: "SINK_BUFFER_SIZE", DefaultValue: "100",
 			Description: "Sink buffer length",
 		},
 		{
-			Type: StringFlag, Name: "SINK_FLUSH_TIMEOUT", DefaultValue: "",
+			Type: StringFlag, Name: "SINK_FLUSH_TIMEOUT", DefaultValue: "10s",
 			Description: "Flush timout for the Sink buffer",
 		},
 	}
