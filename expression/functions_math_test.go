@@ -336,3 +336,26 @@ func TestRoundToDecimal(t *testing.T) {
 		})
 	}
 }
+
+func TestSafeDivide(t *testing.T) {
+	testCases := []struct {
+		name      string
+		divider   interface{}
+		dividende interface{}
+		want      float64
+	}{
+		{"with int : 10 / 2", 10, 2, 5.0},
+		{"with float : 10 / 2", 10.0, 2.0, 5.0},
+		{"with big values : 1e50 / 2", 1e50, 2.0, 1e50 / 2},
+		{"missing values", nil, nil, 0},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := safeDivide(tc.divider, tc.dividende)
+			if got != tc.want {
+				t.Errorf("safeDivide(%v, %d) = %v, want %v", tc.divider, tc.dividende, got, tc.want)
+			}
+		})
+	}
+}

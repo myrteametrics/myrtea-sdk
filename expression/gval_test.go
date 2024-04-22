@@ -481,3 +481,45 @@ func TestEvalRoundToDecimal(t *testing.T) {
 	}
 
 }
+
+func TestEvalSafeDivide(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expression     string
+		variables      map[string]interface{}
+		expectedResult float64
+	}{
+		{
+			name:           "10 / 2 with integers",
+			expression:     "safeDivide(10, 2)",
+			variables:      map[string]interface{}{},
+			expectedResult: 5.0,
+		},
+		{
+			name:           "nil",
+			expression:     "safeDivide(a, b)",
+			variables:      map[string]interface{}{},
+			expectedResult: 0,
+		},
+		{
+			name:           "Round variable to 1 decimal place",
+			expression:     "safeDivide(a, 1)",
+			variables:      map[string]interface{}{"a": 123.4567},
+			expectedResult: 123.4567,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Process(LangEval, tc.expression, tc.variables)
+			if err != nil {
+				t.Error(err)
+			}
+
+			if result != tc.expectedResult {
+				t.Errorf("Result value is not as expected: got %v, want %v", result, tc.expectedResult)
+			}
+		})
+	}
+
+}

@@ -37,6 +37,7 @@ var (
 		gval.Function("sum", sum),
 		gval.Function("average", average),
 		gval.Function("roundToDecimal", roundToDecimal),
+		gval.Function("safeDivide", safeDivide),
 	)
 
 	// LangEvalDate is a custom GVal evaluator for business rules and facts conditions
