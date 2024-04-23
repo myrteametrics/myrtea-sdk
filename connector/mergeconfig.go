@@ -152,7 +152,7 @@ func ApplyFieldMath(config []FieldMath, newDoc *models.Document, existingDoc *mo
 		result, err := expression.Process(
 			expression.LangEval,
 			math.Expression,
-			map[string]interface{}{"New": newDoc.Source, "Existing": existingDoc.Source},
+			map[string]interface{}{"New": newDoc.Source, "Existing": existingDoc.Source, "Output": outputSource},
 		)
 		if err != nil {
 			if strings.Contains(err.Error(), "unknown parameter") {
@@ -162,6 +162,7 @@ func ApplyFieldMath(config []FieldMath, newDoc *models.Document, existingDoc *mo
 				zap.L().Debug("eval",
 					zap.Any("new", newDoc.Source),
 					zap.Any("existing", existingDoc.Source),
+					zap.Any("output", outputSource),
 					zap.Any("expression", math.Expression),
 					zap.Any("result", result),
 				)
