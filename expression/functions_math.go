@@ -208,3 +208,25 @@ func roundToDecimal(input interface{}, decimalPlaces interface{}) (interface{}, 
 	rounded := math.Round(shifted)
 	return rounded / math.Pow(10, float64(intDecimalPlaces)), nil
 }
+
+func convertAsFloat(value interface{}) float64 {
+	switch v := value.(type) {
+	case int, int32, int64:
+		return float64(v.(int))
+	case float32, float64:
+		return v.(float64)
+	default:
+		return 0
+	}
+}
+
+func safeDivide(divider interface{}, dividende interface{}) float64 {
+	floatDivider := convertAsFloat(divider)
+	floatDividende := convertAsFloat(dividende)
+
+	if floatDividende == float64(0) {
+		return 0
+	}
+
+	return floatDivider / floatDividende
+}
