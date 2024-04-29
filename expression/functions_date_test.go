@@ -491,7 +491,12 @@ func TestGetFormattedDuration(t *testing.T) {
 		{"value kept in milliseconds", 1234567, "ms", "{ms} ms", "", false, false, "1234567 ms"},
 		{"invalid unit without print 0 values", 1000, "test", "{ms} ms", "", false, false, ""},
 		{"invalid unit with print 0 values", 1000, "test", "{ms} ms", "", false, true, "0 ms"},
-		{"invalid type", "1000", "test", 100, 0, 1, 1, "error"},
+		{"invalid type for duration", 1000, 1, 100, 0, 1, 1, "error"},
+		{"invalid type for inputUnit", 1000, "test", 100, 0, 1, 1, "error"},
+		{"invalid type for format", 1000, "test", 100, 0, 1, 1, "error"},
+		{"invalid type for separator", 1000, "test", "", 0, 1, 1, "error"},
+		{"invalid type for keepSeparator", 1000, "test", "", "", 1, 1, "error"},
+		{"invalid type for printZeroValues", 1000, "test", "", "", true, 1, "error"},
 	}
 
 	for _, tc := range testCases {
