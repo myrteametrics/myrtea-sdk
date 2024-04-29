@@ -368,6 +368,12 @@ func getFormattedDuration(duration, inputUnit, format, separator, keepSeparator,
 	return getFormattedDurationTyped(durationTyped, inputUnitTyped, formatTyped, separatorTyped, keepSeparatorTyped, printZeroValuesTyped)
 }
 
+// duration : to convert
+// input Unit : ms | s | m | h | d
+// format : wanted output for duration
+// separator : specify your separator to explicitly set where elements limits are in string
+// keepSeparator : if separator should be kept in output
+// printZeroValues : during conversion on each required unit in format, if value is 0, it can be kept or not in output string
 func getFormattedDurationTyped(duration float64, inputUnit, format, separator string, keepSeparator, printZeroValues bool) string {
 
 	durationMs := asMilliseconds(duration, inputUnit)
@@ -388,11 +394,11 @@ func getFormattedDurationTyped(duration float64, inputUnit, format, separator st
 	}
 }
 
-// Sépare les éléments du format de date
+// Separates date format elements
 func splitFormat(format, separator string) []string {
 	var durationFormatSplited []string
 	if separator == "" {
-		//Tente une séparation intelligente sans séparateur
+		// Attempting intelligent separation without a separator
 		var isTextAfter = strings.HasPrefix(strings.Trim(format, " "), "{")
 		if isTextAfter {
 			format = strings.Join(strings.Split(format, "{"), "&separator;{")
@@ -409,9 +415,9 @@ func splitFormat(format, separator string) []string {
 	return durationFormatSplited
 }
 
-// Convertit le nombre de milliseconds en une autre unité à l'aide de "convertUnit"
-// ajoute dans "durationFormatSplited" à la place de "regex" la valeur
-// mais retire l'entrée dans le tableau si "printZeroValue" = false
+// converts the number of milliseconds to another unit using "convertUnit".
+// adds the value to "durationFormatSplited" instead of "regex".
+// but removes the entry from the array if "printZeroValue" = false
 func insertCalculatedUnit(durationMs *float64, nextIndex *int, convertUnit int, durationFormatSplited *[]string, format string, regex string, printZeroValues bool) {
 	if strings.Contains(format, regex) {
 		unitValue := math.Floor(*durationMs / float64(convertUnit))
@@ -425,7 +431,7 @@ func insertCalculatedUnit(durationMs *float64, nextIndex *int, convertUnit int, 
 	}
 }
 
-// Convertit une durée en millisecondes
+// Converts a duration into milliseconds
 func asMilliseconds(duration float64, inputUnit string) float64 {
 	switch inputUnit {
 	case "ms":
