@@ -2,6 +2,8 @@ package expression
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -332,4 +334,111 @@ func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
 	}
 
 	return defaultValue, nil
+}
+
+func getFormattedDuration(duration, inputUnit, format, separator, keepSeparator, printZeroValues interface{}) string {
+	durationTyped, ok := duration.(float64)
+	durationInt, ok2 := duration.(int)
+	if !ok && !ok2 {
+		return "error"
+	}
+	if ok2 {
+		durationTyped = float64(durationInt)
+	}
+	inputUnitTyped, ok := inputUnit.(string)
+	if !ok {
+		return "error"
+	}
+	formatTyped, ok := format.(string)
+	if !ok {
+		return "error"
+	}
+	separatorTyped, ok := separator.(string)
+	if !ok {
+		return "error"
+	}
+	keepSeparatorTyped, ok := keepSeparator.(bool)
+	if !ok {
+		return "error"
+	}
+	printZeroValuesTyped, ok := printZeroValues.(bool)
+	if !ok {
+		return "error"
+	}
+	return getFormattedDurationTyped(durationTyped, inputUnitTyped, formatTyped, separatorTyped, keepSeparatorTyped, printZeroValuesTyped)
+}
+
+func getFormattedDurationTyped(duration float64, inputUnit, format, separator string, keepSeparator, printZeroValues bool) string {
+
+	durationMs := asMilliseconds(duration, inputUnit)
+	nextIndex := 0
+
+	durationFormatSplited := splitFormat(format, separator)
+
+	insertCalculatedUnit(&durationMs, &nextIndex, 1000*60*60*24, &durationFormatSplited, format, "{d}", printZeroValues)
+	insertCalculatedUnit(&durationMs, &nextIndex, 1000*60*60, &durationFormatSplited, format, "{h}", printZeroValues)
+	insertCalculatedUnit(&durationMs, &nextIndex, 1000*60, &durationFormatSplited, format, "{m}", printZeroValues)
+	insertCalculatedUnit(&durationMs, &nextIndex, 1000, &durationFormatSplited, format, "{s}", printZeroValues)
+	insertCalculatedUnit(&durationMs, &nextIndex, 1, &durationFormatSplited, format, "{ms}", printZeroValues)
+
+	if keepSeparator {
+		return fmt.Sprintf("%v", strings.Join(durationFormatSplited, separator))
+	} else {
+		return fmt.Sprintf("%v", strings.Join(durationFormatSplited, ""))
+	}
+}
+
+// Sépare les éléments du format de date
+func splitFormat(format, separator string) []string {
+	var durationFormatSplited []string
+	if separator == "" {
+		//Tente une séparation intelligente sans séparateur
+		var isTextAfter = strings.HasPrefix(strings.Trim(format, " "), "{")
+		if isTextAfter {
+			format = strings.Join(strings.Split(format, "{"), "&separator;{")
+		} else {
+			format = strings.Join(strings.Split(format, "}"), "}&separator;")
+		}
+		durationFormatSplited = strings.Split(format, "&separator;")
+		if isTextAfter {
+			durationFormatSplited = durationFormatSplited[1:len(durationFormatSplited)]
+		}
+	} else {
+		durationFormatSplited = strings.Split(format, separator)
+	}
+	return durationFormatSplited
+}
+
+// Convertit le nombre de milliseconds en une autre unité à l'aide de "convertUnit"
+// ajoute dans "durationFormatSplited" à la place de "regex" la valeur
+// mais retire l'entrée dans le tableau si "printZeroValue" = false
+func insertCalculatedUnit(durationMs *float64, nextIndex *int, convertUnit int, durationFormatSplited *[]string, format string, regex string, printZeroValues bool) {
+	if strings.Contains(format, regex) {
+		unitValue := math.Floor(*durationMs / float64(convertUnit))
+		if unitValue > 0 || printZeroValues {
+			(*durationFormatSplited)[*nextIndex] = strings.Replace((*durationFormatSplited)[*nextIndex], regex, strconv.Itoa(int(unitValue)), -1)
+			*durationMs -= unitValue * float64(convertUnit)
+			*nextIndex++
+		} else {
+			*durationFormatSplited = append((*durationFormatSplited)[:*nextIndex], (*durationFormatSplited)[*nextIndex+1:]...)
+		}
+	}
+}
+
+// Convertit une durée en millisecondes
+func asMilliseconds(duration float64, inputUnit string) float64 {
+	switch inputUnit {
+	case "ms":
+		return duration
+	case "s":
+		return duration * 1000
+	case "m":
+		return asMilliseconds(duration*60, "s")
+	case "h":
+		return asMilliseconds(duration*60, "m")
+	case "d":
+		return asMilliseconds(duration*24, "h")
+	default:
+		return 0
+	}
 }

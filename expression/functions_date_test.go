@@ -470,3 +470,35 @@ func TestGetValueForCurrentDay(t *testing.T) {
 	}
 	AssertNotEqual(t, value, -1)
 }
+
+func TestGetFormattedDuration(t *testing.T) {
+	testCases := []struct {
+		name            string
+		duration        interface{}
+		inputUnit       interface{}
+		format          interface{}
+		separator       interface{}
+		keepSeparator   interface{}
+		printZeroValues interface{}
+		want            string
+	}{
+		{"convert milliseconds", 43100030, "ms", "{h} Hours {m} Minutes {s} Seconds", "", false, false, "11 Hours 58 Minutes 20 Seconds"},
+		{"with separator kept", 43100030, "ms", "{h} Hours, {m} Minutes, {s} Seconds", ",", true, false, "11 Hours, 58 Minutes, 20 Seconds"},
+		{"with separator not kept", 43100030, "ms", "{h} Hours, {m} Minutes, {s} Seconds", ",", false, false, "11 Hours 58 Minutes 20 Seconds"},
+		{"hours only", 43100030, "ms", "{h} Hours", "", false, false, "11 Hours"},
+		{"convert day to minutes", 3, "d", "{m} minutes", "", false, false, "4320 minutes"},
+		{"value kept in milliseconds", 1234567, "ms", "{ms} ms", "", false, false, "1234567 ms"},
+		{"invalid unit without print 0 values", 1000, "test", "{ms} ms", "", false, false, ""},
+		{"invalid unit with print 0 values", 1000, "test", "{ms} ms", "", false, true, "0 ms"},
+		{"invalid type", "1000", "test", 100, 0, 1, 1, "error"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getFormattedDuration(tc.duration, tc.inputUnit, tc.format, tc.separator, tc.keepSeparator, tc.printZeroValues)
+			if got != tc.want {
+				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+			}
+		})
+	}
+}
