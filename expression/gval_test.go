@@ -413,6 +413,48 @@ func TestEvalFormatDate(t *testing.T) {
 
 }
 
+func TestEvalGetFormattedDuration(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expression     string
+		variables      map[string]interface{}
+		expectedResult string
+	}{
+		{
+			name:           "convert milliseconds",
+			expression:     "get_formatted_duration(43100030, \"ms\", \"{h} Hours {m} Minutes {s} Seconds\", \"\", false, false)",
+			variables:      map[string]interface{}{},
+			expectedResult: "11 Hours 58 Minutes 20 Seconds",
+		},
+		{
+			name:           "invalid unit with print 0 values",
+			expression:     "get_formatted_duration(a, \"test\", \"{ms} ms\", \"\", false, true)",
+			variables:      map[string]interface{}{"a": 1000},
+			expectedResult: "0 ms",
+		},
+		{
+			name:           "invalid type",
+			expression:     "get_formatted_duration(a, \"test\", 100, 0, 1, 1)",
+			variables:      map[string]interface{}{"a": "test"},
+			expectedResult: "error",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Process(LangEval, tc.expression, tc.variables)
+			if err != nil {
+				t.Error(err)
+			}
+
+			if result != tc.expectedResult {
+				t.Errorf("Result value is not as expected: got \"%v\", want \"%v\"", result, tc.expectedResult)
+			}
+		})
+	}
+
+}
+
 func TestEvalGetValueForCurrentDay(t *testing.T) {
 	// testing replace without variables
 	eval, err := Process(LangEval, "get_value_current_day([1,2,3,4,5,6,7], "+

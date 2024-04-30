@@ -2,6 +2,7 @@ package expression
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -469,4 +470,126 @@ func TestGetValueForCurrentDay(t *testing.T) {
 		t.FailNow()
 	}
 	AssertNotEqual(t, value, -1)
+}
+
+func TestGetFormattedDuration(t *testing.T) {
+	testCases := []struct {
+		name            string
+		duration        interface{}
+		inputUnit       interface{}
+		format          interface{}
+		separator       interface{}
+		keepSeparator   interface{}
+		printZeroValues interface{}
+		want            string
+	}{
+		{"convert milliseconds", 43100030, "ms", "{h} Hours {m} Minutes {s} Seconds", "", false, false, "11 Hours 58 Minutes 20 Seconds"},
+		{"with separator kept", 43100030, "ms", "{h} Hours, {m} Minutes, {s} Seconds", ",", true, false, "11 Hours, 58 Minutes, 20 Seconds"},
+		{"with separator not kept", 43100030, "ms", "{h} Hours, {m} Minutes, {s} Seconds", ",", false, false, "11 Hours 58 Minutes 20 Seconds"},
+		{"hours only", 43100030, "ms", "{h} Hours", "", false, false, "11 Hours"},
+		{"convert day to minutes", 3, "d", "{m} minutes", "", false, false, "4320 minutes"},
+		{"value kept in milliseconds", 1234567, "ms", "{ms} ms", "", false, false, "1234567 ms"},
+		{"invalid unit without print 0 values", 1000, "test", "{ms} ms", "", false, false, ""},
+		{"invalid unit with print 0 values", 1000, "test", "{ms} ms", "", false, true, "0 ms"},
+		{"invalid type for duration", 1000, 1, 100, 0, 1, 1, "error"},
+		{"invalid type for inputUnit", 1000, "test", 100, 0, 1, 1, "error"},
+		{"invalid type for format", 1000, "test", 100, 0, 1, 1, "error"},
+		{"invalid type for separator", 1000, "test", "", 0, 1, 1, "error"},
+		{"invalid type for keepSeparator", 1000, "test", "", "", 1, 1, "error"},
+		{"invalid type for printZeroValues", 1000, "test", "", "", true, 1, "error"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := getFormattedDuration(tc.duration, tc.inputUnit, tc.format, tc.separator, tc.keepSeparator, tc.printZeroValues)
+			if got != tc.want {
+				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSplitFormat(t *testing.T) {
+	testCases := []struct {
+		name      string
+		format    string
+		separator string
+		want      []string
+	}{
+		{"full format", "{h} Hours {m} Minutes {s} Seconds", "", []string{"{h} Hours ", "{m} Minutes ", "{s} Seconds"}},
+		{"full format with separators", "{h} Hours, {m} Minutes, {s} Seconds", ",", []string{"{h} Hours", " {m} Minutes", " {s} Seconds"}},
+		{"hours only", "{h} Hours", "", []string{"{h} Hours"}},
+		{"time format", "{h}:{m}:{s}", ":", []string{"{h}", "{m}", "{s}"}},
+		{"empty format", "", "", []string{""}},
+		{"format with specified separator and without variables to replace", "a,a,a,a,a", ",", []string{"a", "a", "a", "a", "a"}},
+		{"format with separator and without variables to replace", "a,a,a,a,a", "", []string{"a,a,a,a,a"}},
+		{"invalid type", "{d} jours {g} ??", "", []string{"{d} jours ", "{g} ??"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := splitFormat(tc.format, tc.separator)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestInsertCalculatedUnit(t *testing.T) {
+	testCases := []struct {
+		name                   string
+		durationMs             float64
+		nextIndex, convertUnit int
+		durationFormatSplited  []string
+		format, regex          string
+		printZeroValues        bool
+		want1                  float64
+		want2                  int
+		want3                  []string
+	}{
+		{"test insert", 1000, 0, 1000, []string{"test replace"}, "test replace", "replace", false, 0, 1, []string{"test 1"}},
+		{"test insert zero value not kept", 0, 0, 1, []string{"test replace"}, "test replace", "replace", false, 0, 0, []string{}},
+		{"test insert zero value kept", 0, 0, 1, []string{"test replace"}, "test replace", "replace", true, 0, 1, []string{"test 0"}},
+		{"test insert random number", 43100030, 0, 1000 * 60 * 60, []string{"test replace"}, "test replace", "replace", true, 43100030 - 11*1000*60*60, 1, []string{"test 11"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got1, got2, got3 :=
+				insertCalculatedUnit(tc.durationMs, tc.nextIndex, tc.convertUnit,
+					tc.durationFormatSplited, tc.format, tc.regex, tc.printZeroValues,
+				)
+			if got1 != tc.want1 || got2 != tc.want2 || !reflect.DeepEqual(got3, tc.want3) {
+				t.Errorf("getFormattedDuration() test with name \"%v\" returned {%v, %v, %v}, want {%v, %v, %v}",
+					tc.name, got1, got2, got3, tc.want1, tc.want2, tc.want3,
+				)
+			}
+		})
+	}
+}
+
+func TestAsMilliseconds(t *testing.T) {
+	testCases := []struct {
+		name      string
+		duration  float64
+		inputUnit string
+		want      float64
+	}{
+		{"convert milliseconds as milliseconds", 1234, "ms", 1234},
+		{"convert seconds as milliseconds", 1, "s", 1000},
+		{"convert minutes as milliseconds", 1, "m", 60000},
+		{"convert hours as milliseconds", 1, "h", 3600000},
+		{"convert days as milliseconds", 1, "d", 86400000},
+		{"convert milliseconds as milliseconds", 1234, "test", 0},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := asMilliseconds(tc.duration, tc.inputUnit)
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+			}
+		})
+	}
 }

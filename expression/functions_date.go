@@ -2,6 +2,8 @@ package expression
 
 import (
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -332,4 +334,143 @@ func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
 	}
 
 	return defaultValue, nil
+}
+
+func getFormattedDuration(duration, inputUnit, format, separator, keepSeparator, printZeroValues interface{}) string {
+	durationTyped, ok := duration.(float64)
+	durationInt, ok2 := duration.(int)
+
+	if !ok && !ok2 {
+		return "error"
+	}
+
+	if ok2 {
+		durationTyped = float64(durationInt)
+	}
+
+	inputUnitTyped, ok := inputUnit.(string)
+	if !ok {
+		return "error"
+	}
+
+	formatTyped, ok := format.(string)
+	if !ok {
+		return "error"
+	}
+
+	separatorTyped, ok := separator.(string)
+	if !ok {
+		return "error"
+	}
+
+	keepSeparatorTyped, ok := keepSeparator.(bool)
+	if !ok {
+		return "error"
+	}
+
+	printZeroValuesTyped, ok := printZeroValues.(bool)
+	if !ok {
+		return "error"
+	}
+
+	return getFormattedDurationTyped(
+		durationTyped, inputUnitTyped, formatTyped,
+		separatorTyped, keepSeparatorTyped, printZeroValuesTyped,
+	)
+}
+
+// duration : to convert
+// input Unit : ms | s | m | h | d
+// format : wanted output for duration
+// separator : specify your separator to explicitly set where elements limits are in string
+// keepSeparator : if separator should be kept in output
+// printZeroValues : during conversion on each required unit in format, if value is 0, it can be kept or not in output string
+func getFormattedDurationTyped(duration float64, inputUnit, format, separator string, keepSeparator, printZeroValues bool) string {
+
+	durationMs := asMilliseconds(duration, inputUnit)
+	nextIndex := 0
+
+	durationFormatSplited := splitFormat(format, separator)
+
+	durationMs, nextIndex, durationFormatSplited =
+		insertCalculatedUnit(durationMs, nextIndex, 1000*60*60*24, durationFormatSplited, format, "{d}", printZeroValues)
+	durationMs, nextIndex, durationFormatSplited =
+		insertCalculatedUnit(durationMs, nextIndex, 1000*60*60, durationFormatSplited, format, "{h}", printZeroValues)
+	durationMs, nextIndex, durationFormatSplited =
+		insertCalculatedUnit(durationMs, nextIndex, 1000*60, durationFormatSplited, format, "{m}", printZeroValues)
+	durationMs, nextIndex, durationFormatSplited =
+		insertCalculatedUnit(durationMs, nextIndex, 1000, durationFormatSplited, format, "{s}", printZeroValues)
+	durationMs, nextIndex, durationFormatSplited =
+		insertCalculatedUnit(durationMs, nextIndex, 1, durationFormatSplited, format, "{ms}", printZeroValues)
+
+	if keepSeparator {
+		return fmt.Sprintf("%v", strings.Join(durationFormatSplited, separator))
+	} else {
+		return fmt.Sprintf("%v", strings.Join(durationFormatSplited, ""))
+	}
+}
+
+// Separates date format elements
+func splitFormat(format, separator string) []string {
+	var durationFormatSplited []string
+	if separator == "" {
+		// Attempting intelligent separation without a separator
+		var isTextAfter = strings.HasPrefix(strings.Trim(format, " "), "{")
+		if isTextAfter {
+			format = strings.Join(strings.Split(format, "{"), "&separator;{")
+		} else {
+			format = strings.Join(strings.Split(format, "}"), "}&separator;")
+		}
+		durationFormatSplited = strings.Split(format, "&separator;")
+
+		if isTextAfter {
+			durationFormatSplited = durationFormatSplited[1:]
+		}
+	} else {
+		durationFormatSplited = strings.Split(format, separator)
+	}
+
+	return durationFormatSplited
+}
+
+// converts the number of milliseconds to another unit using "convertUnit".
+// adds the value to "durationFormatSplited" instead of "regex".
+// but removes the entry from the array if "printZeroValue" = false
+func insertCalculatedUnit(
+	durationMs float64,
+	nextIndex, convertUnit int,
+	durationFormatSplited []string,
+	format, regex string,
+	printZeroValues bool,
+) (float64, int, []string) {
+	if strings.Contains(format, regex) {
+		unitValue := math.Floor(durationMs / float64(convertUnit))
+		if unitValue > 0 || printZeroValues {
+			durationFormatSplited[nextIndex] = strings.ReplaceAll(durationFormatSplited[nextIndex], regex, strconv.Itoa(int(unitValue)))
+			durationMs -= unitValue * float64(convertUnit)
+			nextIndex++
+		} else {
+			durationFormatSplited = append(durationFormatSplited[:nextIndex], durationFormatSplited[nextIndex+1:]...)
+		}
+	}
+
+	return durationMs, nextIndex, durationFormatSplited
+}
+
+// Converts a duration into milliseconds
+func asMilliseconds(duration float64, inputUnit string) float64 {
+	switch inputUnit {
+	case "ms":
+		return duration
+	case "s":
+		return duration * 1000
+	case "m":
+		return asMilliseconds(duration*60, "s")
+	case "h":
+		return asMilliseconds(duration*60, "m")
+	case "d":
+		return asMilliseconds(duration*24, "h")
+	default:
+		return 0
+	}
 }
