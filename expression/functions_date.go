@@ -337,40 +337,34 @@ func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
 }
 
 func getFormattedDuration(duration, inputUnit, format, separator, keepSeparator, printZeroValues interface{}) string {
-	durationTyped, ok := duration.(float64)
-	durationInt, ok2 := duration.(int)
+	durationTyped, err := convertAsFloat(duration)
 
-	if !ok && !ok2 {
-		return "error"
-	}
-
-	if ok2 {
-		durationTyped = float64(durationInt)
+	if err != nil {
+		return fmt.Sprintf("error parsing duration, value given is %v, of type %T", duration, duration)
 	}
 
 	inputUnitTyped, ok := inputUnit.(string)
 	if !ok {
-		return "error"
+		return fmt.Sprintf("error parsing inputUnit, type is %T", inputUnit)
 	}
 
 	formatTyped, ok := format.(string)
 	if !ok {
-		return "error"
+		return fmt.Sprintf("error parsing format, type is %T", format)
 	}
 
 	separatorTyped, ok := separator.(string)
 	if !ok {
-		return "error"
+		return fmt.Sprintf("error parsing separator, type is %T", separator)
 	}
 
-	keepSeparatorTyped, ok := keepSeparator.(bool)
-	if !ok {
-		return "error"
+	keepSeparatorTyped, err := convertAsBool(keepSeparator)
+	if err != nil {
+		return fmt.Sprintf("error parsing keepSeparator, type is %T", keepSeparator)
 	}
-
-	printZeroValuesTyped, ok := printZeroValues.(bool)
-	if !ok {
-		return "error"
+	printZeroValuesTyped, err := convertAsBool(printZeroValues)
+	if err != nil {
+		return fmt.Sprintf("error parsing printZeroValues, type is %T", printZeroValues)
 	}
 
 	return getFormattedDurationTyped(
