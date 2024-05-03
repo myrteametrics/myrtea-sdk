@@ -491,12 +491,14 @@ func TestGetFormattedDuration(t *testing.T) {
 		{"value kept in milliseconds", 1234567, "ms", "{ms} ms", "", false, false, "1234567 ms"},
 		{"invalid unit without print 0 values", 1000, "test", "{ms} ms", "", false, false, ""},
 		{"invalid unit with print 0 values", 1000, "test", "{ms} ms", "", false, true, "0 ms"},
-		{"invalid type for duration", 1000, 1, 100, 0, 1, 1, "error"},
-		{"invalid type for inputUnit", 1000, "test", 100, 0, 1, 1, "error"},
-		{"invalid type for format", 1000, "test", 100, 0, 1, 1, "error"},
-		{"invalid type for separator", 1000, "test", "", 0, 1, 1, "error"},
-		{"invalid type for keepSeparator", 1000, "test", "", "", 1, 1, "error"},
-		{"invalid type for printZeroValues", 1000, "test", "", "", true, 1, "error"},
+		{"convert day in string to minutes", "3", "d", "{m} minutes", "", false, false, "4320 minutes"},
+		{"convert day to minutes with boolean in string", "3", "d", "{m} minutes", "", "false", "false", "4320 minutes"},
+		{"invalid type for duration", "1000aaa", 1, 100, 0, 1, 1, "error parsing duration, value given is 1000aaa, of type string"},
+		{"invalid type for inputUnit", 1000, 1, 100, 0, 1, 1, "error parsing inputUnit, type is int"},
+		{"invalid type for format", 1000, "test", 100, 0, 1, 1, "error parsing format, type is int"},
+		{"invalid type for separator", 1000, "test", "", 0, 1, 1, "error parsing separator, type is int"},
+		{"invalid type for keepSeparator", 1000, "test", "", "", 1, 1, "error parsing keepSeparator, type is int"},
+		{"invalid type for printZeroValues", 1000, "test", "", "", true, 1, "error parsing printZeroValues, type is int"},
 	}
 
 	for _, tc := range testCases {
@@ -530,7 +532,7 @@ func TestSplitFormat(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := splitFormat(tc.format, tc.separator)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+				t.Errorf("splitFormat() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
 			}
 		})
 	}
@@ -561,7 +563,7 @@ func TestInsertCalculatedUnit(t *testing.T) {
 					tc.durationFormatSplited, tc.format, tc.regex, tc.printZeroValues,
 				)
 			if got1 != tc.want1 || got2 != tc.want2 || !reflect.DeepEqual(got3, tc.want3) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned {%v, %v, %v}, want {%v, %v, %v}",
+				t.Errorf("insertCalculatedUnit() test with name \"%v\" returned {%v, %v, %v}, want {%v, %v, %v}",
 					tc.name, got1, got2, got3, tc.want1, tc.want2, tc.want3,
 				)
 			}
@@ -588,7 +590,7 @@ func TestAsMilliseconds(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := asMilliseconds(tc.duration, tc.inputUnit)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+				t.Errorf("asMilliseconds() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
 			}
 		})
 	}

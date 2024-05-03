@@ -433,10 +433,16 @@ func TestEvalGetFormattedDuration(t *testing.T) {
 			expectedResult: "0 ms",
 		},
 		{
+			name:           "valid duration as a string",
+			expression:     "get_formatted_duration(a, \"ms\", \"{ms} ms\", \"\", false, true)",
+			variables:      map[string]interface{}{"a": "1000"},
+			expectedResult: "1000 ms",
+		},
+		{
 			name:           "invalid type",
 			expression:     "get_formatted_duration(a, \"test\", 100, 0, 1, 1)",
 			variables:      map[string]interface{}{"a": "test"},
-			expectedResult: "error",
+			expectedResult: "error parsing duration, value given is test, of type string",
 		},
 	}
 
