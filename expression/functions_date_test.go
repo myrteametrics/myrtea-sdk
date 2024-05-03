@@ -532,7 +532,7 @@ func TestSplitFormat(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := splitFormat(tc.format, tc.separator)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+				t.Errorf("splitFormat() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
 			}
 		})
 	}
@@ -563,7 +563,7 @@ func TestInsertCalculatedUnit(t *testing.T) {
 					tc.durationFormatSplited, tc.format, tc.regex, tc.printZeroValues,
 				)
 			if got1 != tc.want1 || got2 != tc.want2 || !reflect.DeepEqual(got3, tc.want3) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned {%v, %v, %v}, want {%v, %v, %v}",
+				t.Errorf("insertCalculatedUnit() test with name \"%v\" returned {%v, %v, %v}, want {%v, %v, %v}",
 					tc.name, got1, got2, got3, tc.want1, tc.want2, tc.want3,
 				)
 			}
@@ -590,7 +590,7 @@ func TestAsMilliseconds(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got := asMilliseconds(tc.duration, tc.inputUnit)
 			if !reflect.DeepEqual(got, tc.want) {
-				t.Errorf("getFormattedDuration() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
+				t.Errorf("asMilliseconds() test with name \"%v\" returned \"%v\", want \"%v\"", tc.name, got, tc.want)
 			}
 		})
 	}

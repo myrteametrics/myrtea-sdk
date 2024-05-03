@@ -209,13 +209,13 @@ func roundToDecimal(input interface{}, decimalPlaces interface{}) (interface{}, 
 	return rounded / math.Pow(10, float64(intDecimalPlaces)), nil
 }
 
-func safeDivide(dividende interface{}, divider interface{}) float64 {
-	floatDividende, _ := convertAsFloat(dividende)
-	floatDivider, err := convertAsFloat(divider)
+func safeDivide(dividend interface{}, divisor interface{}) float64 {
+	floatDividend, _ := convertAsFloat(dividend)
+	floatDivisor, err := convertAsFloat(divisor)
 
 	if err != nil {
 		return 0
 	}
 
-	return floatDividende / floatDivider
+	return floatDividend / floatDivisor
 }

@@ -54,10 +54,16 @@ func AssertNotEqual(t *testing.T, a interface{}, b interface{}, message ...strin
 
 func convertAsFloat(value interface{}) (float64, error) {
 	switch v := value.(type) {
-	case int, int32, int64:
-		return float64(v.(int)), nil
-	case float32, float64:
-		return v.(float64), nil
+	case int:
+		return float64(v), nil
+	case int32:
+		return float64(v), nil
+	case int64:
+		return float64(v), nil
+	case float32:
+		return float64(v), nil
+	case float64:
+		return float64(v), nil
 	case string:
 		value, err := strconv.ParseFloat(v, 64)
 		if err != nil {
