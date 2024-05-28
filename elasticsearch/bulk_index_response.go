@@ -1,4 +1,4 @@
-package elasticsearchv8
+package elasticsearch
 
 // BulkIndexResponseItem represents the Elasticsearch response item.
 type BulkIndexResponseItem struct {

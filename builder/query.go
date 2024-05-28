@@ -3,9 +3,8 @@ package builder
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
-
 	"github.com/olivere/elastic"
+	"reflect"
 )
 
 // Query is an interface for all parts of an elasticsearch query clause
@@ -258,7 +257,6 @@ func (q *RegexpQuery) Source() elastic.Query {
 	return elastic.NewRegexpQuery(q.Field, q.Value.(string))
 }
 
-
 // Contextualize contextualize the current query filter with key-value system
 func (q *RegexpQuery) Contextualize(key string, value string) {}
 
@@ -272,10 +270,8 @@ func (q *WildcardQuery) Source() elastic.Query {
 	return elastic.NewWildcardQuery(q.Field, q.Value.(string))
 }
 
-
 // Contextualize contextualize the current query filter with key-value system
 func (q *WildcardQuery) Contextualize(key string, value string) {}
-
 
 // RangeQuery represents an elasticsearch range query clause
 type RangeQuery struct {

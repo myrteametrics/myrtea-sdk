@@ -1,4 +1,4 @@
-package elasticsearchv8
+package elasticsearch
 
 import (
 	"errors"
@@ -205,8 +205,8 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 		case engine.For:
 			if reflect.ValueOf(f.Value).Kind() == reflect.Slice {
 				var termsQuery types.TermsQuery
-					termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
-					query.Terms = &termsQuery			
+				termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
+				query.Terms = &termsQuery
 			} else {
 				query.Term = map[string]types.TermQuery{
 					f.Field: {Value: f.Value},
@@ -312,7 +312,7 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 					f.Field: {Value: &value},
 				}
 			}
-			
+
 		default:
 			return nil, errors.New("Invalid filter kind: " + f.Operator.String())
 		}

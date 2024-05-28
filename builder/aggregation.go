@@ -2,7 +2,6 @@ package builder
 
 import (
 	"encoding/json"
-
 	"github.com/olivere/elastic"
 )
 
