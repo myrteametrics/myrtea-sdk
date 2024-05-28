@@ -51,9 +51,9 @@ func TestBuildAgg(t *testing.T) {
 						&engine.LeafConditionFragment{Operator: engine.Between, Field: "myfield", Value: 10, Value2: 1000},
 						&engine.LeafConditionFragment{Operator: engine.From, Field: "myfield", Value: 10},
 						&engine.LeafConditionFragment{Operator: engine.To, Field: "myfield", Value: 10},
-						&engine.LeafConditionFragment{Operator: engine.Between, Field: "myfield", Value: "myvalue", Value2: "myvalue"},
-						&engine.LeafConditionFragment{Operator: engine.From, Field: "myfield", Value: "myvalue"},
-						&engine.LeafConditionFragment{Operator: engine.To, Field: "myfield", Value: "myvalue"},
+						&engine.LeafConditionFragment{Operator: engine.Between, Field: "myfield", Value: "myvalue", Value2: "myvalue", TimeZone: "+02:00"},
+						&engine.LeafConditionFragment{Operator: engine.From, Field: "myfield", Value: "myvalue", TimeZone: "+02:00"},
+						&engine.LeafConditionFragment{Operator: engine.To, Field: "myfield", Value: "myvalue", TimeZone: "+02:00"},
 					},
 				},
 			},
@@ -289,7 +289,7 @@ func TestBuildElasticFilterWithRegexp(t *testing.T) {
 			if regexpQuery.Value != "ma.*expression" {
 				t.Errorf("Expected regexp value 'ma.*expression', got '%s'", regexpQuery.Value)
 			}
-			break 
+			break
 		}
 	}
 
@@ -351,7 +351,7 @@ func TestBuildElasticFilterWithOptionalRegexp(t *testing.T) {
 			if regexpQuery.Value != "ma.*expression" {
 				t.Errorf("Expected regexp value 'ma.*expression', got '%s'", regexpQuery.Value)
 			}
-			break 
+			break
 		}
 	}
 
@@ -417,7 +417,7 @@ func TestBuildElasticFilterWithWildCard(t *testing.T) {
 			if *wildcardQuery.Value != "ma.*expression" {
 				t.Errorf("Expected Wildcard value 'ma.*expression', got '%s'", *wildcardQuery.Value)
 			}
-			break 
+			break
 		}
 	}
 

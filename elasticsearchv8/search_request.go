@@ -205,8 +205,8 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 		case engine.For:
 			if reflect.ValueOf(f.Value).Kind() == reflect.Slice {
 				var termsQuery types.TermsQuery
-					termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
-					query.Terms = &termsQuery			
+				termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
+				query.Terms = &termsQuery
 			} else {
 				query.Term = map[string]types.TermQuery{
 					f.Field: {Value: f.Value},
@@ -214,67 +214,17 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 			}
 
 		case engine.From:
-			var rangeQuery types.RangeQuery
-			if value, ok := f.Value.(float64); ok {
-				var tvalue types.Float64 = types.Float64(value)
-				rangeQuery = types.NumberRangeQuery{
-					Gte: &tvalue,
-				}
-			}
-			if value, ok := f.Value.(string); ok {
-				rangeQuery = types.DateRangeQuery{
-					Gte:      some.String(value),
-					TimeZone: some.String(f.TimeZone),
-				}
-			}
 			query.Range = map[string]types.RangeQuery{
-				f.Field: rangeQuery,
+				f.Field: createRangeQuery(f.Field, f.Value, nil, f.TimeZone),
 			}
-
 		case engine.To:
-			var rangeQuery types.RangeQuery
-			if value, ok := f.Value.(float64); ok {
-				var tvalue types.Float64 = types.Float64(value)
-				rangeQuery = types.NumberRangeQuery{
-					Lt: &tvalue,
-				}
-			}
-			if value, ok := f.Value.(string); ok {
-				rangeQuery = types.DateRangeQuery{
-					Lt:       some.String(value),
-					TimeZone: some.String(f.TimeZone),
-				}
-			}
 			query.Range = map[string]types.RangeQuery{
-				f.Field: rangeQuery,
+				f.Field: createRangeQuery(f.Field, nil, f.Value, f.TimeZone),
 			}
-
 		case engine.Between:
-			var rangeQuery types.RangeQuery
-			value, ok := f.Value.(float64)
-			value2, ok2 := f.Value2.(float64)
-			if ok && ok2 {
-				var tvalue types.Float64 = types.Float64(value)
-				var tvalue2 types.Float64 = types.Float64(value2)
-				rangeQuery = types.NumberRangeQuery{
-					Gte: &tvalue,
-					Lt:  &tvalue2,
-				}
-			}
-
-			valueStr, ok := f.Value.(string)
-			valueStr2, ok2 := f.Value2.(string)
-			if ok && ok2 {
-				rangeQuery = types.DateRangeQuery{
-					Gte: some.String(valueStr),
-					Lt:  some.String(valueStr2),
-				}
-			}
-
 			query.Range = map[string]types.RangeQuery{
-				f.Field: rangeQuery,
+				f.Field: createRangeQuery(f.Field, f.Value, f.Value2, f.TimeZone),
 			}
-
 		case engine.OptionalFor:
 			if f.Field == "" || f.Value == "" {
 				return nil, nil
@@ -312,10 +262,69 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 					f.Field: {Value: &value},
 				}
 			}
-			
+
 		default:
 			return nil, errors.New("Invalid filter kind: " + f.Operator.String())
 		}
 	}
 	return query, nil
+}
+
+func createRangeQuery(field string, value interface{}, value2 interface{}, timeZone string) types.RangeQuery {
+	var rangeQuery types.RangeQuery
+
+	if value != nil {
+		switch v := value.(type) {
+		case float64:
+			tvalue := types.Float64(v)
+			if value2 != nil {
+				if v2, ok := value2.(float64); ok {
+					tvalue2 := types.Float64(v2)
+					rangeQuery = types.NumberRangeQuery{
+						Gte: &tvalue,
+						Lt:  &tvalue2,
+					}
+				} else {
+					rangeQuery = types.NumberRangeQuery{
+						Gte: &tvalue,
+					}
+				}
+			} else {
+				rangeQuery = types.NumberRangeQuery{
+					Gte: &tvalue,
+				}
+			}
+		case string:
+			dateRangeQuery := types.DateRangeQuery{
+				Gte: some.String(v),
+			}
+			if value2 != nil {
+				if v2, ok := value2.(string); ok {
+					dateRangeQuery.Lt = some.String(v2)
+				}
+			}
+			if timeZone != "" {
+				dateRangeQuery.TimeZone = some.String(timeZone)
+			}
+			rangeQuery = dateRangeQuery
+		}
+	} else if value2 != nil {
+		switch v2 := value2.(type) {
+		case float64:
+			tvalue2 := types.Float64(v2)
+			rangeQuery = types.NumberRangeQuery{
+				Lt: &tvalue2,
+			}
+		case string:
+			dateRangeQuery := types.DateRangeQuery{
+				Lt: some.String(v2),
+			}
+			if timeZone != "" {
+				dateRangeQuery.TimeZone = some.String(timeZone)
+			}
+			rangeQuery = dateRangeQuery
+		}
+	}
+
+	return rangeQuery
 }

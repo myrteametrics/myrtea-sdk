@@ -1,6 +1,8 @@
 module github.com/myrteametrics/myrtea-sdk/v4
 
-go 1.20
+go 1.21
+
+toolchain go1.22.3
 
 require (
 	github.com/IBM/sarama v1.43.1
