@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/golang-jwt/jwt/v4"
 
 	"go.uber.org/zap"
 )
@@ -17,15 +16,12 @@ type Middleware interface {
 	Handler(h http.Handler) http.Handler
 }
 
-//
-// TODO: Must be refactored and merged in a single lib with github.com/auth0/go-jwt-middleware/jwtmiddleware.go (instead of wrapping it)
-//
-
 // MiddlewareJWT is an implementation of Middleware interface, which provides a specific security handler based on JWT (JSON Web Token)
 type MiddlewareJWT struct {
 	Auth       Auth
 	Handler    func(h http.Handler) http.Handler
 	signingKey []byte
+	JwtAuth    *jwtauth.JWTAuth
 }
 
 // JwtToken wrap the json web token string
@@ -53,22 +49,13 @@ func RandString(length int) string {
 
 // NewMiddlewareJWT initialize a new instance of MiddlewareJWT and returns a pointer of it
 func NewMiddlewareJWT(jwtSigningKey []byte, auth Auth) *MiddlewareJWT {
-	/*
-		var jwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
-			ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-				return jwtSigningKey, nil
-			},
-			SigningMethod: jwt.SigningMethodHS256,
-			Debug:         true,
-		})
-		securingHandler := jwtMiddleware.Handler
-	*/
-	return &MiddlewareJWT{auth, nil, jwtSigningKey}
+	tokenAuth := jwtauth.New("HS256", jwtSigningKey, nil)
+	return &MiddlewareJWT{auth, nil, jwtSigningKey, tokenAuth}
 }
 
 // GetToken returns a http.Handler to authenticate and get a JWT
 func (middleware *MiddlewareJWT) GetToken() http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		var credentials UserWithPassword
 		err := json.NewDecoder(r.Body).Decode(&credentials)
 		if err != nil {
@@ -89,7 +76,7 @@ func (middleware *MiddlewareJWT) GetToken() http.HandlerFunc {
 			return
 		}
 
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		_, tokenString, err := middleware.JwtAuth.Encode(map[string]interface{}{
 			"iss":  "Myrtea metrics",
 			"exp":  time.Now().Add(time.Hour * 12).Unix(),
 			"iat":  time.Now().Unix(),
@@ -97,9 +84,6 @@ func (middleware *MiddlewareJWT) GetToken() http.HandlerFunc {
 			"role": user.Role,
 			"id":   user.ID,
 		})
-
-		// Sign the token with our signing key
-		tokenString, err := token.SignedString(middleware.signingKey)
 		if err != nil {
 			zap.L().Error("Error while signing token", zap.Error(err))
 			w.WriteHeader(http.StatusBadRequest)
@@ -112,7 +96,7 @@ func (middleware *MiddlewareJWT) GetToken() http.HandlerFunc {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-	})
+	}
 }
 
 // AdminAuthentificator is a middle which check if the user is administrator (role=1)
@@ -128,10 +112,3 @@ func AdminAuthentificator(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
-
-// Handler return a specific securing Handler. It should be used to wrap other handlers which must be secured with JWT
-/*
-func (middleware *MiddlewareJWT) Handler(next http.Handler) http.Handler {
-	return middleware.Handler(next)
-}
-*/

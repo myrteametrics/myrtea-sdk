@@ -32,8 +32,8 @@ var (
 	LangExprMath = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("length", length),
-		gval.Function("max", max),
-		gval.Function("min", min),
+		gval.Function("max", mathMax),
+		gval.Function("min", mathMin),
 		gval.Function("sum", sum),
 		gval.Function("average", average),
 		gval.Function("roundToDecimal", roundToDecimal),

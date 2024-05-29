@@ -73,7 +73,7 @@ func TestLength(t *testing.T) {
 
 // Usage: <value> [<value>...]
 func TestMax(t *testing.T) {
-	val, err := max([]int{2, 3, 1})
+	val, err := mathMax([]int{2, 3, 1})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -81,7 +81,7 @@ func TestMax(t *testing.T) {
 	if val != 3.0 {
 		t.Error("invalid max")
 	}
-	val, err = max([]int{})
+	val, err = mathMax([]int{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -91,7 +91,7 @@ func TestMax(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = max([]float64{2.0, 3.0, 1.0})
+	val, err = mathMax([]float64{2.0, 3.0, 1.0})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -99,7 +99,7 @@ func TestMax(t *testing.T) {
 	if val != 3.0 {
 		t.Error("invalid max")
 	}
-	val, err = max([]float64{})
+	val, err = mathMax([]float64{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -109,7 +109,7 @@ func TestMax(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = max([]string{"a", "4", "c"})
+	val, err = mathMax([]string{"a", "4", "c"})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -117,7 +117,7 @@ func TestMax(t *testing.T) {
 	if val != "c" {
 		t.Error("invalid max")
 	}
-	val, err = max([]string{})
+	val, err = mathMax([]string{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -127,7 +127,7 @@ func TestMax(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = max([]interface{}{true, true, false})
+	val, err = mathMax([]interface{}{true, true, false})
 	if err == nil {
 		t.Error("invalid type should return an error")
 		t.FailNow()
@@ -136,7 +136,7 @@ func TestMax(t *testing.T) {
 
 // Usage: <value> [<value>...]
 func TestMin(t *testing.T) {
-	val, err := min([]int{2, 3, 1})
+	val, err := mathMin([]int{2, 3, 1})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -144,7 +144,7 @@ func TestMin(t *testing.T) {
 	if val != 1.0 {
 		t.Error("invalid min")
 	}
-	val, err = min([]int{})
+	val, err = mathMin([]int{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -154,7 +154,7 @@ func TestMin(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = min([]float64{2.0, 3.0, 1.0})
+	val, err = mathMin([]float64{2.0, 3.0, 1.0})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -162,7 +162,7 @@ func TestMin(t *testing.T) {
 	if val != 1.0 {
 		t.Error("invalid min")
 	}
-	val, err = min([]float64{})
+	val, err = mathMin([]float64{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -172,7 +172,7 @@ func TestMin(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = min([]string{"a", "4", "c"})
+	val, err = mathMin([]string{"a", "4", "c"})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -180,7 +180,7 @@ func TestMin(t *testing.T) {
 	if val != "4" {
 		t.Error("invalid min")
 	}
-	val, err = min([]string{})
+	val, err = mathMin([]string{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -190,7 +190,7 @@ func TestMin(t *testing.T) {
 		t.Log(val)
 	}
 
-	val, err = min([]interface{}{true, true, false})
+	val, err = mathMin([]interface{}{true, true, false})
 	if err == nil {
 		t.Error("invalid type should return an error")
 		t.FailNow()

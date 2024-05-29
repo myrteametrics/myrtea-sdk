@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/builder"
 	"github.com/myrteametrics/myrtea-sdk/v4/expression"
 	"github.com/myrteametrics/myrtea-sdk/v4/utils"
 	"go.uber.org/zap"
@@ -137,7 +136,7 @@ func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]strin
 }
 
 func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string) error {
-	variables := make(map[string]interface{}, 0)
+	variables := make(map[string]interface{})
 	for k, v := range placeholders {
 		variables[k] = v
 	}
@@ -158,7 +157,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 			exp := c.Value.(string)
 			result, err := expression.Process(expression.LangEval, exp, variables)
 			if err != nil {
-				if c.Operator == OptionalFor  || c.Operator == OptionalRegexp || c.Operator == OptionalWildcard{
+				if c.Operator == OptionalFor || c.Operator == OptionalRegexp || c.Operator == OptionalWildcard {
 					c.Field = ""
 					c.Value = ""
 				} else {
@@ -186,93 +185,4 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 		}
 	}
 	return nil
-}
-
-func (f *Fact) toElasticQueryAdvancedSource() (*builder.EsSearch, error) {
-	var search builder.EsSearch
-	var source map[string]interface{}
-	err := json.Unmarshal([]byte(f.AdvancedSource), &source)
-	if err != nil {
-		return nil, err
-	}
-	delete(source, "index")
-	delete(source, "order")
-	b, err := json.Marshal(source)
-	if err != nil {
-		return nil, err
-	}
-
-	search.Source = string(b)
-	return &search, nil
-}
-
-// ToElasticQuery convert the fact in an elasticsearch search query
-func (f *Fact) ToElasticQuery(t time.Time, placeholders map[string]string) (*builder.EsSearch, error) {
-
-	if !f.IsExecutable() {
-		return nil, errors.New("Incomplete fact")
-	}
-
-	if f.AdvancedSource != "" {
-		return f.toElasticQueryAdvancedSource()
-	}
-
-	output := builder.EsSearch{}
-	output.Indices = []string{}
-	output.Size = 0
-	output.Order = false
-
-	if f.Intent != nil {
-		if f.Intent.Operator != Select {
-			var intentQuery builder.Aggregation
-			if f.Model != f.Intent.Term || f.Intent.Operator != Count {
-				var err error
-				intentQuery, err = buildElasticAgg(f.Intent)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if f.Dimensions != nil {
-				var err error
-				intentQuery, err = buildElasticBucket(f.Dimensions, intentQuery)
-				if err != nil {
-					return nil, err
-				}
-			}
-			if intentQuery != nil {
-				output.Aggs = []builder.Aggregation{intentQuery}
-			}
-		} else {
-			output.Order = true
-		}
-	} // else { // find an implicit intent ? }
-
-	if f.Condition != nil {
-		variables := make(map[string]interface{}, 0)
-		for k, v := range placeholders {
-			variables[k] = v
-		}
-		for k, v := range expression.GetDateKeywords(t) {
-			variables[k] = v
-		}
-
-		filterQuery, err := buildElasticFilter(f.Condition, variables)
-		if err != nil {
-			return nil, err
-		}
-		if filterQuery != nil {
-			var filter builder.Query
-			query := builder.BoolQuery{
-				Type:    "bool",
-				Filter:  []builder.Query{filterQuery},
-				Must:    nil,
-				Should:  nil,
-				MustNot: nil,
-			}
-			filter = &query
-			output.Query = filter
-		}
-	}
-
-	return &output, nil
 }
