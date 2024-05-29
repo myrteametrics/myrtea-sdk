@@ -19,7 +19,7 @@ func NewDatabaseAuth(DBClient *sqlx.DB) *DatabaseAuth {
 // Authenticate check the input credentials and returns a User the passwords matches
 func (auth *DatabaseAuth) Authenticate(login string, password string) (bool, User, error) {
 
-	query := `SELECT id, login, role, last_name, first_name, email, created, phone FROM users_v1 
+	query := `SELECT id, login, created, last_name, first_name, email, phone FROM users_v4
 		WHERE login = :login AND (password =crypt(:password, password))`
 	params := map[string]interface{}{
 		"login":    login,
@@ -31,19 +31,13 @@ func (auth *DatabaseAuth) Authenticate(login string, password string) (bool, Use
 	}
 	defer rows.Close()
 
-	var user User
-	i := 0
-	for rows.Next() {
-		err = rows.Scan(&user.ID, &user.Login, &user.Role, &user.LastName, &user.FirstName, &user.Email, &user.Created, &user.Phone)
+	if rows.Next() {
+		var user User
+		err = rows.Scan(&user.ID, &user.Login, &user.Created, &user.LastName, &user.FirstName, &user.Email, &user.Phone)
 		if err != nil {
 			return false, User{}, err
 		}
-		i++
-		break
+		return true, user, nil
 	}
-	if i == 0 {
-		return false, User{}, errors.New("Invalid credentials")
-	}
-
-	return true, user, nil
+	return false, User{}, errors.New("Invalid credentials")
 }
