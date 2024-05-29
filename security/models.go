@@ -2,38 +2,35 @@ package security
 
 import (
 	"errors"
+	uuid "github.com/google/uuid"
 	"time"
 )
 
 // User is used as the main user struct
 type User struct {
-	ID        int64     `json:"id" db:"id"`
-	Login     string    `json:"login" db:"login"`
-	Role      int64     `json:"role" db:"role"`
-	LastName  string    `json:"lastName" db:"lastName"`
-	FirstName string    `json:"firstName" db:"firstName"`
-	Email     string    `json:"email" db:"email"`
-	Phone     string    `json:"phone" db:"phone"`
-	Created   time.Time `json:"created" db:"created"`
+	ID        uuid.UUID `json:"id"`
+	Login     string    `json:"login"` // is the unique identifier of the user, through the different connection modes
+	Created   time.Time `json:"created"`
+	LastName  string    `json:"lastName"`
+	FirstName string    `json:"firstName"`
+	Email     string    `json:"email"`
+	Phone     string    `json:"phone"`
 }
 
-// IsValid checks if an user is valid and has no missing mandatory fields
+// IsValid checks if a user is valid and has no missing mandatory fields
 // * Login must not be empty
 // * Login must not be shorter than 3 characters
 // * Role must not be empty (or 0 value)
 // * LastName must not be empty
 func (user *User) IsValid() (bool, error) {
 	if user.Login == "" {
-		return false, errors.New("Missing Login")
+		return false, errors.New("missing Login")
 	}
 	if len(user.Login) < 3 {
-		return false, errors.New("Login is too short (less than 3 charaters)")
-	}
-	if user.Role <= 0 {
-		return false, errors.New("Missing role")
+		return false, errors.New("login is too short (less than 3 charaters)")
 	}
 	if user.LastName == "" {
-		return false, errors.New("Missing Lastname")
+		return false, errors.New("missing Lastname")
 	}
 	return true, nil
 }
@@ -54,10 +51,10 @@ func (user *UserWithPassword) IsValid() (bool, error) {
 		return false, err
 	}
 	if user.Password == "" {
-		return false, errors.New("Missing Password")
+		return false, errors.New("missing Password")
 	}
 	if len(user.Password) < 6 {
-		return false, errors.New("Password is too short (less than 6 characters)")
+		return false, errors.New("password is too short (less than 6 characters)")
 	}
 	return true, nil
 }

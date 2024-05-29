@@ -77,12 +77,11 @@ func (middleware *MiddlewareJWT) GetToken() http.HandlerFunc {
 		}
 
 		_, tokenString, err := middleware.JwtAuth.Encode(map[string]interface{}{
-			"iss":  "Myrtea metrics",
-			"exp":  time.Now().Add(time.Hour * 12).Unix(),
-			"iat":  time.Now().Unix(),
-			"nbf":  time.Now().Unix(),
-			"role": user.Role,
-			"id":   user.ID,
+			"iss": "Myrtea metrics",
+			"exp": time.Now().Add(time.Hour * 12).Unix(),
+			"iat": time.Now().Unix(),
+			"nbf": time.Now().Unix(),
+			"id":  user.ID,
 		})
 		if err != nil {
 			zap.L().Error("Error while signing token", zap.Error(err))
