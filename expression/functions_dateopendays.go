@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/calendar"
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/calendar"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // delayInOpenDays returns the duration between two date in open days/time

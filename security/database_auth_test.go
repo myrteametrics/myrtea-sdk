@@ -5,7 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/myrteametrics/myrtea-sdk/v4/tests"
+	"github.com/myrteametrics/myrtea-sdk/v5/tests"
 )
 
 func dbInit(dbClient *sqlx.DB, t *testing.T) {

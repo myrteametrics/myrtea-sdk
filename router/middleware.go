@@ -5,7 +5,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"net/http"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/handlers/render"
+	"github.com/myrteametrics/myrtea-sdk/v5/handlers/render"
 	"go.uber.org/zap"
 )
 

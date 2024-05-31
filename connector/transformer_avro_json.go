@@ -11,8 +11,8 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/linkedin/goavro"
-	ttlcache "github.com/myrteametrics/myrtea-sdk/v4/cache"
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	ttlcache "github.com/myrteametrics/myrtea-sdk/v5/cache"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // AvroToJSONTransformer :

@@ -10,7 +10,7 @@ import (
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 	"go.uber.org/zap"
 )
 
