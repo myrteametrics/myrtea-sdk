@@ -1,4 +1,4 @@
-package elasticsearchv8
+package elasticsearch
 
 type BulkIndexMeta struct {
 	Index BulkIndexMetaDetail `json:"index"`
