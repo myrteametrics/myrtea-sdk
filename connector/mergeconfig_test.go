@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/models"
+	"github.com/myrteametrics/myrtea-sdk/v5/models"
 )
 
 func TestMergeMath(t *testing.T) {

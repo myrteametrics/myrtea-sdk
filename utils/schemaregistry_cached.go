@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	ttlcache "github.com/myrteametrics/myrtea-sdk/v4/cache"
+	ttlcache "github.com/myrteametrics/myrtea-sdk/v5/cache"
 )
 
 // CachedSchemaRegistry :

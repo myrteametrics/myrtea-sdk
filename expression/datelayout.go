@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 var (

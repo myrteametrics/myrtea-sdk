@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // dayOfWeek returns the input date day of week (1 to 7)

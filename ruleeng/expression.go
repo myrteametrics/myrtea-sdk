@@ -6,14 +6,14 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/expression"
+	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 )
 
-//Expression struct to represent an expression
+// Expression struct to represent an expression
 type Expression string
 
-//EvaluateAsBool evaluates the expression and verifies that the result is the type boolean
-//use to evaluate the conditions in the rule cases (conditions should return a boolean as result)
+// EvaluateAsBool evaluates the expression and verifies that the result is the type boolean
+// use to evaluate the conditions in the rule cases (conditions should return a boolean as result)
 func (exp Expression) EvaluateAsBool(k KnowledgeBase) (bool, error) {
 	value, err := expression.Process(expression.LangEval, string(exp), k.GetFacts())
 
@@ -29,7 +29,7 @@ func (exp Expression) EvaluateAsBool(k KnowledgeBase) (bool, error) {
 	}
 }
 
-//EvaluateAsString evaluates the expression and verifies that the result is the type string
+// EvaluateAsString evaluates the expression and verifies that the result is the type string
 func (exp Expression) EvaluateAsString(k KnowledgeBase) (string, error) {
 	value, err := expression.Process(expression.LangEval, string(exp), k.GetFacts())
 
@@ -45,12 +45,12 @@ func (exp Expression) EvaluateAsString(k KnowledgeBase) (string, error) {
 	}
 }
 
-//Evaluate evaluates the expression and return the result as interface{}
+// Evaluate evaluates the expression and return the result as interface{}
 func (exp Expression) Evaluate(k KnowledgeBase) (interface{}, error) {
 	return expression.Process(expression.LangEval, string(exp), k.GetFacts())
 }
 
-//MarshalJSON mashals a Expression to a a quoted json string
+// MarshalJSON mashals a Expression to a a quoted json string
 func (exp Expression) MarshalJSON() ([]byte, error) {
 	buffer := bytes.NewBufferString(`"`)
 	buffer.WriteString(strings.Replace(string(exp), "\"", "\\\"", -1))

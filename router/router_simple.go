@@ -2,16 +2,16 @@ package router
 
 import (
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/myrteametrics/myrtea-sdk/v4/connector"
+	"github.com/myrteametrics/myrtea-sdk/v5/connector"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/myrteametrics/myrtea-sdk/v4/handlers"
-	"github.com/myrteametrics/myrtea-sdk/v4/postgres"
-	"github.com/myrteametrics/myrtea-sdk/v4/security"
+	"github.com/myrteametrics/myrtea-sdk/v5/handlers"
+	"github.com/myrteametrics/myrtea-sdk/v5/postgres"
+	"github.com/myrteametrics/myrtea-sdk/v5/security"
 
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
