@@ -1,4 +1,4 @@
-module github.com/myrteametrics/myrtea-sdk/v4
+module github.com/myrteametrics/myrtea-sdk/v5
 
 go 1.22
 
