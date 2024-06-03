@@ -14,6 +14,10 @@ func GetTime(t time.Time) string {
 
 // GetTimeZone return timezone of the input time
 func GetTimeZone(t time.Time) string {
+	_, offset := t.Zone()
+	if offset == 0 {
+		return ""
+	}
 	return t.Format("-07:00")
 }
 

@@ -106,7 +106,7 @@ func TestContextualize2(t *testing.T) {
 				&LeafConditionFragment{Operator: From, Field: "myfield", Value: `var1 + "test"`},
 				&LeafConditionFragment{Operator: From, Field: "myfield", Value: `begin`},
 				&LeafConditionFragment{Operator: From, Field: "myfield", Value: `begin + "test"`},
-				&LeafConditionFragment{Operator: From, Field: "myfield", Value: `calendar_add(begin, "-24h")`},
+				&LeafConditionFragment{Operator: From, Field: "myfield", Value: `calendar_add(begin, "-24h")`, TimeZone: "\"+02:00\""},
 			},
 		},
 	}

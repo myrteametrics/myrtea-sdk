@@ -182,6 +182,20 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 		}
 		if c.TimeZone == "" && (c.Operator == From || c.Operator == To || c.Operator == Between) {
 			c.TimeZone = utils.GetTimeZone(t)
+		} else if c.TimeZone != "" {
+			result, err := expression.Process(expression.LangEval, c.TimeZone, variables)
+			if err != nil {
+				zap.L().Warn("Expression evaluation failed", zap.String("exp", c.TimeZone), zap.Error(err))
+				return err
+			}
+			if result != nil {
+				if strResult, ok := result.(string); ok {
+					c.TimeZone = strResult
+				} else {
+					zap.L().Warn("Result is not a string", zap.Any("result", result))
+					return errors.New("expression result is not a string")
+				}
+			}
 		}
 	}
 	return nil
