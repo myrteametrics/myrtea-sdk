@@ -3,7 +3,7 @@ package expression
 import (
 	"fmt"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 func flattenFact(arguments ...interface{}) (map[string]interface{}, error) {

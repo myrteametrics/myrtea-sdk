@@ -1,4 +1,4 @@
-package elasticsearchv8
+package elasticsearch
 
 import (
 	"errors"
@@ -9,8 +9,8 @@ import (
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/myrteametrics/myrtea-sdk/v4/engine"
-	"github.com/myrteametrics/myrtea-sdk/v4/expression"
+	"github.com/myrteametrics/myrtea-sdk/v5/engine"
+	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 	"go.uber.org/zap"
 )
 

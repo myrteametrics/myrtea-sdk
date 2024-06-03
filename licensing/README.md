@@ -10,7 +10,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/license"
+	"github.com/myrteametrics/myrtea-sdk/v5/license"
 )
 
 func main() {
@@ -40,7 +40,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/license"
+	"github.com/myrteametrics/myrtea-sdk/v5/license"
 )
 
 var publicKey = []byte(`

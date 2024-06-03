@@ -24,7 +24,7 @@ func length(input interface{}) (interface{}, error) {
 }
 
 // Usage: <value> [<value>...]
-func max(input interface{}) (interface{}, error) {
+func mathMax(input interface{}) (interface{}, error) {
 	switch v := input.(type) {
 	case []int:
 		return maxInts(v), nil
@@ -38,7 +38,7 @@ func max(input interface{}) (interface{}, error) {
 }
 
 // Usage: <value> [<value>...]
-func min(input interface{}) (interface{}, error) {
+func mathMin(input interface{}) (interface{}, error) {
 	switch v := input.(type) {
 	case []int:
 		return minInts(v), nil
@@ -92,81 +92,81 @@ func maxFloats(input []float64) float64 {
 	if len(input) == 0 {
 		return 0
 	}
-	max := input[0]
+	maxVal := input[0]
 	for _, v := range input {
-		if max < v {
-			max = v
+		if maxVal < v {
+			maxVal = v
 		}
 	}
-	return max
+	return maxVal
 }
 
 func maxStrings(input []string) string {
 	if len(input) == 0 {
 		return ""
 	}
-	max := input[0]
+	maxVal := input[0]
 	for _, v := range input {
-		if max < v {
-			max = v
+		if maxVal < v {
+			maxVal = v
 		}
 	}
-	return max
+	return maxVal
 }
 
 func minInts(input []int) float64 {
 	if len(input) == 0 {
 		return 0
 	}
-	min := input[0]
+	minVal := input[0]
 	for _, v := range input {
-		if min > v {
-			min = v
+		if minVal > v {
+			minVal = v
 		}
 	}
-	return (float64)(min)
+	return (float64)(minVal)
 }
 
 func minFloats(input []float64) float64 {
 	if len(input) == 0 {
 		return 0
 	}
-	min := input[0]
+	minVal := input[0]
 	for _, v := range input {
-		if min > v {
-			min = v
+		if minVal > v {
+			minVal = v
 		}
 	}
-	return min
+	return minVal
 }
 
 func minStrings(input []string) string {
 	if len(input) == 0 {
 		return ""
 	}
-	min := input[0]
+	minVal := input[0]
 	for _, v := range input {
-		if min > v {
-			min = v
+		if minVal > v {
+			minVal = v
 		}
 	}
-	return min
+	return minVal
 }
 
 func sumInts(input []int) float64 {
-	sum := 0
+	sumVal := 0
 	for _, v := range input {
-		sum = sum + v
+		sumVal = sumVal + v
 	}
-	return (float64)(sum)
+	return (float64)(sumVal)
 }
 
 func sumFloats(input []float64) float64 {
-	sum := (float64)(0)
+	sumVal := (float64)(0)
 	for _, v := range input {
-		sum = sum + v
+		sumVal = sumVal + v
 	}
-	return sum
+	return sumVal
 }
 
 func averageInts(input []int) float64 {

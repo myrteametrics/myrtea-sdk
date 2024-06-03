@@ -1,11 +1,11 @@
-package elasticsearchv8
+package elasticsearch
 
 import (
 	"encoding/json"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/puttemplate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/myrteametrics/myrtea-sdk/v4/modeler"
+	"github.com/myrteametrics/myrtea-sdk/v5/modeler"
 	"go.uber.org/zap"
 )
 

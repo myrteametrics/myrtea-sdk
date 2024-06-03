@@ -5,7 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/myrteametrics/myrtea-sdk/v4/tests"
+	"github.com/myrteametrics/myrtea-sdk/v5/tests"
 )
 
 func dbInit(dbClient *sqlx.DB, t *testing.T) {
@@ -82,9 +82,6 @@ func TestDatabaseAuthenticate(t *testing.T) {
 	if user.Login != "admin" {
 		t.Error("Invalid Name")
 	}
-	if user.Role != 1 {
-		t.Error("Invalid Role")
-	}
 }
 
 func TestDatabaseAuthenticateNoTokens(t *testing.T) {
@@ -105,9 +102,6 @@ func TestDatabaseAuthenticateNoTokens(t *testing.T) {
 	}
 	if user.Login != "test" {
 		t.Error("Invalid Name")
-	}
-	if user.Role != 2 {
-		t.Error("Invalid Role")
 	}
 }
 

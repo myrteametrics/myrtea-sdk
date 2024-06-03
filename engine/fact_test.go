@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 )
@@ -70,136 +69,6 @@ func TestIsExecutableInvalid(t *testing.T) {
 	for _, f := range invalidFacts {
 		if f.IsExecutable() {
 			t.Error("Fact should not be executable")
-		}
-	}
-}
-
-func TestToElasticQueryValidSelect(t *testing.T) {
-
-	t.SkipNow() // Development test
-
-	f := Fact{
-		ID:        1,
-		Name:      "1",
-		Model:     "model",
-		Intent:    &IntentFragment{Operator: Select, Term: "model"},
-		Condition: &LeafConditionFragment{Operator: For, Field: "myfield", Value: "myvalue"},
-	}
-	q, err := f.ToElasticQuery(time.Now(), map[string]string{})
-	if err != nil {
-		t.Error(err)
-	}
-	_ = q
-}
-
-func TestToElasticQueryValid(t *testing.T) {
-	validFacts := []Fact{
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Count, Term: "myintent"},
-			Condition: &BooleanFragment{
-				Operator: And,
-				Fragments: []ConditionFragment{
-					&LeafConditionFragment{Operator: For, Field: "myfield", Value: "myvalue"},
-				},
-			},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Count, Term: "myintent"},
-			Dimensions: []*DimensionFragment{
-				{Operator: By, Term: "mydimension"},
-				{Operator: Histogram, Term: "mydimension"},
-				{Operator: DateHistogram, Term: "mydimension"},
-			},
-			Condition: &BooleanFragment{
-				Operator: And,
-				Fragments: []ConditionFragment{
-					&LeafConditionFragment{Operator: For, Field: "myfield", Value: "myvalue"},
-					&BooleanFragment{
-						Operator: Not,
-						Fragments: []ConditionFragment{
-							&LeafConditionFragment{Operator: Exists, Field: "myfield"},
-							&LeafConditionFragment{Operator: Script, Field: "${myscript}"},
-						},
-					},
-					&BooleanFragment{
-						Operator: Or,
-						Fragments: []ConditionFragment{
-							&LeafConditionFragment{Operator: Between, Field: "myfield", Value: "myvalue", Value2: "myvalue"},
-							&LeafConditionFragment{Operator: From, Field: "myfield", Value: "myvalue"},
-							&LeafConditionFragment{Operator: To, Field: "myfield", Value: "myvalue"},
-						},
-					},
-				},
-			},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Avg, Term: "myintent"},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Sum, Term: "myintent"},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Min, Term: "myintent"},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Max, Term: "myintent"},
-		},
-		{
-			ID:     1,
-			Name:   "1",
-			Model:  "model",
-			Intent: &IntentFragment{Operator: Select, Term: "model"},
-		},
-	}
-
-	for _, f := range validFacts {
-		b, err := json.Marshal(f)
-		if err != nil {
-			t.Error(err)
-		}
-		var f2 Fact
-		err = json.Unmarshal(b, &f2)
-		if err != nil {
-			t.Error(err)
-		}
-		_, err = f.ToElasticQuery(time.Now(), map[string]string{})
-		if err != nil {
-			t.Error(err)
-		}
-	}
-
-}
-
-func TestToElasticQueryInvalid(t *testing.T) {
-	invalidFacts := []Fact{
-		{
-			ID:   1,
-			Name: "1",
-		},
-	}
-
-	for _, f := range invalidFacts {
-		_, err := f.ToElasticQuery(time.Now(), map[string]string{})
-		if err == nil {
-			t.Error("Fact should not be convertible to elastic query")
 		}
 	}
 }
@@ -398,33 +267,6 @@ func TestContextualizeOptionalForEmpty(t *testing.T) {
 	if c1.Fragments[1].(*LeafConditionFragment).Value != "" {
 		t.Error("Fragment 2 Value should have been removed (OptionalFor)")
 	}
-}
-
-func TestToElasticQueryOptionalForEmpty(t *testing.T) {
-
-	f := Fact{
-		ID:        1,
-		Name:      "1",
-		Model:     "model",
-		Intent:    &IntentFragment{Operator: Sum, Term: "model"},
-		Condition: &LeafConditionFragment{Operator: OptionalFor, Field: "myfield", Value: "myvalue"},
-	}
-
-	ti := time.Now()
-	placeholders := map[string]string{}
-
-	f.ContextualizeDimensions(ti, placeholders)
-	err := f.ContextualizeCondition(ti, placeholders)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	q, err := f.ToElasticQuery(ti, placeholders)
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	_ = q
 }
 
 func TestContextualizeForSlice(t *testing.T) {

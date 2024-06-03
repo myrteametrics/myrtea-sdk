@@ -1,18 +1,17 @@
 package router
 
 import (
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/myrteametrics/myrtea-sdk/v4/connector"
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/myrteametrics/myrtea-sdk/v5/connector"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/myrteametrics/myrtea-sdk/v4/handlers"
-	"github.com/myrteametrics/myrtea-sdk/v4/postgres"
-	"github.com/myrteametrics/myrtea-sdk/v4/security"
+	"github.com/myrteametrics/myrtea-sdk/v5/handlers"
+	"github.com/myrteametrics/myrtea-sdk/v5/postgres"
+	"github.com/myrteametrics/myrtea-sdk/v5/security"
 
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -133,9 +132,8 @@ func NewChiRouterSimple(config ConfigSimple) *chi.Mux {
 					// JWT MUST have been verified before by the API Gateway
 					rg.Use(UnverifiedAuthenticator)
 				} else {
-					tokenAuth := jwtauth.New(jwt.SigningMethodHS256.Name, signingKey, nil)
-					rg.Use(jwtauth.Verifier(tokenAuth))
-					rg.Use(jwtauth.Authenticator(tokenAuth))
+					rg.Use(jwtauth.Verifier(securityMiddleware.JwtAuth))
+					rg.Use(jwtauth.Authenticator(securityMiddleware.JwtAuth))
 				}
 			}
 			rg.Use(middleware.SetHeader("Content-Type", "application/json"))

@@ -5,8 +5,7 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"net/http"
 
-	"github.com/lestrrat-go/jwx/v2/jwt"
-	"github.com/myrteametrics/myrtea-sdk/v4/handlers/render"
+	"github.com/myrteametrics/myrtea-sdk/v5/handlers/render"
 	"go.uber.org/zap"
 )
 
@@ -32,7 +31,8 @@ func UnverifiedAuthenticator(next http.Handler) http.Handler {
 			return
 		}
 
-		token, err := jwt.Parse([]byte(tokenStr))
+		auth := &jwtauth.JWTAuth{}
+		token, err := auth.Decode(tokenStr)
 		if err != nil {
 			zap.L().Warn("JWT string cannot be parsed") // , zap.String("jwt", tokenStr)) // Security issue if logged without check ?
 			render.Error(w, r, render.ErrAPISecurityMissingContext, errors.New("invalid JWT"))

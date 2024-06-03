@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/buger/jsonparser"
-	"github.com/myrteametrics/myrtea-sdk/v4/utils"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // JSONMapper :

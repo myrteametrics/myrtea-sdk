@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/myrteametrics/myrtea-sdk/v4/handlers/render"
+	"github.com/myrteametrics/myrtea-sdk/v5/handlers/render"
 )
 
 // IsAlive godoc
