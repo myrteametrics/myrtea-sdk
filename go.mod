@@ -24,6 +24,7 @@ require (
 	github.com/linkedin/goavro v2.1.0+incompatible
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/prometheus/client_golang v1.19.1
+	github.com/redis/rueidis v1.0.38
 	github.com/rickar/cal v1.0.2-0.20191101183814-0e8e6fcfe1c2
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/pflag v1.0.5

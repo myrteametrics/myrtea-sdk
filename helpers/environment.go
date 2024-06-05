@@ -188,6 +188,27 @@ func GetConnectorConfigKeys() []ConfigKey {
 	}
 }
 
+func GetRedisConfigKeys() []ConfigKey {
+	return []ConfigKey{
+		{
+			Type: StringFlag, Name: "REDIS_HOSTS", DefaultValue: []string{"http://localhost:6379"},
+			Description: "Redis hostname(s)",
+		},
+		{
+			Type: StringFlag, Name: "REDIS_PASSWORD", DefaultValue: "",
+			Description: "Redis password",
+		},
+		{
+			Type: StringFlag, Name: "REDIS_USE_RESP3", DefaultValue: "true",
+			Description: "Use RESP3 protocol",
+		},
+		{
+			Type: StringFlag, Name: "REDIS_CLIENT_CACHE", DefaultValue: "false",
+			Description: "Enable client cache (only available when RESP3 is enabled)",
+		},
+	}
+}
+
 // ConfigKey represents the definition of a config flag.
 type ConfigKey struct {
 	Type         ConfigKeyType
