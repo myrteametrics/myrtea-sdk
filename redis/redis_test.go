@@ -6,6 +6,9 @@ import (
 )
 
 func TestNewRedisClient(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping redis test in short mode.")
+	}
 	url := "localhost:6379"
 
 	cli, err := NewRedisClient([]string{url}, "", true, true)
