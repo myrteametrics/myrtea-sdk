@@ -191,7 +191,7 @@ func GetConnectorConfigKeys() []ConfigKey {
 func GetRedisConfigKeys() []ConfigKey {
 	return []ConfigKey{
 		{
-			Type: StringFlag, Name: "REDIS_HOSTS", DefaultValue: []string{"http://localhost:6379"},
+			Type: StringSliceFlag, Name: "REDIS_HOSTS", DefaultValue: []string{"localhost:6379"},
 			Description: "Redis hostname(s)",
 		},
 		{
