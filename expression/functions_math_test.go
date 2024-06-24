@@ -359,3 +359,27 @@ func TestSafeDivide(t *testing.T) {
 		})
 	}
 }
+
+func TestNumberWithoutExponent(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value interface{}
+		want  string
+	}{
+		{"integer value", 100000, "100000"},
+		{"integer value with exponent", 1e7, "10000000"},
+		{"float value", 18767.4868, "18767.4868"},
+		{"float value with exponent", 4e-05, "0.00004"},
+		{"float value with exponent as string", "4e-05", "0.00004"},
+		{"not a number", "this is not a number", "this is not a number"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := numberWithoutExponent(tc.value)
+			if got != tc.want {
+				t.Errorf("NumberWithoutExponent(%v) = %v, want %v", tc.value, got, tc.want)
+			}
+		})
+	}
+}

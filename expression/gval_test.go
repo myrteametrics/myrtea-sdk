@@ -571,3 +571,51 @@ func TestEvalSafeDivide(t *testing.T) {
 	}
 
 }
+
+func TestEvalNumberWithoutExponent(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expression     string
+		variables      map[string]interface{}
+		expectedResult string
+	}{
+		{
+			name:           "remove exponent in 4e-05",
+			expression:     "numberWithoutExponent(4e-05)",
+			variables:      map[string]interface{}{},
+			expectedResult: "0.00004",
+		},
+		{
+			name:           "test on integer with exponent",
+			expression:     "numberWithoutExponent(1e6)",
+			variables:      map[string]interface{}{},
+			expectedResult: "1000000",
+		},
+		{
+			name:           "test on string number with exponent",
+			expression:     "numberWithoutExponent(\"1e6\")",
+			variables:      map[string]interface{}{},
+			expectedResult: "1000000",
+		},
+		{
+			name:           "test on not a number",
+			expression:     "numberWithoutExponent(\"this is a test\")",
+			variables:      map[string]interface{}{},
+			expectedResult: "this is a test",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Process(LangEval, tc.expression, tc.variables)
+			if err != nil {
+				t.Error(err)
+			}
+
+			if result != tc.expectedResult {
+				t.Errorf("Result value is not as expected: got %v, want %v", result, tc.expectedResult)
+			}
+		})
+	}
+
+}

@@ -2,7 +2,9 @@ package expression
 
 import (
 	"errors"
+	"fmt"
 	"math"
+	"strconv"
 )
 
 // Usage: <value> [<value>...]
@@ -218,4 +220,15 @@ func safeDivide(dividend interface{}, divisor interface{}) float64 {
 	}
 
 	return floatDividend / floatDivisor
+}
+
+func numberWithoutExponent(value interface{}) interface{} {
+	floatValue, err := convertAsFloat(value)
+
+	if err != nil {
+		fmt.Sprintf("unable to parse this value as a float : %v", value)
+		return value
+	}
+
+	return strconv.FormatFloat(floatValue, 'f', -1, 64)
 }
