@@ -1,6 +1,7 @@
 package expression
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -365,21 +366,26 @@ func TestNumberWithoutExponent(t *testing.T) {
 		name  string
 		value interface{}
 		want  string
+		err   error
 	}{
-		{"integer value", 100000, "100000"},
-		{"integer value with exponent", 1e7, "10000000"},
-		{"float value", 18767.4868, "18767.4868"},
-		{"float value with exponent", 4e-05, "0.00004"},
-		{"float value with exponent as string", "4e-05", "0.00004"},
-		{"not a number", "this is not a number", "this is not a number"},
+		{"integer value", 100000, "100000", nil},
+		{"integer value with exponent", 1e7, "10000000", nil},
+		{"float value", 18767.4868, "18767.4868", nil},
+		{"float value with exponent", 4e-05, "0.00004", nil},
+		{"float value with exponent as string", "4e-05", "0.00004", nil},
+		{"not a number", "this is not a number", "this is not a number", fmt.Errorf("Unable to parse this value as a float : this is not a number")},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := numberWithoutExponent(tc.value)
+			got, err := numberWithoutExponent(tc.value)
 			if got != tc.want {
 				t.Errorf("NumberWithoutExponent(%v) = %v, want %v", tc.value, got, tc.want)
 			}
+			if got != tc.want {
+				t.Errorf("NumberWithoutExponent(%v) returned err = %v wanted error = %v", tc.value, err, tc.err)
+			}
+
 		})
 	}
 }

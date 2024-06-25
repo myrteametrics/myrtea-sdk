@@ -1,6 +1,8 @@
 package expression
 
 import (
+	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"testing"
@@ -577,39 +579,44 @@ func TestEvalNumberWithoutExponent(t *testing.T) {
 		name           string
 		expression     string
 		variables      map[string]interface{}
-		expectedResult string
+		expectedResult interface{}
+		expectedError  error
 	}{
 		{
 			name:           "remove exponent in 4e-05",
 			expression:     "numberWithoutExponent(4e-05)",
 			variables:      map[string]interface{}{},
 			expectedResult: "0.00004",
+			expectedError:  nil,
 		},
 		{
 			name:           "test on integer with exponent",
 			expression:     "numberWithoutExponent(1e6)",
 			variables:      map[string]interface{}{},
 			expectedResult: "1000000",
+			expectedError:  nil,
 		},
 		{
 			name:           "test on string number with exponent",
 			expression:     "numberWithoutExponent(\"1e6\")",
 			variables:      map[string]interface{}{},
 			expectedResult: "1000000",
+			expectedError:  nil,
 		},
 		{
 			name:           "test on not a number",
 			expression:     "numberWithoutExponent(\"this is a test\")",
 			variables:      map[string]interface{}{},
-			expectedResult: "this is a test",
+			expectedResult: nil,
+			expectedError:  fmt.Errorf("Unable to parse this value as a float : this is a test"),
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := Process(LangEval, tc.expression, tc.variables)
-			if err != nil {
-				t.Error(err)
+			if err != nil && errors.Is(err, tc.expectedError) {
+				t.Errorf("Result error is not as expected: got %v, want %v", err, tc.expectedError)
 			}
 
 			if result != tc.expectedResult {
