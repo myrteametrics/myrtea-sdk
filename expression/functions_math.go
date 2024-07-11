@@ -215,7 +215,7 @@ func safeDivide(dividend interface{}, divisor interface{}) float64 {
 	floatDividend, _ := convertAsFloat(dividend)
 	floatDivisor, err := convertAsFloat(divisor)
 
-	if err != nil {
+	if err != nil || floatDivisor == 0 {
 		return 0
 	}
 

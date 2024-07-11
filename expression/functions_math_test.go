@@ -346,6 +346,7 @@ func TestSafeDivide(t *testing.T) {
 		want      float64
 	}{
 		{"with int : 10 / 2", 10, 2, 5.0},
+		{"with int : 0 / 0", 0, 0, 0},
 		{"with float : 10 / 2", 10.0, 2.0, 5.0},
 		{"with big values : 1e50 / 2", 1e50, 2.0, 1e50 / 2},
 		{"missing values", nil, nil, 0},
