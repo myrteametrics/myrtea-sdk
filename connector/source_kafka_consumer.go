@@ -39,16 +39,20 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 	// NOTE:
 	// Do not move the code below to a goroutine.
 	// The `ConsumeClaim` itself is called within a goroutine, see:
-	// https://github.com/Shopify/sarama/blob/main/consumer_group.go#L27-L29
+	// https://github.com/IBM/sarama/blob/main/consumer_group.go#L27-L29
 	for {
 		select {
-		case message := <-claim.Messages():
+		case message, ok := <-claim.Messages():
+			if !ok {
+				zap.L().Warn("Message channel was closed", zap.String("topic", message.Topic))
+				return nil
+			}
 			consumer.processor.Process(message)
 			session.MarkMessage(message, "")
 
 		// Should return when `session.Context()` is done.
 		// If not, will raise `ErrRebalanceInProgress` or `read tcp <ip>:<port>: i/o timeout` when kafka rebalance. see:
-		// https://github.com/Shopify/sarama/issues/1192
+		// https://github.com/IBM/sarama/issues/1192
 		case <-session.Context().Done():
 			return nil
 		}
@@ -85,10 +89,14 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 	// NOTE:
 	// Do not move the code below to a goroutine.
 	// The `ConsumeClaim` itself is called within a goroutine, see:
-	// https://github.com/Shopify/sarama/blob/main/consumer_group.go#L27-L29
+	// https://github.com/IBM/sarama/blob/main/consumer_group.go#L27-L29
 	for {
 		select {
-		case message := <-claim.Messages():
+		case message, ok := <-claim.Messages():
+			if !ok {
+				zap.L().Warn("Message channel was closed", zap.String("topic", message.Topic))
+				return nil
+			}
 			if processor, found := consumer.processors[message.Topic]; found {
 				processor.Process(message)
 				session.MarkMessage(message, "")
@@ -98,7 +106,7 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 
 		// Should return when `session.Context()` is done.
 		// If not, will raise `ErrRebalanceInProgress` or `read tcp <ip>:<port>: i/o timeout` when kafka rebalance. see:
-		// https://github.com/Shopify/sarama/issues/1192
+		// https://github.com/IBM/sarama/issues/1192
 		case <-session.Context().Done():
 			return nil
 		}
