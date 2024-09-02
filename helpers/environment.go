@@ -2,6 +2,8 @@ package helpers
 
 import (
 	"flag"
+	"fmt"
+	"log"
 
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -235,7 +237,7 @@ func InitializeConfig(allowedConfigKeys [][]ConfigKey, configName, configPath, e
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		zap.L().Fatal("Cannot read viper configuration")
+		log.Fatal(fmt.Sprintf("Cannot read viper configuration : %s", err.Error()))
 	}
 
 	// Initialize environment variables configuration
