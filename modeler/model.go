@@ -3,6 +3,7 @@ package modeler
 import (
 	"encoding/json"
 	"errors"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 
 	"github.com/robfig/cron/v3"
 )
@@ -14,12 +15,12 @@ var (
 // ElasticsearchOptions regroups every elasticsearch specific options
 type ElasticsearchOptions struct {
 	// Rollmode can only be "rollover" atm
-	Rollmode                  string                        `json:"rollmode"`
-	Rollcron                  string                        `json:"rollcron"`
-	EnablePurge               bool                          `json:"enablePurge"`
-	PurgeMaxConcurrentIndices int                           `json:"purgeMaxConcurrentIndices"`
-	PatchAliasMaxIndices      int                           `json:"patchAliasMaxIndices"`
-	AdvancedSettings          ElasticsearchAdvancedSettings `json:"advancedSettings,omitempty"`
+	Rollmode                  string              `json:"rollmode"`
+	Rollcron                  string              `json:"rollcron"`
+	EnablePurge               bool                `json:"enablePurge"`
+	PurgeMaxConcurrentIndices int                 `json:"purgeMaxConcurrentIndices"`
+	PatchAliasMaxIndices      int                 `json:"patchAliasMaxIndices"`
+	AdvancedSettings          types.IndexSettings `json:"advancedSettings,omitempty"`
 }
 
 // IsValid checks if a model elasticsearch options is valid and has no missing mandatory fields
@@ -45,10 +46,6 @@ func (eso ElasticsearchOptions) IsValid() (bool, error) {
 	return true, nil
 }
 
-// ElasticsearchAdvancedSettings is a wrapper for advanced elasticsearch template settings
-// like "number_of_shards", "number_of_replica", etc.
-type ElasticsearchAdvancedSettings map[string]interface{}
-
 // Model represents a business entity model
 type Model struct {
 	ID                   int64                `json:"id"`
@@ -66,18 +63,24 @@ func (model *Model) IsValid() (bool, error) {
 	}
 	for _, field := range model.Fields {
 		if ok, err := field.IsValid(); !ok {
-			return false, errors.New("Invalid Field:" + err.Error())
+			if err != nil {
+				return false, errors.New("Invalid Field:" + err.Error())
+			}
+			return false, errors.New("invalid field")
 		}
 	}
 	if ok, err := model.ElasticsearchOptions.IsValid(); !ok {
-		return false, errors.New("Invalid ElasticsearchOptions:" + err.Error())
+		if err != nil {
+			return false, errors.New("Invalid ElasticsearchOptions:" + err.Error())
+		}
+		return false, errors.New("invalid ElasticsearchOptions")
 	}
 	return true, nil
 }
 
 // ToElasticsearchMappingProperties converts a modeler mapping to an elasticsearch mapping
 func (model *Model) ToElasticsearchMappingProperties() map[string]interface{} {
-	properties := make(map[string]interface{}, 0)
+	properties := make(map[string]interface{})
 	for _, field := range model.Fields {
 		fieldName, fieldContent := field.Source()
 		properties[fieldName] = fieldContent

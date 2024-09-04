@@ -93,7 +93,7 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 			result, err := expression.Process(
 				expression.LangEval,
 				mergeGroup.Condition,
-				map[string]interface{}{"New": newDoc.Source, "Existing": existingCopy},
+				map[string]interface{}{"New": newDoc.Source, "Existing": existingCopy, "Output": output.Source},
 			)
 			if err != nil {
 				if strings.Contains(err.Error(), "unknown parameter") {
@@ -225,6 +225,8 @@ func ApplyFieldForceUpdate(fieldUpdate []string, enricherSource map[string]inter
 }
 
 // ApplyFieldMerge applies all FieldReplace merging configuration on input documents
+// Merge can merge a single field with a slice, or vice versa
+// The result of a merge is always a slice with unique fields
 func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
 	for _, field := range fieldMerge {
 		if _, ok := enricherSource[field]; ok {

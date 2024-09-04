@@ -93,7 +93,7 @@ func (field *FieldObject) IsValid() (bool, error) {
 func (field *FieldObject) Source() (string, map[string]interface{}) {
 	var fieldContent map[string]interface{}
 
-	properties := make(map[string]interface{}, 0)
+	properties := make(map[string]interface{})
 	for _, field := range field.Fields {
 		fieldName, fieldContent := field.Source()
 		properties[fieldName] = fieldContent

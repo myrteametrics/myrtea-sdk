@@ -1,33 +1,19 @@
 package elasticsearch
 
 import (
-	"encoding/json"
-
 	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/puttemplate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v5/modeler"
-	"go.uber.org/zap"
 )
 
 // NewPutTemplateRequestV8 constructor the ES template
 func NewPutTemplateRequestV8(indexPatterns []string, model modeler.Model) *puttemplate.Request {
 	mappings := modelToMappingV8(model)
-	rawSettings := model.ElasticsearchOptions.AdvancedSettings
-
-	settings := make(map[string]json.RawMessage)
-	for k, v := range rawSettings {
-		b, err := json.Marshal(v)
-		if err != nil {
-			zap.L().Warn("Cannot marshal setting", zap.String("key", k), zap.Any("value", v))
-			continue
-		}
-		settings[k] = json.RawMessage(b)
-	}
 
 	req := puttemplate.NewRequest()
 	req.IndexPatterns = indexPatterns
 	req.Mappings = mappings
-	req.Settings = settings
+	req.Settings = &model.ElasticsearchOptions.AdvancedSettings
 	return req
 }
 
@@ -50,7 +36,7 @@ func fieldToPropertyV8(rawField modeler.Field) (string, types.Property) {
 	case *modeler.FieldObject:
 		var property types.Property
 
-		properties := make(map[string]types.Property, 0)
+		properties := make(map[string]types.Property)
 		for _, field := range field.Fields {
 			name, childProperty := fieldToPropertyV8(field)
 			properties[name] = childProperty

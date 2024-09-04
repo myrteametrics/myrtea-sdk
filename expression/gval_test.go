@@ -19,6 +19,55 @@ func TestContainsSlice(t *testing.T) {
 	_ = result
 }
 
+func TestGvalAppendSlice(t *testing.T) {
+	variables := map[string]interface{}{"a": []interface{}{"a", "b", "c"}}
+
+	result, err := Process(LangEval, `append("test", "test2")`, variables)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if slice, ok := result.([]interface{}); !ok {
+		t.Error("result is not an array")
+	} else {
+		if len(slice) != 2 {
+			t.Fatal("result slice should have length 2")
+		}
+		if slice[0].(string) != "test" {
+			t.Error("result slice should have the right element")
+		}
+		if slice[1].(string) != "test2" {
+			t.Error("result slice should have the right element")
+		}
+	}
+
+	result, err = Process(LangEval, `append("test", a)`, variables)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if slice, ok := result.([]interface{}); !ok {
+		t.Error("result is not an array")
+	} else {
+		if len(slice) != 4 {
+			t.Fatal("result slice should have length 4")
+		}
+		if slice[0].(string) != "test" {
+			t.Error("slice[0] should be 'test'")
+		}
+		if slice[1].(string) != "a" {
+			t.Error("slice[1] should be 'a'")
+		}
+		if slice[2].(string) != "b" {
+			t.Error("slice[2] should be 'b'")
+		}
+		if slice[3].(string) != "c" {
+			t.Error("slice[3] should be 'c'")
+		}
+	}
+
+}
+
 func TestProcessArray(t *testing.T) {
 	variables := map[string]interface{}{"a": []string{"a", "b", "c"}}
 

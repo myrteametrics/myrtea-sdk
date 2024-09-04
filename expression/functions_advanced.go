@@ -48,8 +48,8 @@ func advancedOperation(a, b interface{}, operator string) (interface{}, error) {
 }
 
 func mapMapOperation(operand1 map[string]interface{}, operand2 map[string]interface{}, operator string) (interface{}, error) {
-	output := make(map[string]interface{}, 0)
-	keys := make(map[string]bool, 0)
+	output := make(map[string]interface{})
+	keys := make(map[string]bool)
 	for key, value := range operand1 {
 		if v1, ok := extractFloat(value); ok {
 			if val, ok := operand2[key]; ok {
@@ -80,7 +80,7 @@ func mapMapOperation(operand1 map[string]interface{}, operand2 map[string]interf
 }
 
 func mapNumberOperation(operand1 map[string]interface{}, operand2 interface{}, operator string) (interface{}, error) {
-	output := make(map[string]interface{}, 0)
+	output := make(map[string]interface{})
 	if v2, ok := extractFloat(operand2); ok {
 		for key, value := range operand1 {
 			if v1, ok := extractFloat(value); ok {

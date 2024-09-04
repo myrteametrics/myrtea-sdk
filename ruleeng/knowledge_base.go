@@ -15,9 +15,9 @@ type DefaultKnowledgeBase struct {
 // NewKBase builds a KBase
 func NewKBase() KnowledgeBase {
 	return &DefaultKnowledgeBase{
-		facts:       make(map[string]interface{}, 0),
+		facts:       make(map[string]interface{}),
 		defaultKeys: make([]string, 0),
-		indexs:      make(map[string]interface{}, 0),
+		indexs:      make(map[string]interface{}),
 	}
 }
 
@@ -94,9 +94,9 @@ func (kBase *DefaultKnowledgeBase) GetFact(key string) interface{} {
 
 // Reset removes all de facts and indexs in the KBase
 func (kBase *DefaultKnowledgeBase) Reset() {
-	kBase.facts = make(map[string]interface{}, 0)
+	kBase.facts = make(map[string]interface{})
 	kBase.defaultKeys = make([]string, 0)
-	kBase.indexs = make(map[string]interface{}, 0)
+	kBase.indexs = make(map[string]interface{})
 }
 
 func (kBase *DefaultKnowledgeBase) String() string {
