@@ -92,6 +92,7 @@ var (
 	LangEvalSlice = gval.NewLanguage(
 		gval.Full(),
 		gval.Function("contains", contains),
+		gval.Function("append", appendSlice),
 	)
 
 	LangEvalUrl = gval.NewLanguage(

@@ -33,7 +33,7 @@ func NewSecuredServer(port int, cert string, key string, router http.Handler) *h
 		Addr:         ":" + strconv.Itoa(port),
 		Handler:      router,
 		TLSConfig:    tlsConfig,
-		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0),
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler)),
 	}
 
 	// return &Server{server, true, cert, key}

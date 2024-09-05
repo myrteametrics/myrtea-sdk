@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	_globalCalendars = make(map[string]Calendar, 0)
+	_globalCalendars = make(map[string]Calendar)
 	_globalCalendars["default-fr"] = NewStandardCalendar("default-fr", FR)
 	SetDefaultCalendar("default-fr")
 }

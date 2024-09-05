@@ -15,7 +15,7 @@ import (
 )
 
 func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[string]string) (*search.Request, error) {
-	variables := make(map[string]interface{}, 0)
+	variables := make(map[string]interface{})
 	for k, v := range parameters {
 		variables[k] = v
 	}
@@ -57,7 +57,7 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 	for _, frag := range dimensions {
 
 		agg := types.Aggregations{
-			Aggregations: make(map[string]types.Aggregations, 0),
+			Aggregations: make(map[string]types.Aggregations),
 		}
 
 		switch frag.Operator {
@@ -118,7 +118,7 @@ func buildElasticAgg(frag *engine.IntentFragment) (string, types.Aggregations, e
 	}
 
 	agg := types.Aggregations{
-		Aggregations: make(map[string]types.Aggregations, 0),
+		Aggregations: make(map[string]types.Aggregations),
 	}
 
 	switch frag.Operator {

@@ -32,3 +32,22 @@ func contains(arguments ...interface{}) (bool, error) {
 
 	return false, nil
 }
+
+func appendSlice(arguments ...interface{}) ([]interface{}, error) {
+	if len(arguments) == 0 {
+		return []interface{}{}, fmt.Errorf("append() expects at least one argument")
+	}
+
+	result := make([]interface{}, 0)
+
+	for _, arg := range arguments {
+		switch val := arg.(type) {
+		case []interface{}:
+			result = append(result, val...)
+		case interface{}:
+			result = append(result, val)
+		}
+	}
+
+	return result, nil
+}

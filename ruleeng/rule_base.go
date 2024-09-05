@@ -14,7 +14,7 @@ type DefaultRuleBase struct {
 
 // NewRBase creates a new rulesBase
 func NewRBase() RuleBase {
-	return &DefaultRuleBase{rules: make(map[int64]Rule, 0)}
+	return &DefaultRuleBase{rules: make(map[int64]Rule)}
 }
 
 // GetRules returns the rules
@@ -43,7 +43,7 @@ func (rBase *DefaultRuleBase) RemoveRule(id int64) {
 
 // Reset removes the rules, tasks and errors of the rulesBase
 func (rBase *DefaultRuleBase) Reset() {
-	rBase.rules = make(map[int64]Rule, 0)
+	rBase.rules = make(map[int64]Rule)
 }
 
 // ExecuteAll executes all the rules of the ruleBase using the knowledgeBase provided as parameter

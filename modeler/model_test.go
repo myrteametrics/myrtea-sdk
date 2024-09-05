@@ -2,6 +2,7 @@ package modeler
 
 import (
 	"encoding/json"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"strings"
 	"testing"
 )
@@ -30,12 +31,9 @@ var model = Model{
 		EnablePurge:               true,
 		PurgeMaxConcurrentIndices: 30,
 		PatchAliasMaxIndices:      2,
-		AdvancedSettings: ElasticsearchAdvancedSettings{
-			"number_of_shards":   1,
-			"number_of_replicas": 0,
-			"test": map[string]interface{}{
-				"value": 5,
-			},
+		AdvancedSettings: types.IndexSettings{
+			NumberOfShards:   "1",
+			NumberOfReplicas: "0",
 		},
 	},
 }
@@ -46,7 +44,7 @@ var expectedModel = strings.ReplaceAll(`{"id":1,"name":"model-1","synonyms":["mo
 "fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]},
 {"name":"f6","type":"object","keepObjectSeparation":true,"fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},
 {"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]}],"elasticsearchOptions":{"rollmode":"cron","rollcron":"0 0 * * *",
-"enablePurge":true,"purgeMaxConcurrentIndices":30,"patchAliasMaxIndices":2,"advancedSettings":{"number_of_replicas":0,"number_of_shards":1,"test":{"value":5}}}}`, "\n", "")
+"enablePurge":true,"purgeMaxConcurrentIndices":30,"patchAliasMaxIndices":2,"advancedSettings":{"number_of_replicas":"0","number_of_shards":"1"}}}`, "\n", "")
 
 func TestMarshal(t *testing.T) {
 	b, err := json.Marshal(model)

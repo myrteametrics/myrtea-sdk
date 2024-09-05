@@ -48,9 +48,9 @@ var model = modeler.Model{
 		EnablePurge:               true,
 		PurgeMaxConcurrentIndices: 30,
 		PatchAliasMaxIndices:      2,
-		AdvancedSettings: modeler.ElasticsearchAdvancedSettings{
-			"number_of_shards":   1,
-			"number_of_replicas": 0,
+		AdvancedSettings: types.IndexSettings{
+			NumberOfShards:   "1",
+			NumberOfReplicas: "0",
 		},
 	},
 }
@@ -162,7 +162,7 @@ func TestESv8PutTemplate(t *testing.T) {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	response, err := es8.Indices.PutTemplate("mytemplate").Timeout("15s").Request(req).Do(context.Background())
+	response, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}

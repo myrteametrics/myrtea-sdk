@@ -171,8 +171,8 @@ func (a ActionDef) Resolve(k KnowledgeBase, EnableDependsForALLAction bool) (Def
 
 	rAction := DefaultAction{
 		Name:                      name,
-		Parameters:                make(map[string]interface{}, 0),
-		MetaData:                  make(map[string]interface{}, 0),
+		Parameters:                make(map[string]interface{}),
+		MetaData:                  make(map[string]interface{}),
 		EnabledDependsAction:      a.EnabledDepends,
 		EnableDependsForALLAction: EnableDependsForALLAction,
 	}
