@@ -44,7 +44,7 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
-				zap.L().Warn("Message channel was closed", zap.String("topic", message.Topic))
+				zap.L().Warn("Message channel was closed")
 				return nil
 			}
 			consumer.processor.Process(message)
@@ -94,7 +94,7 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 		select {
 		case message, ok := <-claim.Messages():
 			if !ok {
-				zap.L().Warn("Message channel was closed", zap.String("topic", message.Topic))
+				zap.L().Warn("Message channel was closed")
 				return nil
 			}
 			if processor, found := consumer.processors[message.Topic]; found {
