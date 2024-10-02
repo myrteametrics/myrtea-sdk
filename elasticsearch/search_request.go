@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"errors"
 	"fmt"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/calendarinterval"
 	"reflect"
 	"time"
 
@@ -73,7 +74,7 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 			agg.Aggregations[name] = output
 
 		case engine.Histogram:
-			var interval types.Float64 = types.Float64(frag.Interval)
+			var interval = types.Float64(frag.Interval)
 			if interval == 0 {
 				interval = 100 // default ?
 			}
@@ -84,14 +85,31 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 			agg.Aggregations[name] = output
 
 		case engine.DateHistogram:
-			var dateInterval types.Duration = frag.DateInterval
-			if dateInterval == "" {
-				dateInterval = "1d" // default ?
+			histogramAgg := &types.DateHistogramAggregation{
+				Field: some.String(frag.Term),
 			}
-			agg.DateHistogram = &types.DateHistogramAggregation{
-				Field:    some.String(frag.Term),
-				Interval: &dateInterval,
+
+			// Fixed interval
+			if frag.CalendarFixed {
+				if frag.DateInterval == "" {
+					histogramAgg.FixedInterval = 24 * time.Hour
+				} else {
+					duration, err := time.ParseDuration(frag.DateInterval)
+					if err != nil {
+						return "", types.Aggregations{}, err
+					}
+					histogramAgg.FixedInterval = duration
+				}
+			} else { // Calendar interval
+				var calendarInterval = frag.DateInterval
+				if calendarInterval == "" {
+					calendarInterval = "month" // default ?
+				}
+
+				histogramAgg.CalendarInterval = &calendarinterval.CalendarInterval{Name: calendarInterval}
 			}
+
+			agg.DateHistogram = histogramAgg
 			agg.Aggregations[name] = output
 		}
 
@@ -107,9 +125,8 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 }
 
 func buildElasticAgg(frag *engine.IntentFragment) (string, types.Aggregations, error) {
-
 	if frag == nil {
-		return "", types.Aggregations{}, errors.New("No intent fragment")
+		return "", types.Aggregations{}, errors.New("no intent fragment")
 	}
 
 	name := fmt.Sprintf("%s_%s", frag.Operator.String(), frag.Term)
@@ -154,8 +171,7 @@ func buildElasticAgg(frag *engine.IntentFragment) (string, types.Aggregations, e
 }
 
 func buildElasticFilter(frag engine.ConditionFragment, variables map[string]interface{}) (*types.Query, error) {
-
-	var query *types.Query = types.NewQuery()
+	var query = types.NewQuery()
 
 	switch f := frag.(type) {
 	case *engine.BooleanFragment:
