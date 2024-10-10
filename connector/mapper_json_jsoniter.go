@@ -142,10 +142,6 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 
 	for _, groupVal := range mapper.mapping {
 		for fieldKey, fieldConfig := range groupVal {
-			// if fieldConfig.Paths == nil {
-			// 	formatedMap[fieldKey] = fieldConfig.DefaultValue
-			// 	continue
-			// }
 
 			var val interface{}
 			if fieldConfig.FieldType != "uuid_from_longs" {
@@ -162,20 +158,25 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 				case "uuid_from_longs":
 					rawMostSig, _ := LookupNestedMap(fieldConfig.Paths[0], data)
 					rawLeastSig, _ := LookupNestedMap(fieldConfig.Paths[1], data)
+
+					invalid := false
+
 					if mostSigN, ok := rawMostSig.(json.Number); !ok {
+						invalid = true
 						// TODO: handle this case !
 						// strings[fieldKey] = uuid.UUID{}.String()
-						zap.L().Warn("rawMostSig not json.Number", zap.String("path", str.Join(fieldConfig.Paths[0], ".")))
 					} else if leastSigN, ok := rawLeastSig.(json.Number); !ok {
+						invalid = true
 						// TODO: handle this case !
 						// strings[fieldKey] = uuid.UUID{}.String()
-						zap.L().Warn("rawLeastSig not json.Number", zap.String("path", str.Join(fieldConfig.Paths[1], ".")))
 					} else {
 						if mostSig, err := mostSigN.Int64(); err != nil {
+							invalid = true
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
 							zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[0], ".")), zap.Error(err))
 						} else if leastSig, err := leastSigN.Int64(); err != nil {
+							invalid = true
 							// TODO: handle this case !
 							// strings[fieldKey] = uuid.UUID{}.String()
 							zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[1], ".")), zap.Error(err))
@@ -183,6 +184,13 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 							strings[fieldKey] = utils.NewUUIDFromBits(mostSig, leastSig)
 						}
 					}
+
+					if invalid {
+						if defaultValue, ok := fieldConfig.DefaultValue.(string); ok && defaultValue != "" {
+							strings[fieldKey] = defaultValue
+						}
+					}
+
 				}
 
 			case json.Number:
