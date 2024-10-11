@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Installing Go
         uses: actions/setup-go@v2
@@ -29,7 +29,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: ./coverage.out
