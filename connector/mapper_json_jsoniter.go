@@ -163,12 +163,8 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 
 					if mostSigN, ok := rawMostSig.(json.Number); !ok {
 						invalid = true
-						// TODO: handle this case !
-						// strings[fieldKey] = uuid.UUID{}.String()
 					} else if leastSigN, ok := rawLeastSig.(json.Number); !ok {
 						invalid = true
-						// TODO: handle this case !
-						// strings[fieldKey] = uuid.UUID{}.String()
 					} else {
 						if mostSig, err := mostSigN.Int64(); err != nil {
 							invalid = true
