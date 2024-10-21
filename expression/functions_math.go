@@ -231,3 +231,12 @@ func numberWithoutExponent(value interface{}) (interface{}, error) {
 
 	return strconv.FormatFloat(floatValue, 'f', -1, 64), nil
 }
+
+func absoluteValue(number interface{}) (interface{}, error) {
+	floatValue, err := convertAsFloat(number)
+	if err != nil {
+		return float64(0), fmt.Errorf("Unable to parse this value as a float : %v", number)
+	}
+
+	return math.Abs(floatValue), nil
+}
