@@ -675,3 +675,56 @@ func TestEvalNumberWithoutExponent(t *testing.T) {
 	}
 
 }
+
+func TestEvalAbsoluteValue(t *testing.T) {
+	testCases := []struct {
+		name           string
+		expression     string
+		variables      map[string]interface{}
+		expectedResult interface{}
+		expectedError  error
+	}{
+		{
+			name:           "integer",
+			expression:     "abs(100)",
+			variables:      map[string]interface{}{},
+			expectedResult: 100.0,
+			expectedError:  nil,
+		},
+		{
+			name:           "negative integer",
+			expression:     "abs(-100)",
+			variables:      map[string]interface{}{},
+			expectedResult: 100.0,
+			expectedError:  nil,
+		},
+		{
+			name:           "string negative float",
+			expression:     "abs(\"-100.12\")",
+			variables:      map[string]interface{}{},
+			expectedResult: 100.12,
+			expectedError:  nil,
+		},
+		{
+			name:           "test on not a number",
+			expression:     "abs(\"this is a test\")",
+			variables:      map[string]interface{}{},
+			expectedResult: nil,
+			expectedError:  fmt.Errorf("Unable to parse this value as a float : this is a test"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Process(LangEval, tc.expression, tc.variables)
+			if err != nil && errors.Is(err, tc.expectedError) {
+				t.Errorf("Result error is not as expected: got %v, want %v", err, tc.expectedError)
+			}
+
+			if result != tc.expectedResult {
+				t.Errorf("Result value is not as expected: got %v, want %v", result, tc.expectedResult)
+			}
+		})
+	}
+
+}

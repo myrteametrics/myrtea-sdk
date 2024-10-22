@@ -383,8 +383,38 @@ func TestNumberWithoutExponent(t *testing.T) {
 			if got != tc.want {
 				t.Errorf("NumberWithoutExponent(%v) = %v, want %v", tc.value, got, tc.want)
 			}
-			if got != tc.want {
+			if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
 				t.Errorf("NumberWithoutExponent(%v) returned err = %v wanted error = %v", tc.value, err, tc.err)
+			}
+
+		})
+	}
+}
+
+func TestAbsoluteValue(t *testing.T) {
+	testCases := []struct {
+		name  string
+		value interface{}
+		want  float64
+		err   error
+	}{
+		{"integer value", 100000, 100000, nil},
+		{"negative integer value", -100000, 100000, nil},
+		{"float value as a string", "18767.4868", 18767.4868, nil},
+		{"negative float value as a string", "-18767.4868", 18767.4868, nil},
+		{"-zero", "-0", 0, nil},
+		{"nil value", nil, 0, fmt.Errorf("Unable to parse this value as a float : <nil>")},
+		{"not a number", "this is not a number", 0, fmt.Errorf("Unable to parse this value as a float : this is not a number")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := absoluteValue(tc.value)
+			if got != tc.want {
+				t.Errorf("absoluteValue(%v) = %v, want %v", tc.value, got, tc.want)
+			}
+			if err != nil && tc.err != nil && err.Error() != tc.err.Error() {
+				t.Errorf("absoluteValue(%v) returned err = %v wanted error = %v", tc.value, err, tc.err)
 			}
 
 		})
