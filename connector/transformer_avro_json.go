@@ -3,7 +3,7 @@ package connector
 import (
 	"encoding/binary"
 	"errors"
-	hambaavro "github.com/hamba/avro/v2"
+	"github.com/hamba/avro/v2"
 	"strconv"
 	"time"
 
@@ -32,21 +32,21 @@ func (transformer AvroToJSONTransformer) Transform(msg Message, to *any) error {
 			return err
 		}
 
-		return hambaavro.Unmarshal(schema, bytes, to)
+		return avro.Unmarshal(schema, bytes, to)
 	default:
 		return errors.New("couldn't transform the Message, the convertor transformer couldn't get the Type of the incoming message")
 	}
 }
 
 // getSchema parses the schema string and returns the schema object, it also caches the schema
-func (transformer AvroToJSONTransformer) getSchema(schemaStr string, schemaID int) (hambaavro.Schema, error) {
+func (transformer AvroToJSONTransformer) getSchema(schemaStr string, schemaID int) (avro.Schema, error) {
 	idStr := strconv.Itoa(schemaID)
 	value, exists := transformer.cache.Get(idStr)
 	if exists {
-		return value.(hambaavro.Schema), nil
+		return value.(avro.Schema), nil
 	}
 
-	schema, err := hambaavro.Parse(schemaStr)
+	schema, err := avro.Parse(schemaStr)
 	if err != nil {
 		return nil, err
 	}
