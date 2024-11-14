@@ -60,6 +60,7 @@ var (
 		gval.Function("format_date", formatDate),
 		gval.Function("get_value_current_day", getValueForCurrentDay),
 		gval.Function("get_formatted_duration", getFormattedDuration),
+		gval.Function("is_now_divisible_by_3", isNowDivisibleBy3),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions

@@ -468,3 +468,9 @@ func asMilliseconds(duration float64, inputUnit string) float64 {
 		return 0
 	}
 }
+
+// isNowDivisibleBy3 checks if the current UTC hour is divisible by 3
+func isNowDivisibleBy3() bool {
+	currentUTCHour := time.Now().UTC().Hour()
+	return currentUTCHour%3 == 0
+}
