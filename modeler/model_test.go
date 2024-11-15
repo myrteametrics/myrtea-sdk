@@ -26,7 +26,7 @@ var model = Model{
 	},
 	Synonyms: []string{"model", "other"},
 	ElasticsearchOptions: ElasticsearchOptions{
-		Rollmode:                  "cron",
+		Rollmode:                  RollmodeSettings{Type: RollmodeCron},
 		Rollcron:                  "0 0 * * *",
 		EnablePurge:               true,
 		PurgeMaxConcurrentIndices: 30,
@@ -43,7 +43,7 @@ var expectedModel = strings.ReplaceAll(`{"id":1,"name":"model-1","synonyms":["mo
 {"name":"f4","type":"boolean","semantic":false,"synonyms":["f4","f4other"]},{"name":"f5","type":"object","keepObjectSeparation":false,
 "fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]},
 {"name":"f6","type":"object","keepObjectSeparation":true,"fields":[{"name":"a","type":"int","semantic":false,"synonyms":["a","aother"]},
-{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]}],"elasticsearchOptions":{"rollmode":"cron","rollcron":"0 0 * * *",
+{"name":"b","type":"string","semantic":false,"synonyms":["b","bother"]}]}],"elasticsearchOptions":{"rollmode":{"type":"cron"},"rollcron":"0 0 * * *",
 "enablePurge":true,"purgeMaxConcurrentIndices":30,"patchAliasMaxIndices":2,"advancedSettings":{"number_of_replicas":"0","number_of_shards":"1"}}}`, "\n", "")
 
 func TestMarshal(t *testing.T) {
