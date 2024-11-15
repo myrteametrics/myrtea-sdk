@@ -43,7 +43,7 @@ var model = modeler.Model{
 	},
 	Synonyms: []string{"model", "other"},
 	ElasticsearchOptions: modeler.ElasticsearchOptions{
-		Rollmode:                  "cron",
+		Rollmode:                  modeler.RollmodeSettings{Type: modeler.RollmodeCron},
 		Rollcron:                  "0 0 * * *",
 		EnablePurge:               true,
 		PurgeMaxConcurrentIndices: 30,

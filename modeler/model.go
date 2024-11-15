@@ -3,6 +3,7 @@ package modeler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 
 	"github.com/robfig/cron/v3"
@@ -12,10 +13,37 @@ var (
 	cronParser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 )
 
+// IndexIntervalType represents the index interval options for time-based
+type IndexIntervalType string
+
+const (
+	Daily   IndexIntervalType = "daily"
+	Monthly IndexIntervalType = "monthly"
+)
+
+// RollmodeType represents the possible types of Rollmode
+type RollmodeType string
+
+const (
+	RollmodeCron      RollmodeType = "cron"
+	RollmodeTimeBased RollmodeType = "timebased"
+)
+
+// TimebasedSettings contains the specific settings for "timebased"
+type TimebasedSettings struct {
+	Interval IndexIntervalType `json:"interval"`
+}
+
+// RollmodeSettings represents either a simple string for "cron" or a configuration for "timebased".
+type RollmodeSettings struct {
+	Type      RollmodeType       `json:"type"`
+	Timebased *TimebasedSettings `json:"timebased,omitempty"`
+}
+
 // ElasticsearchOptions regroups every elasticsearch specific options
 type ElasticsearchOptions struct {
 	// Rollmode can only be "rollover" atm
-	Rollmode                  string              `json:"rollmode"`
+	Rollmode                  RollmodeSettings    `json:"rollmode"`
 	Rollcron                  string              `json:"rollcron"`
 	EnablePurge               bool                `json:"enablePurge"`
 	PurgeMaxConcurrentIndices int                 `json:"purgeMaxConcurrentIndices"`
@@ -25,23 +53,34 @@ type ElasticsearchOptions struct {
 
 // IsValid checks if a model elasticsearch options is valid and has no missing mandatory fields
 func (eso ElasticsearchOptions) IsValid() (bool, error) {
-	if eso.Rollmode == "" {
-		return false, errors.New("Missing Rollmode")
+	if eso.Rollmode.Type == "" {
+		return false, errors.New("missing Rollmode")
 	}
-	if eso.Rollcron == "" {
-		return false, errors.New("Missing Rollcron")
+
+	if eso.Rollmode.Type == RollmodeTimeBased && eso.Rollmode.Timebased == nil {
+		return false, errors.New("missing Timebased settings for timebased rollmode")
 	}
+
+	if eso.Rollmode.Type == RollmodeCron {
+		if eso.Rollcron == "" {
+			return false, errors.New("missing Rollcron")
+		}
+		if _, err := cronParser.Parse(eso.Rollcron); err != nil {
+			return false, fmt.Errorf("invalid Rollcron: %w", err)
+		}
+	}
+
 	if _, err := cronParser.Parse(eso.Rollcron); err != nil {
 		return false, errors.New("Invalid Rollcron:" + err.Error())
 	}
 	if eso.PurgeMaxConcurrentIndices < 0 {
-		return false, errors.New("Invalid PurgeMaxConcurrentIndices")
+		return false, errors.New("invalid PurgeMaxConcurrentIndices")
 	}
 	if eso.EnablePurge && eso.PurgeMaxConcurrentIndices < 1 {
-		return false, errors.New("Invalid PurgeMaxConcurrentIndices")
+		return false, errors.New("invalid PurgeMaxConcurrentIndices")
 	}
 	if eso.PatchAliasMaxIndices < 0 {
-		return false, errors.New("Invalid PatchAliasMaxIndices")
+		return false, errors.New("invalid PatchAliasMaxIndices")
 	}
 	return true, nil
 }
