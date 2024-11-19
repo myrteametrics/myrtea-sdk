@@ -1,6 +1,6 @@
 package connector
 
 // Transformer ..
-type Transformer interface {
-	Transform(msg Message, to *any) error
+type Transformer[T any] interface {
+	Transform(msg Message, T *any) error
 }
