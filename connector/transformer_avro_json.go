@@ -32,7 +32,7 @@ func (transformer AvroToJSONTransformer) Transform(msg Message) (Message, error)
 			return nil, err
 		}
 
-		var output DecodedKafkaMessage
+		output := DecodedKafkaMessage{}
 		err = avro.Unmarshal(schema, bytes, &output.Data)
 		return output, err
 	default:
