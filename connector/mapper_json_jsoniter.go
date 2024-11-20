@@ -139,6 +139,7 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 	ints := make(map[string]int64)
 	bools := make(map[string]bool)
 	times := make(map[string]time.Time)
+	floats := make(map[string]float64)
 
 	for _, groupVal := range mapper.mapping {
 		for fieldKey, fieldConfig := range groupVal {
@@ -201,6 +202,15 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 					} else {
 						ints[fieldKey] = i
 					}
+				case "float":
+					if i, err := v.Float64(); err != nil {
+						switch di := fieldConfig.DefaultValue.(type) {
+						case float64:
+							floats[fieldKey] = di
+						}
+					} else {
+						floats[fieldKey] = i
+					}
 				}
 
 			case bool:
@@ -251,6 +261,7 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 		Strings: strings,
 		Times:   times,
 		Bools:   bools,
+		Floats:  floats,
 	}
 	return filteredMsg, nil
 }
