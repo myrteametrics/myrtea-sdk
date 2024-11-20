@@ -53,7 +53,7 @@ func (transformer AvroToJSONTransformer) getSchema(schemaStr string, schemaID in
 		return nil, err
 	}
 
-	transformer.cache.Set(schemaStr, schema)
+	transformer.cache.Set(idStr, schema)
 	return schema, nil
 }
 
