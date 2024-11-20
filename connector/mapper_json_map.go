@@ -114,6 +114,7 @@ func (mapper JSONMapperMap) MapToDocument(msg Message) (Message, error) {
 	ints := make(map[string]int64)
 	bools := make(map[string]bool)
 	times := make(map[string]time.Time)
+	floats := make(map[string]float64)
 
 	for _, groupVal := range mapper.mapping {
 		for fieldKey, fieldConfig := range groupVal {
@@ -167,6 +168,12 @@ func (mapper JSONMapperMap) MapToDocument(msg Message) (Message, error) {
 			case int:
 				ints[fieldKey] = int64(v)
 
+			case float64:
+				floats[fieldKey] = v
+
+			case float32:
+				floats[fieldKey] = float64(v)
+
 			case time.Time:
 				times[fieldKey] = v
 
@@ -218,6 +225,7 @@ func (mapper JSONMapperMap) MapToDocument(msg Message) (Message, error) {
 		Strings: strings,
 		Times:   times,
 		Bools:   bools,
+		Floats:  floats,
 	}
 	return filteredMsg, nil
 }

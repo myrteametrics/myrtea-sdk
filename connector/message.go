@@ -51,6 +51,7 @@ func (msg MessageWithOptions) String() string {
 type TypedDataMessage struct {
 	Strings map[string]string
 	Ints    map[string]int64
+	Floats  map[string]float64
 	Bools   map[string]bool
 	Times   map[string]time.Time
 }
