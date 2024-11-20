@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"strconv"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -16,6 +15,7 @@ import (
 )
 
 // AvroToJSONTransformer :
+// Deprecated
 type AvroToJSONTransformer struct {
 	schemaRegistryEndpoint string
 	client                 *utils.CachedSchemaRegistry
@@ -23,6 +23,7 @@ type AvroToJSONTransformer struct {
 }
 
 // Transform is the convertor transformer, it has to decode the AVRO message into a byte message (JSONMessage)
+// Deprecated
 func (transformer AvroToJSONTransformer) Transform(msg Message) (Message, error) {
 	switch kafkaMsg := msg.(type) {
 	case KafkaMessage:
@@ -38,8 +39,8 @@ func (transformer AvroToJSONTransformer) Transform(msg Message) (Message, error)
 	}
 }
 
-// New transformer constructor
-// TODO : Manage multiple schemaRegistryEndpoint ? In case of server failure ?
+// NewAvroToJSONTransformer New transformer constructor TODO : Manage multiple schemaRegistryEndpoint ? In case of server failure ?
+// Deprecated
 func NewAvroToJSONTransformer(schemaRegistryEndpoint string, ttlCacheDuration time.Duration) (*AvroToJSONTransformer, error) {
 	client, err := utils.NewCachedSchemaRegistry(schemaRegistryEndpoint, ttlCacheDuration)
 	if err != nil {
@@ -50,6 +51,7 @@ func NewAvroToJSONTransformer(schemaRegistryEndpoint string, ttlCacheDuration ti
 }
 
 // AvroBinaryToNative :
+// Deprecated
 func (transformer AvroToJSONTransformer) AvroBinaryToNative(avroBinary []byte) (interface{}, error) {
 	codec, msg, err := transformer.exposeAvroBinary(avroBinary)
 	if err != nil {
@@ -67,6 +69,7 @@ func (transformer AvroToJSONTransformer) AvroBinaryToNative(avroBinary []byte) (
 }
 
 // AvroBinaryToTextual :
+// Deprecated
 func (transformer AvroToJSONTransformer) AvroBinaryToTextual(avroBinary []byte) ([]byte, error) {
 
 	codec, msg, err := transformer.exposeAvroBinary(avroBinary)
@@ -90,19 +93,8 @@ func (transformer AvroToJSONTransformer) AvroBinaryToTextual(avroBinary []byte) 
 	return textual, nil
 }
 
-// DoubleUnescapeUnicode is a special function to extract avro binaries from a JSON encoded string
-// This function has been built for a very specific usage and may not works on other messages
-func DoubleUnescapeUnicode(s string) ([]byte, error) {
-	s1 := strings.Replace(s, `\\u`, `\u`, -1)
-	s2 := strconv.Quote(s1)
-	s3 := strings.Replace(s2, `\\u`, `\u`, -1)
-	str, err := strconv.Unquote(s3)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(str), nil
-}
-
+// getCodec
+// Deprecated
 func (transformer AvroToJSONTransformer) getCodec(id int, schema string) (*goavro.Codec, error) {
 	idStr := strconv.Itoa(id)
 	value, exists := transformer.cache.Get(idStr)
@@ -122,6 +114,7 @@ func (transformer AvroToJSONTransformer) getCodec(id int, schema string) (*goavr
 }
 
 // exposeAvroBinary :
+// Deprecated
 func (transformer AvroToJSONTransformer) exposeAvroBinary(avroBinary []byte) (*goavro.Codec, []byte, error) {
 	schema, schemaID, msg, err := transformer.getSchemaFromAvroBinary(avroBinary)
 	if err != nil {
@@ -136,6 +129,7 @@ func (transformer AvroToJSONTransformer) exposeAvroBinary(avroBinary []byte) (*g
 }
 
 // getSchemaFromAvroBinary :
+// Deprecated
 func (transformer AvroToJSONTransformer) getSchemaFromAvroBinary(msg []byte) (string, int, []byte, error) {
 	if len(msg) == 0 {
 		return "", -1, nil, errors.New("message is empty")

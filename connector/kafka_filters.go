@@ -14,6 +14,18 @@ type FilterHeaderOption struct {
 	Condition string
 }
 
+func GetHeader(key string, headers []*sarama.RecordHeader) (value string, found bool) {
+	found = false
+	for _, header := range headers {
+		if string(header.Key) == key {
+			value = string(header.Value)
+			found = true
+			return
+		}
+	}
+	return
+}
+
 func FilterHeaders(filters []FilterHeaderOption, headers []*sarama.RecordHeader) (bool, string) {
 	for _, filter := range filters {
 		value := "key_not_found"

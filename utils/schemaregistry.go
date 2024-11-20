@@ -5,6 +5,7 @@ package utils
 import (
 	"crypto/tls"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -127,7 +128,8 @@ func (c *client) IsRegistered(subject, schema string) (bool, Schema, error) {
 	var fs Schema
 	err := c.do("POST", fmt.Sprintf("/subjects/%s", subject), simpleSchema{schema}, &fs)
 	// schema not found?
-	if ce, confluentErr := err.(confluentError); confluentErr && ce.ErrorCode == schemaNotFound {
+	var ce confluentError
+	if errors.As(err, &ce) && ce.ErrorCode == schemaNotFound {
 		return false, fs, nil
 	}
 	// error?

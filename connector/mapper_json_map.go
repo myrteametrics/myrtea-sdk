@@ -1,53 +1,35 @@
 package connector
 
 import (
-	"bytes"
-	"encoding/json" // for json types
 	"errors"
 	"fmt"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
+	"go.uber.org/zap"
 	"strconv"
 	str "strings"
 	"time"
-
-	jsoniter "github.com/json-iterator/go"
-	"github.com/myrteametrics/myrtea-sdk/v5/utils"
-	"go.uber.org/zap"
 )
 
-var jsoni = jsoniter.ConfigCompatibleWithStandardLibrary
-
-// JSONMapperJsoniter :
-type JSONMapperJsoniter struct {
+// JSONMapperMap :
+type JSONMapperMap struct {
 	filters map[string]JSONMapperFilterItem
 	mapping map[string]map[string]JSONMapperConfigItem
 }
 
-// NewJSONMapperJsoniter :
-func NewJSONMapperJsoniter(name, path string) (*JSONMapperJsoniter, error) {
+// NewJSONMapperMap :
+func NewJSONMapperMap(name, path string) (*JSONMapperMap, error) {
 	filters, mapping, err := getConfig(name, path)
 	if err != nil {
 		return nil, err
 	}
-	return &JSONMapperJsoniter{filters: filters, mapping: mapping}, nil
+	return &JSONMapperMap{filters: filters, mapping: mapping}, nil
 }
 
 // FilterDocument checks if document is filtered or not, returns if documents valid and if invalid, the following reason
-func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
+func (mapper JSONMapperMap) FilterDocument(msg Message) (bool, string) {
 	var data map[string]interface{}
 
 	switch message := msg.(type) {
-	case KafkaMessage:
-		// don't handle message if there's no filters
-		if len(mapper.filters) == 0 {
-			return true, ""
-		}
-
-		d := jsoni.NewDecoder(bytes.NewBuffer(message.Data))
-		d.UseNumber()
-
-		if err := d.Decode(&data); err != nil {
-			zap.L().Error("decode", zap.Error(err))
-		}
 	case DecodedKafkaMessage:
 		// don't handle message if there's no filters
 		if len(mapper.filters) == 0 {
@@ -118,17 +100,10 @@ func (mapper JSONMapperJsoniter) FilterDocument(msg Message) (bool, string) {
 }
 
 // MapToDocument Maps data to document
-func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
+func (mapper JSONMapperMap) MapToDocument(msg Message) (Message, error) {
 	var data map[string]interface{}
 
 	switch message := msg.(type) {
-	case KafkaMessage:
-		d := jsoni.NewDecoder(bytes.NewBuffer(message.Data))
-		d.UseNumber()
-
-		if err := d.Decode(&data); err != nil {
-			zap.L().Error("decode", zap.Error(err))
-		}
 	case DecodedKafkaMessage:
 		data = message.Data
 	default:
@@ -162,24 +137,12 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 
 					invalid := false
 
-					if mostSigN, ok := rawMostSig.(json.Number); !ok {
+					if mostSignN, ok := rawMostSig.(int64); !ok {
 						invalid = true
-					} else if leastSigN, ok := rawLeastSig.(json.Number); !ok {
+					} else if leastSigN, ok := rawLeastSig.(int64); !ok {
 						invalid = true
 					} else {
-						if mostSig, err := mostSigN.Int64(); err != nil {
-							invalid = true
-							// TODO: handle this case !
-							// strings[fieldKey] = uuid.UUID{}.String()
-							zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[0], ".")), zap.Error(err))
-						} else if leastSig, err := leastSigN.Int64(); err != nil {
-							invalid = true
-							// TODO: handle this case !
-							// strings[fieldKey] = uuid.UUID{}.String()
-							zap.L().Warn("cannot convert to int64", zap.String("path", str.Join(fieldConfig.Paths[1], ".")), zap.Error(err))
-						} else {
-							strings[fieldKey] = utils.NewUUIDFromBits(mostSig, leastSig)
-						}
+						strings[fieldKey] = utils.NewUUIDFromBits(mostSignN, leastSigN)
 					}
 
 					if invalid {
@@ -190,28 +153,29 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 
 				}
 
-			case json.Number:
-				switch fieldConfig.FieldType {
-				case "long":
-				case "int":
-					if i, err := v.Int64(); err != nil {
-						switch di := fieldConfig.DefaultValue.(type) {
-						case int64:
-							ints[fieldKey] = di
-						}
-					} else {
-						ints[fieldKey] = i
-					}
-				case "float":
-					if i, err := v.Float64(); err != nil {
-						switch di := fieldConfig.DefaultValue.(type) {
-						case float64:
-							floats[fieldKey] = di
-						}
-					} else {
-						floats[fieldKey] = i
-					}
-				}
+			case int64:
+				ints[fieldKey] = v
+
+			case int32:
+				ints[fieldKey] = int64(v)
+
+			case int16:
+				ints[fieldKey] = int64(v)
+
+			case int8:
+				ints[fieldKey] = int64(v)
+
+			case int:
+				ints[fieldKey] = int64(v)
+
+			case float64:
+				floats[fieldKey] = v
+
+			case float32:
+				floats[fieldKey] = float64(v)
+
+			case time.Time:
+				times[fieldKey] = v
 
 			case bool:
 				switch fieldConfig.FieldType {
@@ -267,21 +231,6 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 }
 
 // DecodeDocument returns a DecodedKafkaMessage and contains a map with json decoded data
-func (mapper JSONMapperJsoniter) DecodeDocument(msg Message) (Message, error) {
-	switch message := msg.(type) {
-	case KafkaMessage:
-		decodedKafkaMsg := DecodedKafkaMessage{}
-
-		d := jsoni.NewDecoder(bytes.NewBuffer(message.Data))
-		d.UseNumber()
-
-		if err := d.Decode(&decodedKafkaMsg.Data); err != nil {
-			zap.L().Error("decode", zap.Error(err))
-		}
-
-		return decodedKafkaMsg, nil
-	default:
-		//
-		return TypedDataMessage{}, errors.New("message type not supported")
-	}
+func (mapper JSONMapperMap) DecodeDocument(_ Message) (Message, error) {
+	return nil, errors.New("decodeDocument function is not supported with JSONMapperMap")
 }
