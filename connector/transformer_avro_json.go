@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"strconv"
-	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -92,20 +91,6 @@ func (transformer AvroToJSONTransformer) AvroBinaryToTextual(avroBinary []byte) 
 	}
 
 	return textual, nil
-}
-
-// DoubleUnescapeUnicode is a special function to extract avro binaries from a JSON encoded string
-// This function has been built for a very specific usage and may not works on other messages
-// Deprecated
-func DoubleUnescapeUnicode(s string) ([]byte, error) {
-	s1 := strings.Replace(s, `\\u`, `\u`, -1)
-	s2 := strconv.Quote(s1)
-	s3 := strings.Replace(s2, `\\u`, `\u`, -1)
-	str, err := strconv.Unquote(s3)
-	if err != nil {
-		return nil, err
-	}
-	return []byte(str), nil
 }
 
 // getCodec
