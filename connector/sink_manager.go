@@ -17,6 +17,7 @@ func NewSinkManager() *SinkManager {
 	}
 }
 
+// AddSink add a sink to the manager
 func (sm *SinkManager) AddSink(sink Sink) {
 	sm.sinks = append(sm.sinks, sink)
 }
@@ -32,12 +33,14 @@ func (sm *SinkManager) StartAll(ctx context.Context) {
 	}
 }
 
+// StopAll call all sinks to stop
 func (sm *SinkManager) StopAll() {
 	for _, sink := range sm.sinks {
 		sink.Stop()
 	}
 }
 
+// Wait all sinks to stop
 func (sm *SinkManager) Wait() {
 	sm.wg.Wait()
 }

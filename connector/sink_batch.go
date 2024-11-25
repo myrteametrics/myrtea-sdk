@@ -75,6 +75,7 @@ mainLoop:
 	}
 }
 
+// Stop closes sink data channel
 func (sink *BatchSink) Stop() {
 	close(sink.Send)
 }
