@@ -134,7 +134,7 @@ func (sink *BatchSink) flushBuffer(ctx context.Context, buffer []Message) {
 		}
 	} else {
 		for _, bir := range birs {
-			zap.L().Info("SendToIngester", zap.Any("bir", bir))
+			zap.L().Debug("SendToIngester", zap.Any("bir", bir))
 		}
 	}
 }
