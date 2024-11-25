@@ -92,6 +92,12 @@ func (consumer *DefaultMultiConsumer) Cleanup(sarama.ConsumerGroupSession) error
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	defer func() {
+		if r := recover(); r != nil {
+			zap.L().Warn("Kafka consumer recovered from panic", zap.Any("error", r))
+		}
+	}()
+
 	// NOTE:
 	// Do not move the code below to a goroutine.
 	// The `ConsumeClaim` itself is called within a goroutine, see:
