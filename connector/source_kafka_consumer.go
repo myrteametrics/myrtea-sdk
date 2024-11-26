@@ -17,6 +17,13 @@ type ConsumerParams struct {
 	Done               *chan os.Signal
 }
 
+func NewDefaultConsumerParams(done chan os.Signal) ConsumerParams {
+	return ConsumerParams{
+		MaxPermittedPanics: DefaultMaxPermittedPanics,
+		Done:               &done,
+	}
+}
+
 // DefaultConsumer represents a Sarama consumer group consumer
 type DefaultConsumer struct {
 	Ready      chan bool
