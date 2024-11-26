@@ -38,13 +38,11 @@ func NewBatchSink(targetURL string, client *retryablehttp.Client, bufferSize int
 	}
 }
 
-func (sink *BatchSink) AddMessageToQueue(message Message) {
-	sink.Send <- message
-}
-
-func (sink *BatchSink) Sender(ctx context.Context) {
+func (sink *BatchSink) Start(ctx context.Context) {
 	buffer := make([]Message, 0)
 	forceFlush := sink.resetForceFlush(sink.FlushTimeout)
+
+mainLoop:
 	for {
 		select {
 		case <-forceFlush:
@@ -55,7 +53,12 @@ func (sink *BatchSink) Sender(ctx context.Context) {
 			}
 			forceFlush = sink.resetForceFlush(sink.FlushTimeout)
 
-		case pm := <-sink.Send:
+		case pm, ok := <-sink.Send:
+			if !ok {
+				// Channel was closed
+				zap.L().Info("Sink send channel was closed")
+				break mainLoop
+			}
 			buffer = append(buffer, pm)
 			if len(buffer) >= sink.BufferSize {
 				zap.L().Info("flushing buffer after max length reached", zap.Int("buffer_length", sink.BufferSize))
@@ -65,6 +68,20 @@ func (sink *BatchSink) Sender(ctx context.Context) {
 			}
 		}
 	}
+
+	if len(buffer) > 0 {
+		zap.L().Info("flushing buffer after stopping sink", zap.Int("buffer_length", sink.BufferSize))
+		sink.flushBuffer(ctx, buffer)
+	}
+}
+
+// Stop closes sink data channel
+func (sink *BatchSink) Stop() {
+	close(sink.Send)
+}
+
+func (sink *BatchSink) AddMessageToQueue(message Message) {
+	sink.Send <- message
 }
 
 func (sink *BatchSink) SendToIngester(ctx context.Context, bir *BulkIngestRequest) error {
@@ -117,7 +134,7 @@ func (sink *BatchSink) flushBuffer(ctx context.Context, buffer []Message) {
 		}
 	} else {
 		for _, bir := range birs {
-			zap.L().Info("SendToIngester", zap.Any("bir", bir))
+			zap.L().Debug("SendToIngester", zap.Any("bir", bir))
 		}
 	}
 }

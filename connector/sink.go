@@ -1,6 +1,10 @@
 package connector
 
+import "context"
+
 type Sink interface {
+	Start(context.Context)
+	Stop()
 	AddMessageToQueue(message Message)
 }
 
