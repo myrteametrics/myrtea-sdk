@@ -24,7 +24,7 @@ type MergedVariables struct {
 const prefixGlobalVars = "global_variable_"
 
 var (
-	GlobalVars *GlobalVariables
+	GlobalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
 
 	// cache is a global ttlcache for gval expression
 	cache = ttlcache.NewCache(7 * 24 * time.Hour)
