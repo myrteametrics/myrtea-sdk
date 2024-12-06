@@ -175,6 +175,13 @@ func (gv *GlobalVariables) Set(key string, value interface{}) {
 	zap.L().Info("Global variable set", zap.String("key", prefixGlobalVars+key), zap.Any("value", value), zap.Int("total_count", len(gv.listKeyValue)))
 }
 
+func (gv *GlobalVariables) Delete(key string) {
+	gv.listKeyValueMu.Lock()
+	defer gv.listKeyValueMu.Unlock()
+	delete(gv.listKeyValue, prefixGlobalVars+key)
+	zap.L().Info("Global variable deleted", zap.String("key", prefixGlobalVars+key), zap.Int("total_count", len(gv.listKeyValue)))
+}
+
 func (m *MergedVariables) toMap() map[string]interface{} {
 
 	if len(m.localVars) == 0 {
