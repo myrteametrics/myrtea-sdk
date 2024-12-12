@@ -162,7 +162,7 @@ func (gv *GlobalVariables) Load(listKeyValue map[string]interface{}) {
 	for k, v := range listKeyValue {
 		gv.listKeyValue[prefixGlobalVars+k] = v
 	}
-	gv.listKeyValue = listKeyValue
+
 	zap.L().Info("Global variables loaded", zap.Int("count", len(gv.listKeyValue)))
 }
 
