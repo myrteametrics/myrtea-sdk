@@ -19,7 +19,7 @@ type GlobalVariables struct {
 const prefixGlobalVars = "global_"
 
 var (
-	GlobalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
+	_globalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
 
 	// cache is a global ttlcache for gval expression
 	cache = ttlcache.NewCache(7 * 24 * time.Hour)
@@ -122,7 +122,7 @@ func Process(langEval gval.Language, expression string, variables map[string]int
 		return nil, err
 	}
 
-	result, err := exp(context.Background(), GlobalVars.merge(variables))
+	result, err := exp(context.Background(), _globalVars.merge(variables))
 	if err != nil {
 		return nil, err
 	}
@@ -195,4 +195,9 @@ func (gv *GlobalVariables) merge(params map[string]interface{}) map[string]inter
 	}
 
 	return merged
+}
+
+// G is used to access the global variables
+func G() *GlobalVariables {
+	return _globalVars
 }
