@@ -16,12 +16,7 @@ type GlobalVariables struct {
 	listKeyValueMu sync.RWMutex
 }
 
-type MergedVariables struct {
-	globalVars *GlobalVariables
-	localVars  map[string]interface{}
-}
-
-const prefixGlobalVars = "global_variable_"
+const prefixGlobalVars = "global_"
 
 var (
 	GlobalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
@@ -127,12 +122,7 @@ func Process(langEval gval.Language, expression string, variables map[string]int
 		return nil, err
 	}
 
-	mergedVars := &MergedVariables{
-		globalVars: GlobalVars,
-		localVars:  variables,
-	}
-
-	result, err := exp(context.Background(), mergedVars.toMap())
+	result, err := exp(context.Background(), GlobalVars.merge(variables))
 	if err != nil {
 		return nil, err
 	}
@@ -160,46 +150,47 @@ func (gv *GlobalVariables) Load(listKeyValue map[string]interface{}) {
 	zap.L().Info("Fetching global variables")
 
 	gv.listKeyValueMu.Lock()
-	defer gv.listKeyValueMu.Unlock()
 	for k, v := range listKeyValue {
 		gv.listKeyValue[prefixGlobalVars+k] = v
 	}
+	gv.listKeyValueMu.Unlock()
 
 	zap.L().Info("Global variables loaded", zap.Int("count", len(gv.listKeyValue)))
 }
 
 func (gv *GlobalVariables) Set(key string, value interface{}) {
-	gv.listKeyValueMu.Lock()
-	defer gv.listKeyValueMu.Unlock()
 
+	gv.listKeyValueMu.Lock()
 	gv.listKeyValue[prefixGlobalVars+key] = value
+	gv.listKeyValueMu.Unlock()
 
 	zap.L().Info("Global variable set", zap.String("key", prefixGlobalVars+key), zap.Any("value", value), zap.Int("total_count", len(gv.listKeyValue)))
 }
 
 func (gv *GlobalVariables) Delete(key string) {
+
 	gv.listKeyValueMu.Lock()
-	defer gv.listKeyValueMu.Unlock()
 	delete(gv.listKeyValue, prefixGlobalVars+key)
+	gv.listKeyValueMu.Unlock()
 	zap.L().Info("Global variable deleted", zap.String("key", prefixGlobalVars+key), zap.Int("total_count", len(gv.listKeyValue)))
 }
 
-func (m *MergedVariables) toMap() map[string]interface{} {
+func (gv *GlobalVariables) merge(params map[string]interface{}) map[string]interface{} {
 
-	if len(m.localVars) == 0 {
-		m.globalVars.listKeyValueMu.RLock()
-		defer m.globalVars.listKeyValueMu.RUnlock()
-		return m.globalVars.listKeyValue
+	if len(params) == 0 {
+		gv.listKeyValueMu.RLock()
+		defer gv.listKeyValueMu.RUnlock()
+		return gv.listKeyValue
 	}
 
-	m.globalVars.listKeyValueMu.RLock()
-	merged := make(map[string]interface{}, len(m.globalVars.listKeyValue)+len(m.localVars))
-	for k, v := range m.globalVars.listKeyValue {
+	gv.listKeyValueMu.RLock()
+	merged := make(map[string]interface{}, len(gv.listKeyValue)+len(params))
+	for k, v := range gv.listKeyValue {
 		merged[k] = v
 	}
-	m.globalVars.listKeyValueMu.RUnlock()
+	gv.listKeyValueMu.RUnlock()
 
-	for k, v := range m.localVars {
+	for k, v := range params {
 		merged[k] = v
 	}
 
