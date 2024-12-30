@@ -3,13 +3,24 @@ package expression
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
+	"sync"
 	"time"
 
 	"github.com/PaesslerAG/gval"
 	ttlcache "github.com/myrteametrics/myrtea-sdk/v5/cache"
 )
 
+type GlobalVariables struct {
+	listKeyValue   map[string]interface{}
+	listKeyValueMu sync.RWMutex
+}
+
+const prefixGlobalVars = "global_"
+
 var (
+	_globalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
+
 	// cache is a global ttlcache for gval expression
 	cache = ttlcache.NewCache(7 * 24 * time.Hour)
 
@@ -60,6 +71,7 @@ var (
 		gval.Function("format_date", formatDate),
 		gval.Function("get_value_current_day", getValueForCurrentDay),
 		gval.Function("get_formatted_duration", getFormattedDuration),
+		gval.Function("numberWithoutExponent", numberWithoutExponent),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions
@@ -109,7 +121,8 @@ func Process(langEval gval.Language, expression string, variables map[string]int
 	if err != nil {
 		return nil, err
 	}
-	result, err := exp(context.Background(), variables)
+
+	result, err := exp(context.Background(), _globalVars.merge(variables))
 	if err != nil {
 		return nil, err
 	}
@@ -131,4 +144,60 @@ func getEvaluable(langEval gval.Language, expression string) (gval.Evaluable, er
 	}
 	cache.Set(expression, newExp)
 	return newExp, nil
+}
+
+func (gv *GlobalVariables) Load(listKeyValue map[string]interface{}) {
+	zap.L().Info("Fetching global variables")
+
+	gv.listKeyValueMu.Lock()
+	for k, v := range listKeyValue {
+		gv.listKeyValue[prefixGlobalVars+k] = v
+	}
+	gv.listKeyValueMu.Unlock()
+
+	zap.L().Info("Global variables loaded", zap.Int("count", len(gv.listKeyValue)))
+}
+
+func (gv *GlobalVariables) Set(key string, value interface{}) {
+
+	gv.listKeyValueMu.Lock()
+	gv.listKeyValue[prefixGlobalVars+key] = value
+	gv.listKeyValueMu.Unlock()
+
+	zap.L().Info("Global variable set", zap.String("key", prefixGlobalVars+key), zap.Any("value", value), zap.Int("total_count", len(gv.listKeyValue)))
+}
+
+func (gv *GlobalVariables) Delete(key string) {
+
+	gv.listKeyValueMu.Lock()
+	delete(gv.listKeyValue, prefixGlobalVars+key)
+	gv.listKeyValueMu.Unlock()
+	zap.L().Info("Global variable deleted", zap.String("key", prefixGlobalVars+key), zap.Int("total_count", len(gv.listKeyValue)))
+}
+
+func (gv *GlobalVariables) merge(params map[string]interface{}) map[string]interface{} {
+
+	if len(params) == 0 {
+		gv.listKeyValueMu.RLock()
+		defer gv.listKeyValueMu.RUnlock()
+		return gv.listKeyValue
+	}
+
+	gv.listKeyValueMu.RLock()
+	merged := make(map[string]interface{}, len(gv.listKeyValue)+len(params))
+	for k, v := range gv.listKeyValue {
+		merged[k] = v
+	}
+	gv.listKeyValueMu.RUnlock()
+
+	for k, v := range params {
+		merged[k] = v
+	}
+
+	return merged
+}
+
+// G is used to access the global variables
+func G() *GlobalVariables {
+	return _globalVars
 }
