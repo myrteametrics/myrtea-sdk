@@ -47,10 +47,6 @@ func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[st
 		request.Aggregations = aggregations
 	}
 
-	if f.Intent.Operator == engine.Delete {
-		zap.L().Info("query", zap.Any("query", request))
-	}
-
 	return request, nil
 }
 
