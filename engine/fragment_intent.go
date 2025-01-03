@@ -45,6 +45,7 @@ var intentMap = map[IntentToken]func() *IntentFragment{
 	Select: func() *IntentFragment {
 		return &IntentFragment{"", Select, "", false}
 	},
+	Delete: func() *IntentFragment { return &IntentFragment{"", Delete, "", false} },
 }
 
 // GetIntentFragment search and return an intent fragment by it's name

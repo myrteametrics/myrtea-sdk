@@ -21,6 +21,8 @@ const (
 	Max
 	// Select intent token
 	Select
+	// Delete
+	Delete
 )
 
 func (s IntentToken) String() string {
@@ -37,6 +39,7 @@ var intentToString = map[IntentToken]string{
 	Min:    "min",
 	Max:    "max",
 	Select: "select",
+	Delete: "delete",
 }
 
 var intentToID = map[string]IntentToken{
@@ -46,6 +49,7 @@ var intentToID = map[string]IntentToken{
 	"min":    Min,
 	"max":    Max,
 	"select": Select,
+	"delete": Delete,
 }
 
 // GetIntentToken search and return an intent token from the standard supported operator list

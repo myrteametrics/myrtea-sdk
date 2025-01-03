@@ -49,7 +49,6 @@ var (
 		gval.Function("average", average),
 		gval.Function("roundToDecimal", roundToDecimal),
 		gval.Function("safeDivide", safeDivide),
-		gval.Function("numberWithoutExponent", numberWithoutExponent),
 		gval.Function("abs", absoluteValue),
 	)
 

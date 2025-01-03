@@ -32,7 +32,7 @@ func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[st
 	}
 	request.Query = query
 
-	if f.Intent.Operator != engine.Select {
+	if f.Intent.Operator != engine.Select && f.Intent.Operator != engine.Delete {
 		mainAggName, mainAgg, err := buildElasticAgg(f.Intent)
 		if err != nil {
 			zap.L().Warn("buildElasticAgg", zap.Error(err))

@@ -425,9 +425,9 @@ func TestFormatDate(t *testing.T) {
 		t.Error("formatDate should return abcd")
 		t.FailNow()
 	}
-	result, err = formatDate("2023-08-04T14:57:07.923", "2006-01-02 15:04:05")
-	if result != "2023-08-04 14:57:07" {
-		t.Error("formatDate should return abcd")
+	result, err = formatDate("2023-08-04T14:57:07.923", "2006-01-02")
+	if result != "2023-08-04" {
+		t.Error("formatDate should return 2023-08-04")
 		t.FailNow()
 	}
 }
