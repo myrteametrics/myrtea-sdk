@@ -193,6 +193,7 @@ func (mapper JSONMapperJsoniter) MapToDocument(msg Message) (Message, error) {
 			case json.Number:
 				switch fieldConfig.FieldType {
 				case "long":
+					fallthrough
 				case "int":
 					if i, err := v.Int64(); err != nil {
 						switch di := fieldConfig.DefaultValue.(type) {
