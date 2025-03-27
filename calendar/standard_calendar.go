@@ -1,9 +1,10 @@
 package calendar
 
 import (
+	"github.com/rickar/cal/v2/fr"
 	"time"
 
-	"github.com/rickar/cal"
+	"github.com/rickar/cal/v2"
 )
 
 // CountryCode is a standard country code (for supported calendar)
@@ -18,19 +19,18 @@ const (
 // It only support calendar for France (FR) but can easily implements some more country code
 type StandardCalendar struct {
 	name string
-	c    *cal.Calendar
+	c    *cal.BusinessCalendar
 }
 
 // NewStandardCalendar returns a new instance of a standard calendar
 func NewStandardCalendar(name string, country CountryCode) *StandardCalendar {
 
-	c := cal.NewCalendar()
-	c.Observed = cal.ObservedExact
+	c := cal.NewBusinessCalendar()
 
 	switch country {
 	case FR:
 		c.SetWorkday(time.Saturday, true)
-		cal.AddFranceHolidays(c)
+		c.AddHoliday(fr.Holidays...)
 	}
 
 	return &StandardCalendar{
@@ -46,7 +46,6 @@ func (calendar *StandardCalendar) GetName() string {
 
 // Add returns the time t+d, taking into account working days
 func (calendar *StandardCalendar) Add(t time.Time, d time.Duration) time.Time {
-	//return calendar.c.SubSkipNonWorkdays(t, -1*d)
 	if d == 0 {
 		return t
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"strings"
 
 	"github.com/robfig/cron/v3"
 )
@@ -98,7 +99,10 @@ type Model struct {
 // IsValid checks if a model definition is valid and has no missing mandatory fields
 func (model *Model) IsValid() (bool, error) {
 	if model.Name == "" {
-		return false, errors.New("Missing Name")
+		return false, errors.New("missing Name")
+	}
+	if model.Name != strings.ToLower(model.Name) {
+		return false, errors.New("name must be lower case")
 	}
 	for _, field := range model.Fields {
 		if ok, err := field.IsValid(); !ok {
