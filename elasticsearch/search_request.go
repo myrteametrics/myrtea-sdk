@@ -292,9 +292,9 @@ func createRangeQuery(field string, value interface{}, value2 interface{}, timeZ
 	if value != nil {
 		switch v := value.(type) {
 		case int64, int32:
-			tvalue := types.Float64(float64(val))
+			tvalue := types.Float64(float64(value))
 			if value2 != nil {
-				tvalue2 := types.Float64(float64(val2))
+				tvalue2 := types.Float64(float64(value2))
 				rangeQuery = types.NumberRangeQuery{
 					Gte: &tvalue,
 					Lt:  &tvalue2,
