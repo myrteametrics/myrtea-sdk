@@ -286,31 +286,44 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 	return query, nil
 }
 
+func convertValueToESFloat64(value interface{}) (types.Float64, bool) {
+	if value == nil {
+		return 0, false
+	}
+
+	switch v := value.(type) {
+	case int64:
+		return types.Float64(v), true
+	case int32:
+		return types.Float64(v), true
+	case float64:
+		return types.Float64(v), true
+	case float32:
+		return types.Float64(v), true
+	default:
+		return 0, false
+	}
+}
+
 func createRangeQuery(field string, value interface{}, value2 interface{}, timeZone string) types.RangeQuery {
 	var rangeQuery types.RangeQuery
 
 	if value != nil {
-		switch v := value.(type) {
-		case float64:
-			tvalue := types.Float64(v)
-			if value2 != nil {
-				if v2, ok := value2.(float64); ok {
-					tvalue2 := types.Float64(v2)
-					rangeQuery = types.NumberRangeQuery{
-						Gte: &tvalue,
-						Lt:  &tvalue2,
-					}
-				} else {
-					rangeQuery = types.NumberRangeQuery{
-						Gte: &tvalue,
-					}
+
+		if v, ok := convertValueToESFloat64(value); ok {
+
+			if tvalue2, ok := convertValueToESFloat64(value2); ok {
+				rangeQuery = types.NumberRangeQuery{
+					Gte: &v,
+					Lt:  &tvalue2,
 				}
 			} else {
 				rangeQuery = types.NumberRangeQuery{
-					Gte: &tvalue,
+					Gte: &v,
 				}
 			}
-		case string:
+
+		} else if v, ok := value.(string); ok {
 			dateRangeQuery := types.DateRangeQuery{
 				Gte: some.String(v),
 			}
@@ -324,14 +337,14 @@ func createRangeQuery(field string, value interface{}, value2 interface{}, timeZ
 			}
 			rangeQuery = dateRangeQuery
 		}
+
 	} else if value2 != nil {
-		switch v2 := value2.(type) {
-		case float64:
-			tvalue2 := types.Float64(v2)
+
+		if v2, ok := convertValueToESFloat64(value2); ok {
 			rangeQuery = types.NumberRangeQuery{
-				Lt: &tvalue2,
+				Lt: &v2,
 			}
-		case string:
+		} else if v2, ok := value.(string); ok {
 			dateRangeQuery := types.DateRangeQuery{
 				Lt: some.String(v2),
 			}
@@ -340,6 +353,7 @@ func createRangeQuery(field string, value interface{}, value2 interface{}, timeZ
 			}
 			rangeQuery = dateRangeQuery
 		}
+
 	}
 
 	return rangeQuery
