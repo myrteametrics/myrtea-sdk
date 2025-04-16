@@ -3,6 +3,7 @@ package modeler
 import (
 	"encoding/json"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 	"strings"
 	"testing"
 )
@@ -139,4 +140,22 @@ func TestSource(t *testing.T) {
 
 	}
 
+}
+
+func TestElasticsearchOptions_IsValid(t *testing.T) {
+	opt := ElasticsearchOptions{
+		Rollmode: RollmodeSettings{
+			Type: RollmodeCron,
+		},
+		Rollcron: "0 0 * * *",
+	}
+
+	valid, _ := opt.IsValid()
+
+	expression.AssertEqual(t, valid, true, "Rollcron is valid")
+
+	opt.Rollcron = "2 * * * *"
+	valid, _ = opt.IsValid()
+
+	expression.AssertEqual(t, valid, false, "Rollcron should be invalid, since its interval is less than every day")
 }
