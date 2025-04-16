@@ -5,10 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/robfig/cron/v3"
 	"strings"
 	"time"
-
-	"github.com/robfig/cron/v3"
 )
 
 var (
@@ -59,24 +58,28 @@ func (eso ElasticsearchOptions) IsValid() (bool, error) {
 		return false, errors.New("missing Rollmode")
 	}
 
-	if eso.Rollmode.Type == RollmodeTimeBased && eso.Rollmode.Timebased == nil {
-		return false, errors.New("missing Timebased settings for timebased rollmode")
-	}
-
-	if eso.Rollmode.Type == RollmodeCron {
+	switch eso.Rollmode.Type {
+	case RollmodeCron:
 		if eso.Rollcron == "" {
 			return false, errors.New("missing Rollcron")
 		}
-		if parsedCron, err := cronParser.Parse(eso.Rollcron); err != nil {
-			return false, fmt.Errorf("invalid Rollcron: %w", err)
-		} else {
-			now := time.Now()
-			year, month, day := now.Date()
-			now = time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+	case RollmodeTimeBased:
+		if eso.Rollmode.Timebased == nil {
+			return false, errors.New("missing Timebased settings for timebased rollmode")
+		}
+	default:
+		return false, errors.New("unknown Rollmode")
+	}
 
-			if parsedCron.Next(now).Sub(now) < 24*time.Hour {
-				return false, fmt.Errorf("invalid Rollcron: interval must be at every day")
-			}
+	if parsedCron, err := cronParser.Parse(eso.Rollcron); err != nil {
+		return false, fmt.Errorf("invalid Rollcron: %w", err)
+	} else {
+		now := time.Now()
+		year, month, day := now.Date()
+		now = time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+
+		if parsedCron.Next(now).Sub(now) < 24*time.Hour {
+			return false, fmt.Errorf("invalid Rollcron: interval must be at every day")
 		}
 	}
 
