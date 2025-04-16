@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"strings"
+	"time"
 
 	"github.com/robfig/cron/v3"
 )
@@ -66,14 +67,19 @@ func (eso ElasticsearchOptions) IsValid() (bool, error) {
 		if eso.Rollcron == "" {
 			return false, errors.New("missing Rollcron")
 		}
-		if _, err := cronParser.Parse(eso.Rollcron); err != nil {
+		if parsedCron, err := cronParser.Parse(eso.Rollcron); err != nil {
 			return false, fmt.Errorf("invalid Rollcron: %w", err)
+		} else {
+			now := time.Now()
+			year, month, day := now.Date()
+			now = time.Date(year, month, day, 0, 0, 0, 0, now.Location())
+
+			if parsedCron.Next(now).Sub(now) < 24*time.Hour {
+				return false, fmt.Errorf("invalid Rollcron: interval must be at every day")
+			}
 		}
 	}
 
-	if _, err := cronParser.Parse(eso.Rollcron); err != nil {
-		return false, errors.New("Invalid Rollcron:" + err.Error())
-	}
 	if eso.PurgeMaxConcurrentIndices < 0 {
 		return false, errors.New("invalid PurgeMaxConcurrentIndices")
 	}
