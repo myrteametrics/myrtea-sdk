@@ -15,17 +15,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[string]string) (*search.Request, error) {
-	variables := make(map[string]interface{})
-	for k, v := range parameters {
-		variables[k] = v
-	}
+func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[string]interface{}) (*search.Request, error) {
+
 	for k, v := range expression.GetDateKeywords(ti) {
-		variables[k] = v
+		parameters[k] = v
 	}
 
 	request := search.NewRequest()
-	query, err := buildElasticFilter(f.Condition, variables)
+	query, err := buildElasticFilter(f.Condition, parameters)
 	if err != nil {
 		zap.L().Warn("buildElasticFilter", zap.Error(err))
 		return nil, err
