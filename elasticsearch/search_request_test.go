@@ -95,7 +95,7 @@ func TestBuildAgg(t *testing.T) {
 	// t.Log(name2, string(b))
 	// t.Fail()
 
-	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), make(map[string]string))
+	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), map[string]interface{}{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -172,7 +172,7 @@ func TestBuildSelect(t *testing.T) {
 	// t.Log(string(b))
 	// t.Fail()
 
-	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), make(map[string]string))
+	search2, err := ConvertFactToSearchRequestV8(f, time.Now(), map[string]interface{}{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -199,7 +199,7 @@ func TestBuildSelect(t *testing.T) {
 	// t.Log(string(b))
 	// t.Fail()
 
-	search2, err = ConvertFactToSearchRequestV8(ff, time.Now(), make(map[string]string))
+	search2, err = ConvertFactToSearchRequestV8(ff, time.Now(), map[string]interface{}{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -226,7 +226,7 @@ func TestBuildSelect(t *testing.T) {
 	// t.Log(string(b))
 	// t.Fail()
 
-	search3, err := ConvertFactToSearchRequestV8(fff, time.Now(), make(map[string]string))
+	search3, err := ConvertFactToSearchRequestV8(fff, time.Now(), map[string]interface{}{})
 	if err != nil {
 		t.Error(err)
 	}
