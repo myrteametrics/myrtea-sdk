@@ -290,6 +290,7 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 }
 
 // isEmptyValue checks if a value is empty regardless of its type
+// Warning: This function is suitable for non-intensive usage due to reflection cost
 func isEmptyValue(v interface{}) bool {
 	if v == nil {
 		return true
