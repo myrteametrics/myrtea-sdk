@@ -122,7 +122,7 @@ func (f *Fact) IsExecutable() bool {
 }
 
 // ContextualizeDimensions contextualize fact dimensions placeholders (standard or custom) and set the right timezone if needed
-func (f *Fact) ContextualizeDimensions(t time.Time, placeholders map[string]string) {
+func (f *Fact) ContextualizeDimensions(t time.Time) {
 	for _, dim := range f.Dimensions {
 		if dim.Operator == DateHistogram {
 			dim.TimeZone = utils.GetTimeZone(t)
@@ -131,17 +131,14 @@ func (f *Fact) ContextualizeDimensions(t time.Time, placeholders map[string]stri
 }
 
 // ContextualizeCondition contextualize fact condition tree placeholders (standard or custom) and set the right timezone if needed
-func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]string) error {
+func (f *Fact) ContextualizeCondition(t time.Time, placeholders map[string]interface{}) error {
 	return contextualizeCondition(f.Condition, t, placeholders)
 }
 
-func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]string) error {
-	variables := make(map[string]interface{})
-	for k, v := range placeholders {
-		variables[k] = v
-	}
+func contextualizeCondition(condition ConditionFragment, t time.Time, placeholders map[string]interface{}) error {
+
 	for k, v := range expression.GetDateKeywords(t) {
-		variables[k] = v
+		placeholders[k] = v
 	}
 
 	switch c := condition.(type) {
@@ -155,7 +152,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 	case *LeafConditionFragment:
 		if c.Value != nil && reflect.TypeOf(c.Value).Kind() == reflect.String {
 			exp := c.Value.(string)
-			result, err := expression.Process(expression.LangEval, exp, variables)
+			result, err := expression.Process(expression.LangEval, exp, placeholders)
 			if err != nil {
 				if c.Operator == OptionalFor || c.Operator == OptionalRegexp || c.Operator == OptionalWildcard {
 					c.Field = ""
@@ -171,7 +168,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 		}
 		if c.Value2 != nil && reflect.TypeOf(c.Value2).Kind() == reflect.String {
 			exp := c.Value2.(string)
-			result, err := expression.Process(expression.LangEval, exp, variables)
+			result, err := expression.Process(expression.LangEval, exp, placeholders)
 			if err != nil {
 				zap.L().Warn("Expression evaluation failed", zap.String("exp", c.Value2.(string)), zap.Error(err))
 				return err
@@ -183,7 +180,7 @@ func contextualizeCondition(condition ConditionFragment, t time.Time, placeholde
 		if c.TimeZone == "" && (c.Operator == From || c.Operator == To || c.Operator == Between) {
 			c.TimeZone = utils.GetTimeZone(t)
 		} else if c.TimeZone != "" {
-			result, err := expression.Process(expression.LangEval, c.TimeZone, variables)
+			result, err := expression.Process(expression.LangEval, c.TimeZone, placeholders)
 			if err != nil {
 				zap.L().Warn("Expression evaluation failed", zap.String("exp", c.TimeZone), zap.Error(err))
 				return err

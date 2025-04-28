@@ -15,17 +15,14 @@ import (
 	"go.uber.org/zap"
 )
 
-func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[string]string) (*search.Request, error) {
-	variables := make(map[string]interface{})
-	for k, v := range parameters {
-		variables[k] = v
-	}
+func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[string]interface{}) (*search.Request, error) {
+
 	for k, v := range expression.GetDateKeywords(ti) {
-		variables[k] = v
+		parameters[k] = v
 	}
 
 	request := search.NewRequest()
-	query, err := buildElasticFilter(f.Condition, variables)
+	query, err := buildElasticFilter(f.Condition, parameters)
 	if err != nil {
 		zap.L().Warn("buildElasticFilter", zap.Error(err))
 		return nil, err
@@ -242,11 +239,17 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 				f.Field: createRangeQuery(f.Field, f.Value, f.Value2, f.TimeZone),
 			}
 		case engine.OptionalFor:
-			if f.Field == "" || f.Value == "" {
+			if f.Field == "" || isEmptyValue(f.Value) {
 				return nil, nil
 			}
-			query.Term = map[string]types.TermQuery{
-				f.Field: {Value: f.Value},
+			if reflect.ValueOf(f.Value).Kind() == reflect.Slice {
+				var termsQuery types.TermsQuery
+				termsQuery.TermsQuery = map[string]types.TermsQueryField{f.Field: f.Value}
+				query.Terms = &termsQuery
+			} else {
+				query.Term = map[string]types.TermQuery{
+					f.Field: {Value: f.Value},
+				}
 			}
 		case engine.Regexp:
 			if value, ok := f.Value.(string); ok {
@@ -284,6 +287,35 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 		}
 	}
 	return query, nil
+}
+
+// isEmptyValue checks if a value is empty regardless of its type
+// Warning: This function is suitable for non-intensive usage due to reflection cost
+func isEmptyValue(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+
+	value := reflect.ValueOf(v)
+	switch value.Kind() {
+	case reflect.String:
+		return value.String() == ""
+	case reflect.Array, reflect.Slice, reflect.Map:
+		return value.Len() == 0
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return value.Int() == 0
+	case reflect.Float32, reflect.Float64:
+		return value.Float() == 0
+	case reflect.Bool:
+		return !value.Bool()
+	case reflect.Ptr, reflect.Interface:
+		if value.IsNil() {
+			return true
+		}
+		return isEmptyValue(value.Elem().Interface())
+	}
+
+	return false
 }
 
 func convertValueToESFloat64(value interface{}) (types.Float64, bool) {

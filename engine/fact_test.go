@@ -80,10 +80,9 @@ func TestContextualizeInvalid(t *testing.T) {
 		{Condition: &LeafConditionFragment{Operator: From, Field: "myfield", Value: `calendar_add(test, "-24h")`}},
 	}
 	ts := time.Now()
-	placeholders := map[string]string{}
 
 	for _, f := range facts {
-		err := f.ContextualizeCondition(ts, placeholders)
+		err := f.ContextualizeCondition(ts, map[string]interface{}{})
 		if err == nil {
 			t.Error("Expression should be invalid")
 			t.FailNow()
@@ -111,7 +110,7 @@ func TestContextualize2(t *testing.T) {
 		},
 	}
 	ts := time.Now()
-	placeholders := map[string]string{"var1": "hello"}
+	placeholders := map[string]interface{}{"var1": "hello"}
 
 	err := f.ContextualizeCondition(ts, placeholders)
 	if err != nil {
@@ -154,11 +153,11 @@ func TestContextualize(t *testing.T) {
 	}
 
 	ts, _ := time.Parse("2006-01-02T15:04:05.000Z07:00", "2019-09-15T12:30:00.000+02:00")
-	placeholders := map[string]string{
+	placeholders := map[string]interface{}{
 		"myvariable": "myvalue",
 	}
 
-	f.ContextualizeDimensions(ts, placeholders)
+	f.ContextualizeDimensions(ts)
 
 	if f.Dimensions[2].TimeZone != "+02:00" {
 		t.Error("Invalid datehistogram timezone")
@@ -212,7 +211,7 @@ func TestContextualizeOptionalFor(t *testing.T) {
 		},
 	}
 
-	placeholders := map[string]string{
+	placeholders := map[string]interface{}{
 		"myvariable": "myvalue",
 	}
 
@@ -248,13 +247,9 @@ func TestContextualizeOptionalForEmpty(t *testing.T) {
 		},
 	}
 
-	placeholders := map[string]string{
-		// "myvariable": "myvalue",
-	}
-
 	ts := time.Now()
 
-	err := f.ContextualizeCondition(ts, placeholders)
+	err := f.ContextualizeCondition(ts, map[string]interface{}{})
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -284,7 +279,7 @@ func TestContextualizeForSlice(t *testing.T) {
 		},
 	}
 
-	placeholders := map[string]string{
+	placeholders := map[string]interface{}{
 		"myvariable1": "test1",
 		"myvariable4": "test4",
 	}
@@ -329,7 +324,7 @@ func TestContextualizeOptionalRegexp(t *testing.T) {
 		},
 	}
 
-	placeholders := map[string]string{
+	placeholders := map[string]interface{}{
 		"myvariable": "**a*a",
 	}
 
@@ -366,7 +361,7 @@ func TestContextualizeWildCard(t *testing.T) {
 		},
 	}
 
-	placeholders := map[string]string{
+	placeholders := map[string]interface{}{
 		"myvariable": "**a*a",
 	}
 
