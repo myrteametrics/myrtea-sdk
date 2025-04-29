@@ -114,7 +114,7 @@ var (
 	)
 )
 
-// Process process an expression with a map of properties using a specific GVal language
+// Process processes an expression with a map of properties using a specific GVal language
 func Process(langEval gval.Language, expression string, variables map[string]interface{}) (interface{}, error) {
 	for k, v := range GetDateKeywords(time.Now()) {
 		if _, ok := variables[k]; !ok {
