@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -117,6 +118,7 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 
 // Create method used to create an externalConfig
 func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error) {
+	_, _, _ = r.refreshNextIdGen()
 	tx, err := r.conn.Begin() // Start a transaction
 	if err != nil {
 		return -1, err
@@ -124,13 +126,17 @@ func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error
 
 	var id int64
 
-	err = r.newStatement().
-		Insert("external_generic_config_v1").
+	statement := r.newStatement().
+		Insert(table).
 		Columns("name").
 		Values(externalConfig.Name).
-		Suffix("RETURNING \"id\"").
-		QueryRow().
-		Scan(&id)
+		Suffix("RETURNING \"id\"")
+	if externalConfig.Id != 0 {
+		statement.Columns("id", "name").
+			Values(externalConfig.Id, externalConfig.Name)
+	}
+	err = statement.QueryRow().Scan(&id)
+
 	if err != nil {
 		tx.Rollback() // Cancel transaction in case of error
 		return -1, err
@@ -257,6 +263,7 @@ func (r *PostgresRepository) Delete(id int64) error {
 	if err != nil {
 		return err
 	}
+	_, _, _ = r.refreshNextIdGen()
 	return r.checkRowsAffected(res, 1)
 }
 
@@ -338,4 +345,26 @@ func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, erro
 	}
 
 	return oldVersions, nil
+}
+
+func (r *PostgresRepository) refreshNextIdGen() (int64, bool, error) {
+	query := fmt.Sprintf(`SELECT setval(pg_get_serial_sequence('%s', 'id'), coalesce(max(id),0) + 1, false) FROM %s`, table, table)
+	rows, err := r.conn.Query(query)
+
+	if err != nil {
+		zap.L().Error("Couldn't query the database:", zap.Error(err))
+		return 0, false, err
+	}
+	defer rows.Close()
+
+	var data int64
+	if rows.Next() {
+		err := rows.Scan(&data)
+		if err != nil {
+			return 0, false, err
+		}
+		return data, true, nil
+	} else {
+		return 0, false, nil
+	}
 }
