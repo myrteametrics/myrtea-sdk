@@ -94,6 +94,7 @@ type Case struct {
 	Actions                   []ActionDef `json:"actions"`
 	Enabled                   bool        `json:"enabled"`
 	EnableDependsForALLAction bool        `json:"enableDependsForALLAction"`
+	CheckPrevSetAction        bool        `json:"checkPrevSetAction"` // CheckPrevSet indicates whether to verify the previously set action parameters in the rule evaluation process.
 }
 
 func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
@@ -114,7 +115,7 @@ func resolve(c Case, k KnowledgeBase) []DefaultAction {
 		if !a.Enabled {
 			continue
 		}
-		rAction, err := a.Resolve(k, c.EnableDependsForALLAction)
+		rAction, err := a.Resolve(k, c)
 		if err == nil {
 			rAction.MetaData["caseName"] = c.Name
 			resolvedActions = append(resolvedActions, rAction)
@@ -161,7 +162,7 @@ type ActionDef struct {
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
-func (a ActionDef) Resolve(k KnowledgeBase, EnableDependsForALLAction bool) (DefaultAction, error) {
+func (a ActionDef) Resolve(k KnowledgeBase, c Case) (DefaultAction, error) {
 
 	name, err := a.Name.EvaluateAsString(k)
 
@@ -174,7 +175,8 @@ func (a ActionDef) Resolve(k KnowledgeBase, EnableDependsForALLAction bool) (Def
 		Parameters:                make(map[string]interface{}),
 		MetaData:                  make(map[string]interface{}),
 		EnabledDependsAction:      a.EnabledDepends,
-		EnableDependsForALLAction: EnableDependsForALLAction,
+		EnableDependsForALLAction: c.EnableDependsForALLAction,
+		CheckPrevSetAction:        c.CheckPrevSetAction,
 	}
 
 	for key, exp := range a.Parameters {
