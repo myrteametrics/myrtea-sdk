@@ -8,6 +8,7 @@ type Action interface {
 	GetMetaData() map[string]interface{}
 	GetEnabledDependsAction() bool
 	GetEnableDependsForALLAction() bool
+	GetCheckPrevSetAction() bool
 }
 
 // DefaultAction default action implementation
@@ -17,6 +18,7 @@ type DefaultAction struct {
 	MetaData                  map[string]interface{} `json:"metaData"`
 	EnabledDependsAction      bool                   `json:"enabledDepends"`
 	EnableDependsForALLAction bool                   `json:"enableDependsForALLAction"`
+	CheckPrevSetAction        bool                   `json:"checkPrevSetAction"`
 }
 
 // GetParameters returns the action parameters
@@ -42,4 +44,8 @@ func (a DefaultAction) GetEnabledDependsAction() bool {
 // GetEnableDependsForALLAction return if the case supports dependency management
 func (a DefaultAction) GetEnableDependsForALLAction() bool {
 	return a.EnableDependsForALLAction
+}
+
+func (a DefaultAction) GetCheckPrevSetAction() bool {
+	return a.CheckPrevSetAction
 }
