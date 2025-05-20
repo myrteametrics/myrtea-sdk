@@ -203,8 +203,9 @@ func (r *PostgresRepository) GetAll() ([]VariablesConfig, error) {
 	return r.GetAllByScope(globalVariablesScope)
 }
 
-// GetAll method used to get all Variables Config filtered on a specified scope value
-// Scope used to filter is by default set to globalVariablesScope for retro-compatibility
+// GetAllByScope retrieves all Variables Config filtered by the specified scope.
+// The `scope` parameter is used to filter the results. If an empty string is provided,
+// the function defaults to using the global scope (`globalVariablesScope`) for retro-compatibility.
 func (r *PostgresRepository) GetAllByScope(scope string) ([]VariablesConfig, error) {
 	variablesConfig := make([]VariablesConfig, 0)
 
