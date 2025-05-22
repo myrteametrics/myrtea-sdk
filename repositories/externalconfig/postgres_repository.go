@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/myrteametrics/myrtea-sdk/v5/repositories/utils"
-	"go.uber.org/zap"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -119,7 +118,7 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 
 // Create method used to create an externalConfig
 func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error) {
-	_, _, _ = r.refreshNextIdGen()
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 	tx, err := r.conn.Begin() // Start a transaction
 	if err != nil {
 		return -1, err
