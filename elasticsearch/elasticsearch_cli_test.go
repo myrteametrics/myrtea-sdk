@@ -156,13 +156,13 @@ func TestESv8PutTemplate(t *testing.T) {
 		t.Skip("skipping elasticsearch test in short mode")
 	}
 
-	req := NewPutTemplateRequestV8([]string{"index-*"}, model)
+	req := NewPutIndexTemplateRequestV8([]string{"index-*"}, model)
 	es8, err := elasticsearch.NewTypedClient(cfgv8)
 	if err != nil {
 		t.Errorf("Error creating the client: %s", err)
 	}
 
-	response, err := es8.Indices.PutTemplate("mytemplate").Request(req).Do(context.Background())
+	response, err := es8.Indices.PutIndexTemplate("mytemplate").Request(req).Do(context.Background())
 	if err != nil {
 		t.Errorf("Error getting response: %s", err)
 	}
