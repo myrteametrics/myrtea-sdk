@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/myrteametrics/myrtea-sdk/v5/repositories/utils"
 	"go.uber.org/zap"
 	"time"
 
@@ -263,7 +264,7 @@ func (r *PostgresRepository) Delete(id int64) error {
 	if err != nil {
 		return err
 	}
-	_, _, _ = r.refreshNextIdGen()
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 	return r.checkRowsAffected(res, 1)
 }
 
@@ -345,18 +346,4 @@ func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, erro
 	}
 
 	return oldVersions, nil
-}
-
-func (r *PostgresRepository) refreshNextIdGen() (int64, bool, error) {
-	query := fmt.Sprintf(`SELECT setval(pg_get_serial_sequence('%s', 'id'), coalesce(max(id),0) + 1, false) FROM %s`, table, table)
-	var data int64
-	err := r.conn.QueryRow(query).Scan(&data)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return 0, false, nil
-		}
-		zap.L().Error("Couldn't query the database:", zap.Error(err))
-		return 0, false, err
-	}
-	return data, true, nil
 }

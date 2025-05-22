@@ -15,7 +15,6 @@ type Repository interface {
 	Delete(id int64) error
 	GetAll() (map[int64]ExternalConfig, error)
 	GetAllOldVersions(id int64) ([]ExternalConfig, error)
-	refreshNextIdGen() (int64, bool, error)
 }
 
 var (

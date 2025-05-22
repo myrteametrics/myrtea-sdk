@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/myrteametrics/myrtea-sdk/v5/expression"
+	"github.com/myrteametrics/myrtea-sdk/v5/repositories/utils"
 	"go.uber.org/zap"
 
 	sq "github.com/Masterminds/squirrel"
@@ -118,6 +119,7 @@ func (r *PostgresRepository) GetByKey(key string) (VariablesConfig, bool, error)
 
 // Create method used to create an Variable Config
 func (r *PostgresRepository) Create(variable VariablesConfig) (int64, error) {
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 	var id int64
 	err := r.newStatement().
 		Insert(table).
@@ -194,6 +196,8 @@ func (r *PostgresRepository) Delete(id int64) error {
 	if rowCount != 1 {
 		return errors.New("unexpected number of rows affected")
 	}
+
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 
 	return nil
 }
