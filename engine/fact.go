@@ -124,7 +124,7 @@ func (f *Fact) IsExecutable() bool {
 // ContextualizeDimensions contextualize fact dimensions placeholders (standard or custom) and set the right timezone if needed
 func (f *Fact) ContextualizeDimensions(t time.Time) {
 	for _, dim := range f.Dimensions {
-		if dim.Operator == DateHistogram {
+		if dim.Operator == DateHistogram && dim.TimeZone == "" {
 			dim.TimeZone = utils.GetTimeZone(t)
 		}
 	}
