@@ -14,7 +14,9 @@ type Repository interface {
 	Update(id int64, variable VariablesConfig) error
 	Delete(id int64) error
 	GetAll() ([]VariablesConfig, error)
+	GetAllByScope(scope string) ([]VariablesConfig, error)
 	GetAllAsMap() (map[string]interface{}, error)
+	GetAllAsMapByScope(scope string) (map[string]interface{}, error)
 }
 
 var (

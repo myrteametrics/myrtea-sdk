@@ -86,6 +86,10 @@ func buildElasticBucket(name string, intent types.Aggregations, dimensions []*en
 				Field: some.String(frag.Term),
 			}
 
+			if frag.TimeZone != "" {
+				histogramAgg.TimeZone = &frag.TimeZone
+			}
+
 			// Fixed interval
 			if frag.CalendarFixed {
 				if frag.DateInterval == "" {
