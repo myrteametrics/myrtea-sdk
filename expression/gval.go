@@ -156,6 +156,7 @@ func (gv *GlobalVariables) Load(listKeyValue map[string]interface{}) {
 	gv.listKeyValueMu.Lock()
 	for k, v := range listKeyValue {
 		gv.listKeyValue[prefixGlobalVars+k] = v
+		gv.listKeyValue[k] = v
 	}
 	gv.listKeyValueMu.Unlock()
 
@@ -166,6 +167,7 @@ func (gv *GlobalVariables) Set(key string, value interface{}) {
 
 	gv.listKeyValueMu.Lock()
 	gv.listKeyValue[prefixGlobalVars+key] = value
+	gv.listKeyValue[key] = value
 	gv.listKeyValueMu.Unlock()
 
 	zap.L().Info("Global variable set", zap.String("key", prefixGlobalVars+key), zap.Any("value", value), zap.Int("total_count", len(gv.listKeyValue)))
@@ -175,6 +177,7 @@ func (gv *GlobalVariables) Delete(key string) {
 
 	gv.listKeyValueMu.Lock()
 	delete(gv.listKeyValue, prefixGlobalVars+key)
+	delete(gv.listKeyValue, key)
 	gv.listKeyValueMu.Unlock()
 	zap.L().Info("Global variable deleted", zap.String("key", prefixGlobalVars+key), zap.Int("total_count", len(gv.listKeyValue)))
 }
