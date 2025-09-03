@@ -595,3 +595,32 @@ func TestAsMilliseconds(t *testing.T) {
 		})
 	}
 }
+
+func runCase(t *testing.T, name, nowUTC, sendTime, tz string, want bool) {
+	t.Helper()
+	gotIface, err := onceTodayAtHour(nowUTC, sendTime, tz)
+	if err != nil {
+		t.Fatalf("%s: error: %v", name, err)
+	}
+	got, ok := gotIface.(bool)
+	if !ok {
+		t.Fatalf("%s: return type is not bool", name)
+	}
+	if got != want {
+		t.Errorf("%s: got %v, want %v", name, got, want)
+	}
+}
+
+func TestDynamicPrecision(t *testing.T) {
+	// Hour precision: "23h" → HH must match (minutes/seconds ignored)
+	runCase(t, "Hour match (CET)", "2025-01-15T22:15:05.000", "23h", "1h", true) // 23:xx local
+	runCase(t, "Hour mismatch", "2025-01-15T21:59:59.000", "23h", "1h", false)
+
+	// Minute precision: "23h30m" → HH:MM must match (seconds ignored)
+	runCase(t, "Minute match", "2025-01-15T22:30:59.000", "23h30m", "1h", true) // 23:30 local
+	runCase(t, "Minute mismatch", "2025-01-15T22:31:00.000", "23h30m", "1h", false)
+
+	// Second precision: "23h30m30s" → HH:MM:SS must match
+	runCase(t, "Second match", "2025-01-15T22:30:30.000", "23h30m30s", "1h", true) // 23:30:30 local
+	runCase(t, "Second mismatch", "2025-01-15T22:30:31.000", "23h30m30s", "1h", false)
+}

@@ -468,3 +468,69 @@ func asMilliseconds(duration float64, inputUnit string) float64 {
 		return 0
 	}
 }
+
+// once_today_at_hour(nowUTC, send_time, tzOrAuto) -> bool
+//
+// Args (all strings):
+//   - nowUTC:    UTC timestamp, e.g. "2025-09-03T10:15:00Z"
+//   - send_time: HMS-only French-style time (strict):
+//     "23h", "23h30m", "23h30m30s"
+//     Precision is inferred:
+//   - "HHh"         -> match hour exactly (HH must match)
+//   - "HHhMMm"      -> match minute exactly (HH:MM must match)
+//   - "HHhMMmSSs"   -> match second exactly (HH:MM:SS must match)
+//   - tzOrAuto:  "auto" (Europe/Paris if available, else manual DST)
+//     OR a UTC offset for local time like "2h", "+2h", "1h", "+1h", "-3h"
+//     Meaning: local_time = UTC + tz
+//
+// Behavior:
+//   - Computes today's *local* target instant from send_time using tzOrAuto,
+//     converts to UTC, then compares components according to inferred precision:
+//   - hour precision   -> nowUTC.Hour   == targetUTC.Hour
+//   - minute precision -> nowUTC.Hour:Minute   == targetUTC.Hour:Minute
+//   - second precision -> nowUTC.Hour:Minute:Second == targetUTC.Hour:Minute:Second
+func onceTodayAtHour(args ...interface{}) (interface{}, error) {
+	if len(args) != 3 {
+		return nil, fmt.Errorf("once_today_at_hour() expects 3 string args: nowUTC, send_time, tzOrAuto")
+	}
+	nowStr, ok1 := args[0].(string)
+	sendTimeStr, ok2 := args[1].(string)
+	tzSpec, ok3 := args[2].(string)
+	if !ok1 || !ok2 || !ok3 {
+		return nil, fmt.Errorf("once_today_at_hour() expects 3 string args")
+	}
+
+	nowUTC, err := time.Parse(utils.TimeLayout, nowStr)
+	if err != nil {
+		return nil, fmt.Errorf("once_today_at_hour() invalid nowUTC: %v", err)
+	}
+	nowUTC = nowUTC.UTC()
+
+	startUTC := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
+
+	// Parse "HHh[MMm[SSs]]" and infer precision
+	h, m, s, prec, err := parseHMSStrict(sendTimeStr)
+	if err != nil {
+		return nil, fmt.Errorf("once_today_at_hour() %v", err)
+	}
+
+	// Build today's target in UTC using tz semantics: local = UTC + tz  =>  UTC = local - tz
+	targetUTC, err := computeTargetUTC_UTCplus(nowUTC, startUTC, h, m, s, tzSpec)
+	if err != nil {
+		return nil, fmt.Errorf("once_today_at_hour() %v", err)
+	}
+
+	// Compare by precision
+	switch prec {
+	case precisionHour:
+		return nowUTC.Hour() == targetUTC.Hour(), nil
+	case precisionMinute:
+		return nowUTC.Hour() == targetUTC.Hour() && nowUTC.Minute() == targetUTC.Minute(), nil
+	case precisionSecond:
+		return nowUTC.Hour() == targetUTC.Hour() &&
+			nowUTC.Minute() == targetUTC.Minute() &&
+			nowUTC.Second() == targetUTC.Second(), nil
+	default:
+		return false, fmt.Errorf("unknown precision")
+	}
+}
