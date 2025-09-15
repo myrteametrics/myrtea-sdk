@@ -380,7 +380,7 @@ func createRangeQuery(field string, value interface{}, value2 interface{}, timeZ
 			rangeQuery = types.NumberRangeQuery{
 				Lt: &v2,
 			}
-		} else if v2, ok := value.(string); ok {
+		} else if v2, ok := value2.(string); ok {
 			dateRangeQuery := types.DateRangeQuery{
 				Lt: some.String(v2),
 			}

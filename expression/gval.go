@@ -71,6 +71,7 @@ var (
 		gval.Function("get_value_current_day", getValueForCurrentDay),
 		gval.Function("get_formatted_duration", getFormattedDuration),
 		gval.Function("numberWithoutExponent", numberWithoutExponent),
+		gval.Function("once_today_at_hour", onceTodayAtHour),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions
