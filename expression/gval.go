@@ -3,9 +3,10 @@ package expression
 import (
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/PaesslerAG/gval"
 	ttlcache "github.com/myrteametrics/myrtea-sdk/v5/cache"
@@ -19,7 +20,7 @@ type GlobalVariables struct {
 const prefixGlobalVars = "global_"
 
 var (
-	_globalVars *GlobalVariables = &GlobalVariables{listKeyValue: make(map[string]interface{})}
+	_globalVars = &GlobalVariables{listKeyValue: make(map[string]interface{})}
 
 	// cache is a global ttlcache for gval expression
 	cache = ttlcache.NewCache(7 * 24 * time.Hour)

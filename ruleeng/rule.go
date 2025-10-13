@@ -3,6 +3,9 @@ package ruleeng
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+
+	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 )
 
 // Rule ...
@@ -11,6 +14,7 @@ type Rule interface {
 	GetID() int64
 	GetDefaultValues() map[string]interface{}
 	Execute(k KnowledgeBase) []Action
+	IsValid() (bool, error)
 }
 
 // DefaultRule default rule implementation
@@ -30,6 +34,58 @@ func (r DefaultRule) GetID() int64 {
 // GetDefaultValues returns rule default values
 func (r DefaultRule) GetDefaultValues() map[string]interface{} {
 	return r.Parameters
+}
+
+// IsValid validates the rule structure and returns validation status
+func (r DefaultRule) IsValid() (bool, error) {
+	if r.Cases == nil {
+		return false, errors.New("missing rule cases")
+	}
+	if len(r.Cases) <= 0 {
+		return false, errors.New("missing rule cases")
+	}
+
+	// Validate each case
+	for i, c := range r.Cases {
+		if c.Name == "" {
+			return false, fmt.Errorf("missing case name at index %d", i)
+		}
+		if c.Condition == "" {
+			return false, fmt.Errorf("missing case condition for case: %s", c.Name)
+		}
+
+		// Validate condition expression syntax
+		if err := ValidateExpressionSyntax(string(c.Condition)); err != nil {
+			return false, fmt.Errorf("invalid condition syntax in case '%s': %w", c.Name, err)
+		}
+		if c.Actions == nil {
+			return false, fmt.Errorf("missing case actions for case: %s", c.Name)
+		}
+		if len(c.Actions) <= 0 {
+			return false, fmt.Errorf("missing case actions for case: %s", c.Name)
+		}
+
+		// Validate each action in the case
+		for j, a := range c.Actions {
+			if a.Name == "" {
+				return false, fmt.Errorf("missing action name at index %d in case: %s", j, c.Name)
+			}
+
+			// Validate action name expression syntax
+			if err := ValidateExpressionSyntax(string(a.Name)); err != nil {
+				return false, fmt.Errorf("invalid action name syntax at index %d in case '%s': %w", j, c.Name, err)
+			}
+
+			// Validate action parameters expression syntax
+			for paramName, paramExpr := range a.Parameters {
+				if err := ValidateExpressionSyntax(string(paramExpr)); err != nil {
+					return false, fmt.Errorf("invalid parameter '%s' syntax in action at index %d in case '%s': %w", paramName, j, c.Name, err)
+				}
+			}
+		}
+	}
+
+	return true, nil
 }
 
 // Execute executes the rule and return the resulting actions
@@ -78,10 +134,10 @@ func (r *DefaultRule) UnmarshalJSON(data []byte) error {
 	}
 
 	if r.Cases == nil {
-		return errors.New("Missing rule cases")
+		return errors.New("missing rule cases")
 	}
 	if len(r.Cases) <= 0 {
-		return errors.New("Missing rule cases")
+		return errors.New("missing rule cases")
 	}
 
 	return nil
@@ -210,5 +266,14 @@ func (a *ActionDef) UnmarshalJSON(data []byte) error {
 		return errors.New("Missing action name")
 	}
 
+	return nil
+}
+
+// ValidateExpressionSyntax validates the syntax of the expression
+func ValidateExpressionSyntax(expr string) error {
+	_, err := expression.LangEval.NewEvaluable(expr)
+	if err != nil {
+		return fmt.Errorf("invalid expression syntax: %w", err)
+	}
 	return nil
 }
