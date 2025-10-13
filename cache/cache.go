@@ -106,7 +106,7 @@ func (cache *Cache) Count() int {
 	return count
 }
 
-func (cache *Cache) cleanup() {
+func (cache *Cache) Cleanup() {
 	cache.mutex.Lock()
 	for key, item := range cache.items {
 		if item.expired() {
@@ -126,7 +126,7 @@ func (cache *Cache) startCleanupTimer() {
 		for {
 			select {
 			case <-ticker:
-				cache.cleanup()
+				cache.Cleanup()
 			}
 		}
 	})()

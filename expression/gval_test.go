@@ -728,3 +728,62 @@ func TestEvalAbsoluteValue(t *testing.T) {
 	}
 
 }
+
+// helper for running an expression and asserting bool result
+func runBoolExpr(t *testing.T, name, expr string, want bool) {
+	t.Helper()
+	got, err := Process(LangEval, expr, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("%s: eval error: %v (expr=%s)", name, err, expr)
+	}
+	b, ok := got.(bool)
+	if !ok {
+		t.Fatalf("%s: result is not bool (got %T) (expr=%s)", name, got, expr)
+	}
+	if b != want {
+		t.Errorf("%s: got %v, want %v (expr=%s)", name, b, want, expr)
+	}
+}
+
+func TestOnceTodayAtHour_DynamicPrecision_WithExplicitTZ_CET(t *testing.T) {
+	// tz = "1h"  ⇒ local = UTC + 1h (CET, winter)
+	// "23h" local ⇒ 22:xx UTC
+	// "23h30m" local ⇒ 22:30:xx UTC
+	// "23h30m30s" local ⇒ 22:30:30 UTC
+
+	// Hour precision: "23h" -> HH must match
+	runBoolExpr(t,
+		"Hour match (CET)",
+		`once_today_at_hour("2025-01-15T22:15:05.000", "23h", "1h")`,
+		true,
+	)
+	runBoolExpr(t,
+		"Hour mismatch (CET)",
+		`once_today_at_hour("2025-01-15T21:59:59.000", "23h", "1h")`,
+		false,
+	)
+
+	// Minute precision: "23h30m" -> HH:MM must match (seconds ignored)
+	runBoolExpr(t,
+		"Minute match (CET)",
+		`once_today_at_hour("2025-01-15T22:30:59.000", "23h30m", "1h")`,
+		true,
+	)
+	runBoolExpr(t,
+		"Minute mismatch (CET)",
+		`once_today_at_hour("2025-01-15T22:31:00.000", "23h30m", "1h")`,
+		false,
+	)
+
+	// Second precision: "23h30m30s" -> HH:MM:SS must match
+	runBoolExpr(t,
+		"Second match (CET)",
+		`once_today_at_hour("2025-01-15T22:30:30.000", "23h30m30s", "1h")`,
+		true,
+	)
+	runBoolExpr(t,
+		"Second mismatch (CET)",
+		`once_today_at_hour("2025-01-15T22:30:31.000", "23h30m30s", "1h")`,
+		false,
+	)
+}

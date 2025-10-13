@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/myrteametrics/myrtea-sdk/v5/repositories/utils"
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
@@ -117,6 +118,7 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 
 // Create method used to create an externalConfig
 func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error) {
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 	tx, err := r.conn.Begin() // Start a transaction
 	if err != nil {
 		return -1, err
@@ -124,13 +126,17 @@ func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error
 
 	var id int64
 
-	err = r.newStatement().
-		Insert("external_generic_config_v1").
+	statement := r.newStatement().
+		Insert(table).
 		Columns("name").
 		Values(externalConfig.Name).
-		Suffix("RETURNING \"id\"").
-		QueryRow().
-		Scan(&id)
+		Suffix("RETURNING \"id\"")
+	if externalConfig.Id != 0 {
+		statement.Columns("id", "name").
+			Values(externalConfig.Id, externalConfig.Name)
+	}
+	err = statement.QueryRow().Scan(&id)
+
 	if err != nil {
 		tx.Rollback() // Cancel transaction in case of error
 		return -1, err
@@ -257,6 +263,7 @@ func (r *PostgresRepository) Delete(id int64) error {
 	if err != nil {
 		return err
 	}
+	_, _, _ = utils.RefreshNextIdGen(r.conn.DB, table)
 	return r.checkRowsAffected(res, 1)
 }
 

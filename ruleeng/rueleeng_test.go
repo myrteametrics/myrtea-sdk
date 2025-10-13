@@ -523,6 +523,7 @@ var ruleStr = `{
 		"name": "case1",
 		"enabled": true,
 		"condition": "fact_test_1.aggs.agg0.value == fact_test_1.aggs.doc_count.value",
+        "checkprevsetaction": true,		
 		"actions": [
 		  {
 			"name": "\"set\"",
