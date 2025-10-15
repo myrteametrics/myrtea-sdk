@@ -78,6 +78,10 @@ func (r DefaultRule) IsValid() (bool, error) {
 
 			// Validate action parameters expression syntax
 			for paramName, paramExpr := range a.Parameters {
+				if paramExpr == "" {
+					continue
+				}
+
 				if err := ValidateExpressionSyntax(string(paramExpr)); err != nil {
 					return false, fmt.Errorf("invalid parameter '%s' syntax in action at index %d in case '%s': %w", paramName, j, c.Name, err)
 				}
