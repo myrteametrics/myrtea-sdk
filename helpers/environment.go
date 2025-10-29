@@ -95,6 +95,22 @@ func GetElasticsearchConfigKeys() []ConfigKey {
 			Type: StringSliceFlag, Name: "ELASTICSEARCH_URLS", DefaultValue: []string{"http://localhost:9200"},
 			Description: "Elasticsearch URLS",
 		},
+		{
+			Type: StringFlag, Name: "ELASTICSEARCH_AUTH", DefaultValue: "false",
+			Description: "Enable Elasticsearch authentication",
+		},
+		{
+			Type: StringFlag, Name: "ELASTICSEARCH_INSECURE", DefaultValue: "false",
+			Description: "Disable Elasticsearch TLS verification (insecure mode)",
+		},
+		{
+			Type: StringFlag, Name: "ELASTICSEARCH_USERNAME", DefaultValue: "",
+			Description: "Elasticsearch username for authentication",
+		},
+		{
+			Type: StringFlag, Name: "ELASTICSEARCH_PASSWORD", DefaultValue: "",
+			Description: "Elasticsearch password for authentication",
+		},
 	}
 }
 
