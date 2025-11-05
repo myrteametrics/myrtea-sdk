@@ -657,13 +657,12 @@ func detectDateFormat(template string) (format string, mode string, err error) {
 	case strings.Contains(template, "YYYYMM"):
 		return "200601", "monthly", nil
 
-	case strings.Contains(template, "YYYY"):
-		return "2006", "yearly", nil
-
 	case strings.Contains(template, "YYYYMMDDHH"):
 		return "2006010215", "hourly", nil
 	case strings.Contains(template, "YYYY-MM-DD-HH"):
 		return "2006-01-02-15", "hourly", nil
+	case strings.Contains(template, "YYYY"):
+		return "2006", "yearly", nil
 	}
 
 	return "", "", fmt.Errorf("unrecognized date format in template: %s", template)
