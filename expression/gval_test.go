@@ -787,3 +787,83 @@ func TestOnceTodayAtHour_DynamicPrecision_WithExplicitTZ_CET(t *testing.T) {
 		false,
 	)
 }
+
+func TestBuildIndexNames_CurrentMonth(t *testing.T) {
+	result, err := Process(LangEval, `generate_time_range_indexes("myrtea-ncu-YYYY.MM")`, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	now := time.Now().Format("2006.01")
+	expected := "myrtea-ncu-" + now
+
+	if result != expected {
+		t.Errorf("Expected %s, got %s", expected, result)
+	}
+}
+
+func TestBuildIndexNames_MonthRangeForward(t *testing.T) {
+	result, err := Process(LangEval, `generate_time_range_indexes("myrtea-ncu-YYYY.MM", 2)`, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	now := time.Now()
+	expected := []string{
+		"myrtea-ncu-" + now.Format("2006.01"),
+		"myrtea-ncu-" + now.AddDate(0, 1, 0).Format("2006.01"),
+		"myrtea-ncu-" + now.AddDate(0, 2, 0).Format("2006.01"),
+	}
+
+	expectedStr := strings.Join(expected, ",")
+	if result != expectedStr {
+		t.Errorf("Expected %s, got %s", expectedStr, result)
+	}
+}
+
+func TestBuildIndexNames_MonthRangeBackward(t *testing.T) {
+	result, err := Process(LangEval, `generate_time_range_indexes("myrtea-ncu-YYYY-MM",-2)`, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	now := time.Now()
+
+	fmt.Printf("result %v", result)
+	expected := []string{
+		"myrtea-ncu-" + now.AddDate(0, -2, 0).Format("2006-01"),
+		"myrtea-ncu-" + now.AddDate(0, -1, 0).Format("2006-01"),
+		"myrtea-ncu-" + now.Format("2006-01"),
+	}
+
+	expectedStr := strings.Join(expected, ",")
+	if result != expectedStr {
+		t.Errorf("Expected %s, got %s", expectedStr, result)
+	}
+}
+
+func TestBuildIndexNames_DailyRange(t *testing.T) {
+	result, err := Process(LangEval, `generate_time_range_indexes("myrtea-YYYY.MM.DD", -2)`, map[string]interface{}{})
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	now := time.Now()
+	expected := []string{
+		"myrtea-" + now.AddDate(0, 0, -2).Format("2006.01.02"),
+		"myrtea-" + now.AddDate(0, 0, -1).Format("2006.01.02"),
+		"myrtea-" + now.Format("2006.01.02"),
+	}
+
+	expectedStr := strings.Join(expected, ",")
+	if result != expectedStr {
+		t.Errorf("Expected %s, got %s", expectedStr, result)
+	}
+}
+
+func TestBuildIndexNames_InvalidTemplate(t *testing.T) {
+	_, err := Process(LangEval, `generate_time_range_indexes("myrtea-ncu")`, map[string]interface{}{})
+	if err == nil {
+		t.Fatalf("Expected error for invalid template, got nil")
+	}
+}
