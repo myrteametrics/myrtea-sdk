@@ -829,7 +829,6 @@ func TestBuildIndexNames_MonthRangeBackward(t *testing.T) {
 
 	now := time.Now()
 
-	fmt.Printf("result %v", result)
 	expected := []string{
 		"myrtea-ncu-" + now.AddDate(0, -2, 0).Format("2006-01"),
 		"myrtea-ncu-" + now.AddDate(0, -1, 0).Format("2006-01"),
