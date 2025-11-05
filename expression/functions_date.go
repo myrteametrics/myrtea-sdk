@@ -548,12 +548,12 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 // - Always returns a single string (indexes separated by commas)
 func generateTimeRangeIndexes(args ...interface{}) (string, error) {
 	if len(args) < 1 || len(args) > 2 {
-		return "", fmt.Errorf("generate_time_range_indexes() attend 1 ou 2 arguments : (template[, offset])")
+		return "", fmt.Errorf("generate_time_range_indexes() expects 1 or 2 arguments: (template[, offset])")
 	}
 
 	template, ok := args[0].(string)
 	if !ok || strings.TrimSpace(template) == "" {
-		return "", fmt.Errorf("le premier argument 'template' doit être une string non vide")
+		return "", fmt.Errorf("first argument 'template' must be a non-empty string")
 	}
 
 	dateFormat, mode, err := detectDateFormat(template)
@@ -563,7 +563,7 @@ func generateTimeRangeIndexes(args ...interface{}) (string, error) {
 
 	idx := strings.Index(template, "YYYY")
 	if idx == -1 {
-		return "", fmt.Errorf("le template doit contenir un format de date valide (YYYY...)")
+		return "", fmt.Errorf("template must contain a valid date format (YYYY...)")
 	}
 	prefix := strings.TrimRight(template[:idx], "-_. /")
 
@@ -580,7 +580,7 @@ func generateTimeRangeIndexes(args ...interface{}) (string, error) {
 			n, _ := strconv.Atoi(v)
 			offset = n
 		default:
-			return "", fmt.Errorf("le deuxième argument doit être un entier ou une string numérique")
+			return "", fmt.Errorf("second argument must be an integer or a numeric string")
 		}
 	}
 
@@ -666,5 +666,5 @@ func detectDateFormat(template string) (format string, mode string, err error) {
 		return "2006-01-02-15", "hourly", nil
 	}
 
-	return "", "", fmt.Errorf("format de date non reconnu dans le template : %s", template)
+	return "", "", fmt.Errorf("unrecognized date format in template: %s", template)
 }
