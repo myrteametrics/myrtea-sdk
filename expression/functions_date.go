@@ -535,7 +535,7 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 	}
 }
 
-// buildIndexNames generates index names from a prefix + dynamic date format.
+// generateTimeRangeIndexes generates index names from a prefix + dynamic date format.
 // Usage:
 //
 //	generate_time_range_indexes("myrtea-YYYY.MM")
