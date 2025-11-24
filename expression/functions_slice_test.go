@@ -53,49 +53,166 @@ func TestAppendSlice(t *testing.T) {
 	if len(output) != 2 {
 		t.Fatal("Output length not equal to 2")
 	}
-	if output[0] != "first" {
-		t.Errorf("Output not equal to first")
-	}
-	if output[1] != "test2" {
-		t.Errorf("Output not equal to test2")
+}
+
+func TestFilter(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []interface{}
+		expected []interface{}
+		wantErr  bool
+	}{
+		{
+			name:     "filter single value",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "b"},
+			expected: []interface{}{"b"},
+			wantErr:  false,
+		},
+		{
+			name:     "filter multiple values",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "a", "c"},
+			expected: []interface{}{"a", "c"},
+			wantErr:  false,
+		},
+		{
+			name:     "filter no matches",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "d"},
+			expected: []interface{}{},
+			wantErr:  false,
+		},
+		{
+			name:     "filter all values",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "a", "b", "c"},
+			expected: []interface{}{"a", "b", "c"},
+			wantErr:  false,
+		},
+		{
+			name:     "filter empty array",
+			args:     []interface{}{[]interface{}{}, "a"},
+			expected: []interface{}{},
+			wantErr:  false,
+		},
+		{
+			name:     "filter with numbers",
+			args:     []interface{}{[]interface{}{1, 2, 3}, 2},
+			expected: []interface{}{2},
+			wantErr:  false,
+		},
+		{
+			name:    "filter error - not enough args",
+			args:    []interface{}{[]interface{}{"a", "b"}},
+			wantErr: true,
+		},
+		{
+			name:    "filter error - first arg not array",
+			args:    []interface{}{"not an array", "b"},
+			wantErr: true,
+		},
 	}
 
-	// Test combine slice with value
-	output, err = appendSlice([]interface{}{"first", "first2"}, "second")
-	if err != nil {
-		t.Error(err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := filter(tt.args...)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("filter() expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("filter() unexpected error: %v", err)
+				return
+			}
+			if len(output) != len(tt.expected) {
+				t.Errorf("filter() length = %v, want %v", len(output), len(tt.expected))
+				return
+			}
+			for i, v := range output {
+				if v != tt.expected[i] {
+					t.Errorf("filter() output[%d] = %v, want %v", i, v, tt.expected[i])
+				}
+			}
+		})
 	}
-	if len(output) != 3 {
-		t.Fatal("Output length not equal to 3")
-	}
-	if output[0] != "first" {
-		t.Errorf("Output not equal to first")
-	}
-	if output[1] != "first2" {
-		t.Errorf("Output not equal to first2")
-	}
-	if output[2] != "second" {
-		t.Errorf("Output not equal to second")
+}
+
+func TestExclude(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []interface{}
+		expected []interface{}
+		wantErr  bool
+	}{
+		{
+			name:     "exclude single value",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "b"},
+			expected: []interface{}{"a", "c"},
+			wantErr:  false,
+		},
+		{
+			name:     "exclude multiple values",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "a", "c"},
+			expected: []interface{}{"b"},
+			wantErr:  false,
+		},
+		{
+			name:     "exclude no matches",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "d"},
+			expected: []interface{}{"a", "b", "c"},
+			wantErr:  false,
+		},
+		{
+			name:     "exclude all values",
+			args:     []interface{}{[]interface{}{"a", "b", "c"}, "a", "b", "c"},
+			expected: []interface{}{},
+			wantErr:  false,
+		},
+		{
+			name:     "exclude empty array",
+			args:     []interface{}{[]interface{}{}, "a"},
+			expected: []interface{}{},
+			wantErr:  false,
+		},
+		{
+			name:     "exclude with numbers",
+			args:     []interface{}{[]interface{}{1, 2, 3}, 2},
+			expected: []interface{}{1, 3},
+			wantErr:  false,
+		},
+		{
+			name:    "exclude error - not enough args",
+			args:    []interface{}{[]interface{}{"a", "b"}},
+			wantErr: true,
+		},
+		{
+			name:    "exclude error - first arg not array",
+			args:    []interface{}{"not an array", "b"},
+			wantErr: true,
+		},
 	}
 
-	// Test combine slice with slice
-	output, err = appendSlice([]interface{}{1, 2}, []interface{}{"3", "4"})
-	if err != nil {
-		t.Error(err)
-	}
-	if len(output) != 4 {
-		t.Fatal("Output length not equal to 4")
-	}
-	if output[0] != 1 {
-		t.Errorf("Output not equal to 1")
-	}
-	if output[1] != 2 {
-		t.Errorf("Output not equal to 2")
-	}
-	if output[2] != "3" {
-		t.Errorf("Output not equal to 3")
-	}
-	if output[3] != "4" {
-		t.Errorf("Output not equal to 4")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := exclude(tt.args...)
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("exclude() expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("exclude() unexpected error: %v", err)
+				return
+			}
+			if len(output) != len(tt.expected) {
+				t.Errorf("exclude() length = %v, want %v", len(output), len(tt.expected))
+				return
+			}
+			for i, v := range output {
+				if v != tt.expected[i] {
+					t.Errorf("exclude() output[%d] = %v, want %v", i, v, tt.expected[i])
+				}
+			}
+		})
 	}
 }

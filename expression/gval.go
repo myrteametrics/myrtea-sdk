@@ -108,6 +108,8 @@ var (
 		gval.Full(),
 		gval.Function("contains", contains),
 		gval.Function("append", appendSlice),
+		gval.Function("filter", filter),
+		gval.Function("exclude", exclude),
 	)
 
 	LangEvalUrl = gval.NewLanguage(

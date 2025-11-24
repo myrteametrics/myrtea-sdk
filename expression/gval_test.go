@@ -866,3 +866,147 @@ func TestBuildIndexNames_InvalidTemplate(t *testing.T) {
 		t.Fatalf("Expected error for invalid template, got nil")
 	}
 }
+
+// TestGvalFilter tests the filter function integration with gval
+func TestGvalFilter(t *testing.T) {
+	// Test: filter with length - excluding "b"
+	variables := map[string]interface{}{
+		"list": []interface{}{"a", "b", "c"},
+	}
+
+	result, err := Process(LangEval, `length(exclude(list, "b"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 2 {
+		t.Errorf("Expected length 2, got %v", result)
+	}
+
+	// Test: filter with length - including only "b"
+	result, err = Process(LangEval, `length(filter(list, "b"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 1 {
+		t.Errorf("Expected length 1, got %v", result)
+	}
+
+	// Test: filter multiple values
+	result, err = Process(LangEval, `length(filter(list, "a", "c"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 2 {
+		t.Errorf("Expected length 2, got %v", result)
+	}
+
+	// Test: exclude multiple values
+	result, err = Process(LangEval, `length(exclude(list, "a", "c"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 1 {
+		t.Errorf("Expected length 1, got %v", result)
+	}
+}
+
+// TestGvalFilterWithNumbers tests filter/exclude with numeric arrays
+func TestGvalFilterWithNumbers(t *testing.T) {
+	variables := map[string]interface{}{
+		"numbers": []interface{}{1, 2, 3, 4, 5},
+	}
+
+	// Filter only even numbers (2, 4)
+	result, err := Process(LangEval, `length(filter(numbers, 2, 4))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 2 {
+		t.Errorf("Expected length 2, got %v", result)
+	}
+
+	// Exclude specific numbers
+	result, err = Process(LangEval, `length(exclude(numbers, 1, 5))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 3 {
+		t.Errorf("Expected length 3, got %v", result)
+	}
+}
+
+// TestGvalFilterChaining tests chaining filter operations
+func TestGvalFilterChaining(t *testing.T) {
+	variables := map[string]interface{}{
+		"list": []interface{}{"a", "b", "c", "d", "e"},
+	}
+
+	// Chain: exclude "b", then exclude "d"
+	result, err := Process(LangEval, `length(exclude(exclude(list, "b"), "d"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 3 {
+		t.Errorf("Expected length 3 (a, c, e), got %v", result)
+	}
+
+	// Chain: filter for a,b,c then exclude b
+	result, err = Process(LangEval, `length(exclude(filter(list, "a", "b", "c"), "b"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 2 {
+		t.Errorf("Expected length 2 (a, c), got %v", result)
+	}
+}
+
+// TestGvalFilterWithVariables tests using variables in filter expressions
+func TestGvalFilterWithVariables(t *testing.T) {
+	variables := map[string]interface{}{
+		"list":         []interface{}{"apple", "banana", "cherry"},
+		"excludeValue": "banana",
+	}
+
+	// Exclude using variable
+	result, err := Process(LangEval, `length(exclude(list, excludeValue))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 2 {
+		t.Errorf("Expected length 2, got %v", result)
+	}
+
+	// Filter using variable
+	result, err = Process(LangEval, `length(filter(list, "apple"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 1 {
+		t.Errorf("Expected length 1, got %v", result)
+	}
+}
+
+// TestGvalFilterEmptyResults tests filter/exclude with no matches
+func TestGvalFilterEmptyResults(t *testing.T) {
+	variables := map[string]interface{}{
+		"list": []interface{}{"a", "b", "c"},
+	}
+
+	// Filter with no matches
+	result, err := Process(LangEval, `length(filter(list, "z"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 0 {
+		t.Errorf("Expected length 0, got %v", result)
+	}
+
+	// Exclude all elements
+	result, err = Process(LangEval, `length(exclude(list, "a", "b", "c"))`, variables)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	if result.(float64) != 0 {
+		t.Errorf("Expected length 0, got %v", result)
+	}
+}
