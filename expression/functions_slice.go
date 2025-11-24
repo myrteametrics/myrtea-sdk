@@ -72,13 +72,31 @@ func filter(arguments ...interface{}) ([]interface{}, error) {
 		includeValues = append(includeValues, arguments[i])
 	}
 
+	// Build maps for fast lookup
+	numericMap := make(map[float64]bool)
+	otherMap := make(map[interface{}]bool)
+	for _, val := range includeValues {
+		if num, ok := toFloat64(val); ok {
+			numericMap[num] = true
+		} else {
+			otherMap[val] = true
+		}
+	}
+
 	result := make([]interface{}, 0)
 	for _, item := range slice {
-		for _, val := range includeValues {
-			if compareValues(item, val) {
-				result = append(result, item)
-				break
+		include := false
+		if num, ok := toFloat64(item); ok {
+			if numericMap[num] {
+				include = true
 			}
+		} else {
+			if otherMap[item] {
+				include = true
+			}
+		}
+		if include {
+			result = append(result, item)
 		}
 	}
 
@@ -105,13 +123,27 @@ func exclude(arguments ...interface{}) ([]interface{}, error) {
 		excludeValues = append(excludeValues, arguments[i])
 	}
 
+	// Build maps for fast lookup
+	numericMap := make(map[float64]bool)
+	otherMap := make(map[interface{}]bool)
+	for _, val := range excludeValues {
+		if num, ok := toFloat64(val); ok {
+			numericMap[num] = true
+		} else {
+			otherMap[val] = true
+		}
+	}
+
 	result := make([]interface{}, 0)
 	for _, item := range slice {
 		excluded := false
-		for _, val := range excludeValues {
-			if compareValues(item, val) {
+		if num, ok := toFloat64(item); ok {
+			if numericMap[num] {
 				excluded = true
-				break
+			}
+		} else {
+			if otherMap[item] {
+				excluded = true
 			}
 		}
 		if !excluded {
