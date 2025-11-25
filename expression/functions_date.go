@@ -534,3 +534,136 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 		return false, fmt.Errorf("unknown precision")
 	}
 }
+
+// generateTimeRangeIndexes generates index names from a prefix + dynamic date format.
+// Usage:
+//
+//	generate_time_range_indexes("myrtea-YYYY.MM")
+//	generate_time_range_indexes("myrtea-YYYY.MM", -2)
+//	generate_time_range_indexes("myrtea-YYYYMMDD", 3)
+//
+// Rules:
+// - The date format is automatically detected from the template
+// - The second argument (optional) is an integer: negative for the past, positive for the future
+// - Always returns a single string (indexes separated by commas)
+func generateTimeRangeIndexes(args ...interface{}) (string, error) {
+	if len(args) < 1 || len(args) > 2 {
+		return "", fmt.Errorf("generate_time_range_indexes() expects 1 or 2 arguments: (template[, offset])")
+	}
+
+	template, ok := args[0].(string)
+	if !ok || strings.TrimSpace(template) == "" {
+		return "", fmt.Errorf("first argument 'template' must be a non-empty string")
+	}
+
+	dateFormat, mode, err := detectDateFormat(template)
+	if err != nil {
+		return "", err
+	}
+
+	idx := strings.Index(template, "YYYY")
+	if idx == -1 {
+		return "", fmt.Errorf("template must contain a valid date format (YYYY...)")
+	}
+	prefix := strings.TrimRight(template[:idx], "-_. /")
+
+	offset := 0
+	if len(args) == 2 {
+		switch v := args[1].(type) {
+		case int:
+			offset = v
+		case int64:
+			offset = int(v)
+		case float64:
+			offset = int(v)
+		case string:
+			n, _ := strconv.Atoi(v)
+			offset = n
+		default:
+			return "", fmt.Errorf("second argument must be an integer or a numeric string")
+		}
+	}
+
+	now := time.Now()
+	start := now
+	end := now
+
+	switch mode {
+	case "hourly":
+		if offset < 0 {
+			start = now.Add(time.Duration(offset) * time.Hour)
+		} else {
+			end = now.Add(time.Duration(offset) * time.Hour)
+		}
+	case "daily":
+		if offset < 0 {
+			start = now.AddDate(0, 0, offset)
+		} else {
+			end = now.AddDate(0, 0, offset)
+		}
+	case "monthly":
+		if offset < 0 {
+			start = now.AddDate(0, offset, 0)
+		} else {
+			end = now.AddDate(0, offset, 0)
+		}
+	case "yearly":
+		if offset < 0 {
+			start = now.AddDate(offset, 0, 0)
+		} else {
+			end = now.AddDate(offset, 0, 0)
+		}
+	}
+
+	var indices []string
+	cur := start
+	for !cur.After(end) {
+		dateStr := cur.Format(dateFormat)
+		index := fmt.Sprintf("%s-%s", prefix, dateStr)
+		indices = append(indices, index)
+
+		switch mode {
+		case "hourly":
+			cur = cur.Add(time.Hour)
+		case "daily":
+			cur = cur.AddDate(0, 0, 1)
+		case "monthly":
+			cur = cur.AddDate(0, 1, 0)
+		case "yearly":
+			cur = cur.AddDate(1, 0, 0)
+		}
+	}
+
+	return strings.Join(indices, ","), nil
+}
+
+func detectDateFormat(template string) (format string, mode string, err error) {
+	switch {
+	case strings.Contains(template, "YYYY.MM.DD"):
+		return "2006.01.02", "daily", nil
+	case strings.Contains(template, "YYYY-MM-DD"):
+		return "2006-01-02", "daily", nil
+	case strings.Contains(template, "YYYY/MM/DD"):
+		return "2006/01/02", "daily", nil
+	case strings.Contains(template, "YYYYMMDD"):
+		return "20060102", "daily", nil
+
+	case strings.Contains(template, "YYYY.MM"):
+		return "2006.01", "monthly", nil
+	case strings.Contains(template, "YYYY-MM"):
+		return "2006-01", "monthly", nil
+	case strings.Contains(template, "YYYY/MM"):
+		return "2006/01", "monthly", nil
+	case strings.Contains(template, "YYYYMM"):
+		return "200601", "monthly", nil
+
+	case strings.Contains(template, "YYYYMMDDHH"):
+		return "2006010215", "hourly", nil
+	case strings.Contains(template, "YYYY-MM-DD-HH"):
+		return "2006-01-02-15", "hourly", nil
+	case strings.Contains(template, "YYYY"):
+		return "2006", "yearly", nil
+	}
+
+	return "", "", fmt.Errorf("unrecognized date format in template: %s", template)
+}

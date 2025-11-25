@@ -73,6 +73,7 @@ var (
 		gval.Function("get_formatted_duration", getFormattedDuration),
 		gval.Function("numberWithoutExponent", numberWithoutExponent),
 		gval.Function("once_today_at_hour", onceTodayAtHour),
+		gval.Function("generate_time_range_indexes", generateTimeRangeIndexes),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions
@@ -107,6 +108,8 @@ var (
 		gval.Full(),
 		gval.Function("contains", contains),
 		gval.Function("append", appendSlice),
+		gval.Function("filter", filter),
+		gval.Function("exclude", exclude),
 	)
 
 	LangEvalUrl = gval.NewLanguage(
