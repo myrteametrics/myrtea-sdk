@@ -340,7 +340,6 @@ func TestEs8BulkIndex(t *testing.T) {
 	meta := BulkIndexMeta{
 		Index: BulkIndexMetaDetail{
 			S_Index: "myindex",
-			S_Type:  "_doc",
 			S_Id:    "51",
 		},
 	}
