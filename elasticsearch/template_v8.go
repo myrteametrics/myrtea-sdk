@@ -1,19 +1,21 @@
 package elasticsearch
 
 import (
-	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/puttemplate"
+	"github.com/elastic/go-elasticsearch/v8/typedapi/indices/putindextemplate"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v5/modeler"
 )
 
-// NewPutTemplateRequestV8 constructor the ES template
-func NewPutTemplateRequestV8(indexPatterns []string, model modeler.Model) *puttemplate.Request {
+// NewPutIndexTemplateRequestV8 constructor the ES template
+func NewPutIndexTemplateRequestV8(indexPatterns []string, model modeler.Model) *putindextemplate.Request {
 	mappings := modelToMappingV8(model)
 
-	req := puttemplate.NewRequest()
+	req := putindextemplate.NewRequest()
 	req.IndexPatterns = indexPatterns
-	req.Mappings = mappings
-	req.Settings = &model.ElasticsearchOptions.AdvancedSettings
+	req.Template = &types.IndexTemplateMapping{
+		Mappings: mappings,
+		Settings: &model.ElasticsearchOptions.AdvancedSettings,
+	}
 	return req
 }
 
