@@ -110,6 +110,8 @@ var (
 		gval.Function("append", appendSlice),
 		gval.Function("filter", filter),
 		gval.Function("exclude", exclude),
+		gval.Function("sort", sortSlice),
+		gval.Function("join", join),
 	)
 
 	LangEvalUrl = gval.NewLanguage(

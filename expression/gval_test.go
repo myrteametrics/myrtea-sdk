@@ -1010,3 +1010,130 @@ func TestGvalFilterEmptyResults(t *testing.T) {
 		t.Errorf("Expected length 0, got %v", result)
 	}
 }
+
+// TestGvalSliceFunctions tests sort and join through the gval evaluator
+func TestGvalSliceFunctions(t *testing.T) {
+	tests := []struct {
+		name       string
+		expression string
+		variables  map[string]interface{}
+		expected   interface{}
+		wantErr    bool
+	}{
+		{
+			name:       "sort ascending with numbers",
+			expression: `sort(numbers, "asc")`,
+			variables: map[string]interface{}{
+				"numbers": []interface{}{3, 1, 4, 1, 5, 9, 2, 6},
+			},
+			expected: []interface{}{1, 1, 2, 3, 4, 5, 6, 9},
+			wantErr:  false,
+		},
+		{
+			name:       "sort descending with strings",
+			expression: `sort(words, "desc")`,
+			variables: map[string]interface{}{
+				"words": []interface{}{"zebra", "apple", "mango", "banana"},
+			},
+			expected: []interface{}{"zebra", "mango", "banana", "apple"},
+			wantErr:  false,
+		},
+		{
+			name:       "sort default order (ascending)",
+			expression: `sort(numbers)`,
+			variables: map[string]interface{}{
+				"numbers": []interface{}{5, 2, 8, 1, 9},
+			},
+			expected: []interface{}{1, 2, 5, 8, 9},
+			wantErr:  false,
+		},
+		{
+			name:       "join strings",
+			expression: `join(items, ", ")`,
+			variables: map[string]interface{}{
+				"items": []interface{}{"apple", "banana", "cherry"},
+			},
+			expected: "apple, banana, cherry",
+			wantErr:  false,
+		},
+		{
+			name:       "join numbers with dash",
+			expression: `join(numbers, "-")`,
+			variables: map[string]interface{}{
+				"numbers": []interface{}{1, 2, 3, 4, 5},
+			},
+			expected: "1-2-3-4-5",
+			wantErr:  false,
+		},
+		{
+			name:       "combined: sort ascending then join",
+			expression: `join(sort(values, "asc"), " | ")`,
+			variables: map[string]interface{}{
+				"values": []interface{}{5, 2, 8, 1, 9},
+			},
+			expected: "1 | 2 | 5 | 8 | 9",
+			wantErr:  false,
+		},
+		{
+			name:       "combined: filter, sort desc, and join",
+			expression: `join(sort(filter(data, 1, 3, 5, 7, 9), "desc"), ", ")`,
+			variables: map[string]interface{}{
+				"data": []interface{}{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+			},
+			expected: "9, 7, 5, 3, 1",
+			wantErr:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := Process(LangEval, tt.expression, tt.variables)
+
+			if tt.wantErr {
+				if err == nil {
+					t.Errorf("Process() expected error but got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Errorf("Process() unexpected error: %v", err)
+				return
+			}
+
+			// Compare results based on type
+			switch exp := tt.expected.(type) {
+			case string:
+				if result != exp {
+					t.Errorf("Process() result = %v, want %v", result, exp)
+				}
+			case []interface{}:
+				resSlice, ok := result.([]interface{})
+				if !ok {
+					t.Errorf("Process() result is not a slice: %T", result)
+					return
+				}
+				if len(resSlice) != len(exp) {
+					t.Errorf("Process() result length = %v, want %v", len(resSlice), len(exp))
+					return
+				}
+				for i := range resSlice {
+					// Handle numeric comparison
+					resNum, resIsNum := toFloat64(resSlice[i])
+					expNum, expIsNum := toFloat64(exp[i])
+					if resIsNum && expIsNum {
+						if resNum != expNum {
+							t.Errorf("Process() result[%d] = %v, want %v", i, resSlice[i], exp[i])
+						}
+					} else if resSlice[i] != exp[i] {
+						t.Errorf("Process() result[%d] = %v, want %v", i, resSlice[i], exp[i])
+					}
+				}
+			default:
+				if result != exp {
+					t.Errorf("Process() result = %v, want %v", result, exp)
+				}
+			}
+		})
+	}
+}
