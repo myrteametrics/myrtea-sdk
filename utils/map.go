@@ -127,7 +127,14 @@ func PatchNestedMap(pathParts []string, data map[string]interface{}, newValue in
 			}
 			return false
 		} else {
-			if _, ok := val.(map[string]interface{}); ok {
+			// Allow replacing maps only with other maps, prevent replacing maps with non-map values
+			if _, existingIsMap := val.(map[string]interface{}); existingIsMap {
+				if _, newIsMap := newValue.(map[string]interface{}); newIsMap {
+					// Allow replacing map with another map
+					data[key] = newValue
+					return true
+				}
+				// Prevent replacing map with non-map value
 				return false
 			}
 			data[key] = newValue

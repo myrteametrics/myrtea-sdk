@@ -1413,6 +1413,66 @@ func TestReplaceObjectToArrayElement(t *testing.T) {
 	)
 }
 
+func TestReplaceNestedObjectInArray(t *testing.T) {
+	// Test replacing nested object within array element with another nested object
+	// First document has pairs[0].bla2: {test: "s2", test2: "s2"}
+	// Second document has pairs[0].bla1: {test: "t1", test2: "t1"}
+	// Replace first document pairs[0].bla2 with second document pairs[0].bla1
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "pairs[0].bla1", Destination: "pairs[0].bla2"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"pairs": []interface{}{
+				map[string]interface{}{
+					"bla1": map[string]interface{}{
+						"test":  "t1",
+						"test2": "t1",
+					},
+					"bla2": map[string]interface{}{
+						"test":  "t2",
+						"test2": "t2",
+					},
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"pairs": []interface{}{
+				map[string]interface{}{
+					"bla1": map[string]interface{}{
+						"test":  "s1",
+						"test2": "s1",
+					},
+					"bla2": map[string]interface{}{
+						"test":  "s2",
+						"test2": "s2",
+					},
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"pairs": []interface{}{
+				map[string]interface{}{
+					"bla1": map[string]interface{}{
+						"test":  "s1",
+						"test2": "s1",
+					},
+					"bla2": map[string]interface{}{
+						"test":  "t1",
+						"test2": "t1",
+					},
+				},
+			},
+		}},
+	)
+}
+
 func TestReplaceWithCondition(t *testing.T) {
 	// Test replace with condition
 	testMerge(t,
