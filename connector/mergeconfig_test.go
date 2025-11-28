@@ -798,6 +798,58 @@ func testMerge(t *testing.T, config Config, new *models.Document, existing *mode
 	return out
 }
 
+// testMergeWithArrayCheck is a helper that compares arrays as sets (ignoring order)
+func testMergeWithArrayCheck(t *testing.T, fieldName string, config Config, new *models.Document, existing *models.Document, expectedArray []interface{}) {
+	out := config.Apply(new, existing)
+
+	// Get the field value from output
+	actualValue, ok := out.Source[fieldName]
+	if !ok {
+		t.Errorf("Field %s not found in output", fieldName)
+		t.FailNow()
+	}
+
+	actualArray, ok := actualValue.([]interface{})
+	if !ok {
+		t.Errorf("Field %s is not an array", fieldName)
+		t.FailNow()
+	}
+
+	// Check if arrays have same elements (ignoring order)
+	if !arraysHaveSameElements(actualArray, expectedArray) {
+		t.Errorf("Arrays don't match for field %s\nActual: %v\nExpected: %v", fieldName, actualArray, expectedArray)
+		t.Fail()
+	}
+}
+
+// arraysHaveSameElements checks if two arrays contain the same elements (ignoring order)
+func arraysHaveSameElements(a, b []interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	// Create a map to count occurrences
+	counts := make(map[interface{}]int)
+	for _, v := range a {
+		counts[v]++
+	}
+	for _, v := range b {
+		counts[v]--
+		if counts[v] < 0 {
+			return false
+		}
+	}
+
+	// Check all counts are zero
+	for _, count := range counts {
+		if count != 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func toMillis(d time.Duration) int64 {
 	return d.Nanoseconds() / 1e6
 }
@@ -1155,6 +1207,766 @@ func TestNestedGroupsWithForceUpdate(t *testing.T) {
 		}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
 			"updateField": "new_value",
+		}},
+	)
+}
+
+func TestReplaceSimpleField(t *testing.T) {
+	// Test basic field replacement
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "sourceField", Destination: "targetField"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"sourceField": "test_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing_value",
+			"targetField":   "test_value",
+		}},
+	)
+}
+
+func TestReplaceNestedFields(t *testing.T) {
+	// Test nested field replacement
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "data.nested.value", Destination: "output.result"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"data": map[string]interface{}{
+				"nested": map[string]interface{}{
+					"value": 12345,
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingData": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingData": "existing",
+			"output": map[string]interface{}{
+				"result": 12345,
+			},
+		}},
+	)
+}
+
+func TestReplaceArrayElement(t *testing.T) {
+	// Test replacing from array element to another field
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "items[0]", Destination: "selectedItem"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": []interface{}{"first", "second", "third"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+			"selectedItem":  "first",
+		}},
+	)
+}
+
+func TestReplaceArrayToArray(t *testing.T) {
+	// Test replacing from one array element to another array element
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "source[1]", Destination: "target[0]"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"source": []interface{}{"a", "b", "c"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"target": []interface{}{"x", "y", "z"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"target": []interface{}{"b", "y", "z"},
+		}},
+	)
+}
+
+func TestReplaceNestedArrayObject(t *testing.T) {
+	// Test replacing nested object within array
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "users[0].name", Destination: "primaryUser"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"users": []interface{}{
+				map[string]interface{}{"name": "Alice", "age": 30},
+				map[string]interface{}{"name": "Bob", "age": 25},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+			"primaryUser":   "Alice",
+		}},
+	)
+}
+
+func TestReplaceComplexArrayMapping(t *testing.T) {
+	// Test complex array mapping with nested objects
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "records[1].metadata.timestamp", Destination: "lastUpdate"},
+						{Source: "records[0].data.value", Destination: "firstValue"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"records": []interface{}{
+				map[string]interface{}{
+					"data": map[string]interface{}{"value": 100},
+				},
+				map[string]interface{}{
+					"metadata": map[string]interface{}{"timestamp": "2025-11-28T10:00:00Z"},
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+			"lastUpdate":    "2025-11-28T10:00:00Z",
+			"firstValue":    100,
+		}},
+	)
+}
+
+func TestReplaceObjectToArrayElement(t *testing.T) {
+	// Test replacing entire object to array element
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "config.settings", Destination: "profiles[0]"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"config": map[string]interface{}{
+				"settings": map[string]interface{}{
+					"theme": "dark",
+					"lang":  "en",
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"profiles": []interface{}{
+				map[string]interface{}{"theme": "light", "lang": "fr"},
+				map[string]interface{}{"theme": "auto", "lang": "de"},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"profiles": []interface{}{
+				map[string]interface{}{"theme": "dark", "lang": "en"},
+				map[string]interface{}{"theme": "auto", "lang": "de"},
+			},
+		}},
+	)
+}
+
+func TestReplaceWithCondition(t *testing.T) {
+	// Test replace with condition
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.shouldReplace == true",
+					Replace: []FieldMapping{
+						{Source: "newData", Destination: "targetData"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"shouldReplace": true,
+			"newData":       "replacement_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"targetData": "original_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"targetData": "replacement_value",
+		}},
+	)
+}
+
+func TestReplaceConditionFalse(t *testing.T) {
+	// Test replace with false condition - should not replace
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.shouldReplace == true",
+					Replace: []FieldMapping{
+						{Source: "newData", Destination: "targetData"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"shouldReplace": false,
+			"newData":       "replacement_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"targetData": "original_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"targetData": "original_value",
+		}},
+	)
+}
+
+func TestReplaceMultipleArrayMappings(t *testing.T) {
+	// Test multiple array element replacements
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "source[0].id", Destination: "output[0].identifier"},
+						{Source: "source[1].id", Destination: "output[1].identifier"},
+						{Source: "source[0].value", Destination: "output[0].data"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"source": []interface{}{
+				map[string]interface{}{"id": "A1", "value": 100},
+				map[string]interface{}{"id": "B2", "value": 200},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"output": []interface{}{
+				map[string]interface{}{"identifier": "", "data": 0},
+				map[string]interface{}{"identifier": "", "data": 0},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"output": []interface{}{
+				map[string]interface{}{"identifier": "A1", "data": 100},
+				map[string]interface{}{"identifier": "B2", "data": 0},
+			},
+		}},
+	)
+}
+
+func TestReplaceNestedGroups(t *testing.T) {
+	// Test replace within nested groups
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.processData == true",
+					Groups: []Group{
+						{
+							Replace: []FieldMapping{
+								{Source: "temp[0]", Destination: "result"},
+							},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"processData": true,
+			"temp":        []interface{}{"success", "error"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"result": "pending",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"result": "success",
+		}},
+	)
+}
+
+func TestReplaceDeepNestedArray(t *testing.T) {
+	// Test deep nested array access
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "root.level1[0].level2[1].value", Destination: "extracted"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"root": map[string]interface{}{
+				"level1": []interface{}{
+					map[string]interface{}{
+						"level2": []interface{}{
+							map[string]interface{}{"value": "first"},
+							map[string]interface{}{"value": "second"},
+						},
+					},
+				},
+			},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+			"extracted":     "second",
+		}},
+	)
+}
+
+func TestReplaceMissingSource(t *testing.T) {
+	// Test replace when source field doesn't exist - should not create destination
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "nonExistent", Destination: "target"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"otherField": "value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+	)
+}
+
+func TestReplaceArrayOutOfBounds(t *testing.T) {
+	// Test replace when array index is out of bounds - should not replace
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "items[10]", Destination: "selected"},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": []interface{}{"a", "b", "c"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"selected": "original",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"selected": "original",
+		}},
+	)
+}
+
+func TestReplaceCombinedWithOtherOperations(t *testing.T) {
+	// Test replace combined with other merge operations
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Replace: []FieldMapping{
+						{Source: "data[0]", Destination: "primary"},
+					},
+					FieldReplace: []string{"status"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"data":   []interface{}{"value1", "value2"},
+			"status": "active",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"primary": "old_value",
+			"status":  "inactive",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"primary": "value1",
+			"status":  "active",
+		}},
+	)
+}
+
+func TestApplyFieldMerge(t *testing.T) {
+	// Test merging two arrays with unique elements
+	testMergeWithArrayCheck(t, "tags",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"tags"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"tags": []interface{}{"tag2", "tag3"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"tags": []interface{}{"tag1", "tag2"},
+		}},
+		[]interface{}{"tag1", "tag2", "tag3"},
+	)
+
+	// Test merging single value with array
+	testMergeWithArrayCheck(t, "items",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"items"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": "newItem",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": []interface{}{"existingItem1", "existingItem2"},
+		}},
+		[]interface{}{"existingItem1", "existingItem2", "newItem"},
+	)
+
+	// Test merging array with single value
+	testMergeWithArrayCheck(t, "items",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"items"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": []interface{}{"newItem1", "newItem2"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": "existingItem",
+		}},
+		[]interface{}{"existingItem", "newItem1", "newItem2"},
+	)
+
+	// Test merging two single values
+	testMergeWithArrayCheck(t, "value",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"value"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"value": "newValue",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"value": "existingValue",
+		}},
+		[]interface{}{"existingValue", "newValue"},
+	)
+
+	// Test merging arrays with duplicates - should remove duplicates
+	testMergeWithArrayCheck(t, "categories",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"categories"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"categories": []interface{}{"cat1", "cat2", "cat3"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"categories": []interface{}{"cat2", "cat3", "cat4"},
+		}},
+		[]interface{}{"cat1", "cat2", "cat3", "cat4"},
+	)
+
+	// Test merging when enricher field doesn't exist - should not merge
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"nonExistent"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"otherField": "value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing",
+		}},
+	)
+
+	// Test merging with ExistingAsMaster = false
+	testMergeWithArrayCheck(t, "tags",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: false,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"tags"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"tags": []interface{}{"newTag1", "newTag2"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"tags": []interface{}{"existingTag1", "existingTag2"},
+		}},
+		[]interface{}{"newTag1", "newTag2", "existingTag1", "existingTag2"},
+	)
+
+	// Test merging numeric values
+	testMergeWithArrayCheck(t, "numbers",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"numbers"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"numbers": []interface{}{1, 2, 3},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"numbers": []interface{}{2, 3, 4, 5},
+		}},
+		[]interface{}{1, 2, 3, 4, 5},
+	)
+
+	// Test merging with condition
+	testMergeWithArrayCheck(t, "items",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:  "New.shouldMerge == true",
+					FieldMerge: []string{"items"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"shouldMerge": true,
+			"items":       []interface{}{"item3", "item4"},
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"items": []interface{}{"item1", "item2"},
+		}},
+		[]interface{}{"item1", "item2", "item3", "item4"},
+	)
+}
+
+func TestApplyFieldKeepEarliestEdgeCases(t *testing.T) {
+	// Test when enricher source field doesn't exist - should not update
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"timestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"otherField": "value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
+		}},
+	)
+
+	// Test when enricher source has invalid date format - should not update
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"timestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "not-a-date",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
+		}},
+	)
+
+	// Test when output has invalid date but enricher has valid date - should update
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"timestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-10-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "invalid-date",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-10-20T12:00:25+02:00",
+		}},
+	)
+
+	// Test when output doesn't have field and enricher does - should add
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"newTimestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"newTimestamp": "2019-11-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "value",
+			"newTimestamp":  "2019-11-20T12:00:25+02:00",
+		}},
+	)
+
+	// Test when output has earlier date (should NOT update - keep existing earlier)
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"timestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-12-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-10-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-10-20T12:00:25+02:00",
+		}},
+	)
+
+	// Test with various date formats
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"date"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"date": "2019-10-20",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"date": "2019-11-20",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"date": "2019-10-20",
+		}},
+	)
+
+	// Test with RFC3339 format
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"created"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"created": "2019-01-15T10:00:00Z",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"created": "2019-12-15T10:00:00Z",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"created": "2019-01-15T10:00:00Z",
+		}},
+	)
+
+	// Test with empty string in enricher - should not update
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldKeepEarliest: []string{"timestamp"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"timestamp": "2019-11-20T12:00:25+02:00",
 		}},
 	)
 }
