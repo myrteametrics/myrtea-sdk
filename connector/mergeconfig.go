@@ -45,6 +45,7 @@ type Group struct {
 	FieldReplace          []string    `json:"fieldReplace,omitempty"`
 	FieldReplaceIfMissing []string    `json:"fieldReplaceIfMissing,omitempty"`
 	FieldMerge            []string    `json:"fieldMerge,omitempty"`
+	FieldMergeAll         []string    `json:"fieldMergeAll,omitempty"`
 	FieldMath             []FieldMath `json:"fieldMath,omitempty"`
 	FieldKeepLatest       []string    `json:"fieldKeepLatest,omitempty"`
 	FieldKeepEarliest     []string    `json:"fieldKeepEarliest,omitempty"`
@@ -134,6 +135,8 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 			// zap.L().Debug("KeepEarliest", zap.Any("source", outputSource))
 
 			ApplyFieldMerge(mergeGroup.FieldMerge, enricher.Source, output.Source)
+
+			ApplyFieldMergeAll(mergeGroup.FieldMergeAll, enricher.Source, output.Source)
 
 			// keepBigger + keepMostrecent etc...
 			// keepSmaller + keepOlder etc...
@@ -254,6 +257,37 @@ func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{},
 			for k := range m {
 				newSlice = append(newSlice, k)
 			}
+			outputSource[field] = newSlice
+		}
+	}
+}
+
+// ApplyFieldMergeAll applies all FieldReplace merging configuration on input documents
+// Merge can merge a single field with a slice, or vice versa
+// The result of a merge is always a slice with unique fields
+func ApplyFieldMergeAll(fieldMergeAll []string, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
+	for _, field := range fieldMergeAll {
+		if _, ok := enricherSource[field]; ok {
+			newSlice := make([]interface{}, 0)
+
+			switch v := outputSource[field].(type) {
+			case []interface{}:
+				for _, e := range v {
+					newSlice = append(newSlice, e)
+				}
+			case interface{}:
+				newSlice = append(newSlice, v)
+			}
+
+			switch v := enricherSource[field].(type) {
+			case []interface{}:
+				for _, e := range v {
+					newSlice = append(newSlice, e)
+				}
+			case interface{}:
+				newSlice = append(newSlice, v)
+			}
+
 			outputSource[field] = newSlice
 		}
 	}
