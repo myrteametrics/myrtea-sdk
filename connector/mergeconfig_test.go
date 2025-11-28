@@ -801,3 +801,360 @@ func testMerge(t *testing.T, config Config, new *models.Document, existing *mode
 func toMillis(d time.Duration) int64 {
 	return d.Nanoseconds() / 1e6
 }
+
+func TestNestedGroups(t *testing.T) {
+	// Test 1: Basic nested group - parent condition controls nested group execution
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.status == \"active\"",
+					FieldReplace: []string{"status"},
+					Groups: []Group{
+						{
+							FieldReplace: []string{"nestedField"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "active",
+			"nestedField": "new_nested_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "inactive",
+			"nestedField": "existing_nested_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "active",
+			"nestedField": "new_nested_value",
+		}},
+	)
+
+	// Test 2: Nested group not executed when parent condition is false
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.status == \"inactive\"",
+					FieldReplace: []string{"status"},
+					Groups: []Group{
+						{
+							FieldReplace: []string{"nestedField"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "active",
+			"nestedField": "new_nested_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "inactive",
+			"nestedField": "existing_nested_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"status":      "inactive",
+			"nestedField": "existing_nested_value",
+		}},
+	)
+
+	// Test 3: Nested group with its own condition
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.level1 == true",
+					FieldReplace: []string{"level1"},
+					Groups: []Group{
+						{
+							Condition:    "New.level2 == true",
+							FieldReplace: []string{"level2"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": true,
+			"level2": true,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": false,
+			"level2": false,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": true,
+			"level2": true,
+		}},
+	)
+
+	// Test 4: Nested group condition is false, parent executes but nested doesn't
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.level1 == true",
+					FieldReplace: []string{"level1"},
+					Groups: []Group{
+						{
+							Condition:    "New.level2 == false",
+							FieldReplace: []string{"level2"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": true,
+			"level2": true,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": false,
+			"level2": false,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": true,
+			"level2": false,
+		}},
+	)
+
+	// Test 5: Multiple nested groups at same level
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.parent == \"yes\"",
+					FieldReplace: []string{"parent"},
+					Groups: []Group{
+						{
+							Condition:    "New.child1 == \"a\"",
+							FieldReplace: []string{"child1"},
+						},
+						{
+							Condition:    "New.child2 == \"b\"",
+							FieldReplace: []string{"child2"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"parent": "yes",
+			"child1": "a",
+			"child2": "b",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"parent": "no",
+			"child1": "old_a",
+			"child2": "old_b",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"parent": "yes",
+			"child1": "a",
+			"child2": "b",
+		}},
+	)
+
+	// Test 6: Deep nesting (3 levels)
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.level1 == 1",
+					FieldReplace: []string{"level1"},
+					Groups: []Group{
+						{
+							Condition:    "New.level2 == 2",
+							FieldReplace: []string{"level2"},
+							Groups: []Group{
+								{
+									Condition:    "New.level3 == 3",
+									FieldReplace: []string{"level3"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": 1,
+			"level2": 2,
+			"level3": 3,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": 0,
+			"level2": 0,
+			"level3": 0,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"level1": 1,
+			"level2": 2,
+			"level3": 3,
+		}},
+	)
+
+	// Test 7: Nested groups with FieldMath
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.calculate == true",
+					Groups: []Group{
+						{
+							FieldMath: []FieldMath{
+								{Expression: "New.value1 + Existing.value2", OutputField: "result"},
+							},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"calculate": true,
+			"value1":    10,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"value2": 20,
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"value2": 20,
+			"result": 30,
+		}},
+	)
+
+	// Test 8: Nested group without condition in parent
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldReplace: []string{"unconditionalField"},
+					Groups: []Group{
+						{
+							Condition:    "New.conditionalField == \"apply\"",
+							FieldReplace: []string{"conditionalField"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"unconditionalField": "new_unconditional",
+			"conditionalField":   "apply",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"unconditionalField": "existing_unconditional",
+			"conditionalField":   "existing_conditional",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"unconditionalField": "new_unconditional",
+			"conditionalField":   "apply",
+		}},
+	)
+
+	// Test 10: Multiple top-level groups with nested groups
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition:    "New.group1Active == true",
+					FieldReplace: []string{"group1Field"},
+					Groups: []Group{
+						{
+							FieldReplace: []string{"group1Nested"},
+						},
+					},
+				},
+				{
+					Condition:    "New.group2Active == true",
+					FieldReplace: []string{"group2Field"},
+					Groups: []Group{
+						{
+							FieldReplace: []string{"group2Nested"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"group1Active": true,
+			"group2Active": true,
+			"group1Field":  "new1",
+			"group1Nested": "newNested1",
+			"group2Field":  "new2",
+			"group2Nested": "newNested2",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"group1Field":  "existing1",
+			"group1Nested": "existingNested1",
+			"group2Field":  "existing2",
+			"group2Nested": "existingNested2",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"group1Field":  "new1",
+			"group1Nested": "newNested1",
+			"group2Field":  "new2",
+			"group2Nested": "newNested2",
+		}},
+	)
+}
+
+func TestNestedGroupsWithReplaceIfMissing(t *testing.T) {
+	// Test nested groups with FieldReplaceIfMissing
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.checkMissing == true",
+					Groups: []Group{
+						{
+							FieldReplaceIfMissing: []string{"optionalField"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"checkMissing":  true,
+			"optionalField": "new_optional",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"existingField": "existing_value",
+			"optionalField": "new_optional",
+		}},
+	)
+}
+
+func TestNestedGroupsWithForceUpdate(t *testing.T) {
+	// Test nested groups with FieldForceUpdate
+	testMerge(t,
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					Condition: "New.forceUpdate == true",
+					Groups: []Group{
+						{
+							FieldForceUpdate: []string{"updateField"},
+						},
+					},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"forceUpdate": true,
+			"updateField": "new_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"updateField": "existing_value",
+		}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{
+			"updateField": "new_value",
+		}},
+	)
+}

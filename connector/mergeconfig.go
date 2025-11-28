@@ -39,7 +39,9 @@ type Config struct {
 	Groups           []Group `json:"groups,omitempty"`
 }
 
-// Group allows to group un set of merge fields and to define an optional condition to applay the merge fields
+// Group allows to group a set of merge fields and to define an optional condition to apply the merge fields.
+// Groups can be nested to create complex conditional merge logic. When a parent group's condition is true,
+// its nested groups are also evaluated.
 type Group struct {
 	Condition             string      `json:"condition,omitempty"`
 	FieldReplace          []string    `json:"fieldReplace,omitempty"`
@@ -49,6 +51,7 @@ type Group struct {
 	FieldKeepLatest       []string    `json:"fieldKeepLatest,omitempty"`
 	FieldKeepEarliest     []string    `json:"fieldKeepEarliest,omitempty"`
 	FieldForceUpdate      []string    `json:"fieldForceUpdate,omitempty"`
+	Groups                []Group     `json:"groups,omitempty"` // Nested groups for hierarchical conditional logic
 }
 
 // FieldMath specify a merge rule using a math expression
@@ -87,7 +90,13 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 
 	addKeys(newDoc.Source, existingCopy)
 
-	for _, mergeGroup := range config.Groups {
+	applyGroups(config.Groups, newDoc, existingDoc, existingCopy, output, enricher)
+	return output
+}
+
+// applyGroups processes a list of groups recursively, supporting nested groups
+func applyGroups(groups []Group, newDoc *models.Document, existingDoc *models.Document, existingCopy map[string]interface{}, output *models.Document, enricher *models.Document) {
+	for _, mergeGroup := range groups {
 		var applyMergeGroup bool
 		if mergeGroup.Condition != "" {
 			result, err := expression.Process(
@@ -141,9 +150,13 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 
 			ApplyFieldForceUpdate(mergeGroup.FieldForceUpdate, enricher.Source, output.Source)
 			// zap.L().Debug("update", zap.Any("source", outputSource))
+
+			// Process nested groups recursively
+			if len(mergeGroup.Groups) > 0 {
+				applyGroups(mergeGroup.Groups, newDoc, existingDoc, existingCopy, output, enricher)
+			}
 		}
 	}
-	return output
 }
 
 // ApplyFieldMath applies all FieldMath merging configuration on input documents
