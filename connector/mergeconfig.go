@@ -39,16 +39,26 @@ type Config struct {
 	Groups           []Group `json:"groups,omitempty"`
 }
 
-// Group allows to group un set of merge fields and to define an optional condition to applay the merge fields
+// Group allows to group a set of merge fields and to define an optional condition to apply the merge fields.
+// Groups can be nested to create complex conditional merge logic. When a parent group's condition is true,
+// its nested groups are also evaluated.
 type Group struct {
-	Condition             string      `json:"condition,omitempty"`
-	FieldReplace          []string    `json:"fieldReplace,omitempty"`
-	FieldReplaceIfMissing []string    `json:"fieldReplaceIfMissing,omitempty"`
-	FieldMerge            []string    `json:"fieldMerge,omitempty"`
-	FieldMath             []FieldMath `json:"fieldMath,omitempty"`
-	FieldKeepLatest       []string    `json:"fieldKeepLatest,omitempty"`
-	FieldKeepEarliest     []string    `json:"fieldKeepEarliest,omitempty"`
-	FieldForceUpdate      []string    `json:"fieldForceUpdate,omitempty"`
+	Condition             string         `json:"condition,omitempty"`
+	FieldReplace          []string       `json:"fieldReplace,omitempty"`
+	FieldReplaceIfMissing []string       `json:"fieldReplaceIfMissing,omitempty"`
+	FieldMerge            []string       `json:"fieldMerge,omitempty"`
+	FieldMath             []FieldMath    `json:"fieldMath,omitempty"`
+	FieldKeepLatest       []string       `json:"fieldKeepLatest,omitempty"`
+	FieldKeepEarliest     []string       `json:"fieldKeepEarliest,omitempty"`
+	FieldForceUpdate      []string       `json:"fieldForceUpdate,omitempty"`
+	Replace               []FieldMapping `json:"replace,omitempty"` // Replace allows source-to-destination field mapping with array index support
+	Groups                []Group        `json:"groups,omitempty"`  // Nested groups for hierarchical conditional logic
+}
+
+// FieldMapping defines a mapping from a source field to a destination field
+type FieldMapping struct {
+	Source      string `json:"source"`
+	Destination string `json:"destination"`
 }
 
 // FieldMath specify a merge rule using a math expression
@@ -87,7 +97,13 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 
 	addKeys(newDoc.Source, existingCopy)
 
-	for _, mergeGroup := range config.Groups {
+	applyGroups(config.Groups, newDoc, existingDoc, existingCopy, output, enricher)
+	return output
+}
+
+// applyGroups processes a list of groups recursively, supporting nested groups
+func applyGroups(groups []Group, newDoc *models.Document, existingDoc *models.Document, existingCopy map[string]interface{}, output *models.Document, enricher *models.Document) {
+	for _, mergeGroup := range groups {
 		var applyMergeGroup bool
 		if mergeGroup.Condition != "" {
 			result, err := expression.Process(
@@ -127,6 +143,9 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 			ApplyFieldReplace(mergeGroup.FieldReplace, enricher.Source, output.Source)
 			// zap.L().Debug("replace", zap.Any("source", outputSource))
 
+			ApplyReplace(mergeGroup.Replace, enricher.Source, output.Source)
+			// zap.L().Debug("replace mapping", zap.Any("source", outputSource))
+
 			ApplyFieldKeepLatest(mergeGroup.FieldKeepLatest, enricher.Source, output.Source)
 			// zap.L().Debug("KeepLatest", zap.Any("source", outputSource))
 
@@ -141,9 +160,13 @@ func (config *Config) Apply(newDoc *models.Document, existingDoc *models.Documen
 
 			ApplyFieldForceUpdate(mergeGroup.FieldForceUpdate, enricher.Source, output.Source)
 			// zap.L().Debug("update", zap.Any("source", outputSource))
+
+			// Process nested groups recursively
+			if len(mergeGroup.Groups) > 0 {
+				applyGroups(mergeGroup.Groups, newDoc, existingDoc, existingCopy, output, enricher)
+			}
 		}
 	}
-	return output
 }
 
 // ApplyFieldMath applies all FieldMath merging configuration on input documents
@@ -303,6 +326,22 @@ func ApplyFieldKeepEarliest(fieldKeepEarliest []string, enricherSource map[strin
 					outputSource[field] = sourceStr
 				}
 			}
+		}
+	}
+}
+
+// ApplyReplace applies field mappings from source to destination paths
+// Supports array indices like pairs[0], pairs[1].machine2, etc.
+func ApplyReplace(replaceMappings []FieldMapping, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
+	for _, mapping := range replaceMappings {
+		// Try to get value from source field (including map objects)
+		sourceParts := strings.Split(mapping.Source, ".")
+		sourceValue, found := utils.LookupNestedMapValue(sourceParts, enricherSource)
+
+		if found {
+			// Set value to destination field
+			destParts := strings.Split(mapping.Destination, ".")
+			utils.PatchNestedMap(destParts, outputSource, sourceValue)
 		}
 	}
 }

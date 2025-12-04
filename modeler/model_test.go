@@ -2,10 +2,11 @@ package modeler
 
 import (
 	"encoding/json"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 	"strings"
 	"testing"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
+	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 )
 
 var model = Model{
@@ -33,8 +34,8 @@ var model = Model{
 		PurgeMaxConcurrentIndices: 30,
 		PatchAliasMaxIndices:      2,
 		AdvancedSettings: types.IndexSettings{
-			NumberOfShards:   "1",
-			NumberOfReplicas: "0",
+			NumberOfShards:   func() *string { s := "1"; return &s }(),
+			NumberOfReplicas: func() *string { s := "0"; return &s }(),
 		},
 	},
 }

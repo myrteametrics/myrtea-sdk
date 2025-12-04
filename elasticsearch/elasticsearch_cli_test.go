@@ -49,8 +49,8 @@ var model = modeler.Model{
 		PurgeMaxConcurrentIndices: 30,
 		PatchAliasMaxIndices:      2,
 		AdvancedSettings: types.IndexSettings{
-			NumberOfShards:   "1",
-			NumberOfReplicas: "0",
+			NumberOfShards:   func() *string { s := "1"; return &s }(),
+			NumberOfReplicas: func() *string { s := "0"; return &s }(),
 		},
 	},
 }

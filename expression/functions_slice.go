@@ -2,6 +2,8 @@ package expression
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 )
 
 func contains(arguments ...interface{}) (bool, error) {
@@ -154,24 +156,6 @@ func exclude(arguments ...interface{}) ([]interface{}, error) {
 	return result, nil
 }
 
-// compareValues compares two values, handling type conversions for numbers
-func compareValues(a, b interface{}) bool {
-	// Direct equality check first
-	if a == b {
-		return true
-	}
-
-	// Handle numeric comparisons
-	aNum, aIsNum := toFloat64(a)
-	bNum, bIsNum := toFloat64(b)
-
-	if aIsNum && bIsNum {
-		return aNum == bNum
-	}
-
-	return false
-}
-
 // toFloat64 converts various numeric types to float64
 func toFloat64(v interface{}) (float64, bool) {
 	switch val := v.(type) {
@@ -202,4 +186,105 @@ func toFloat64(v interface{}) (float64, bool) {
 	default:
 		return 0, false
 	}
+}
+
+// sort sorts an array (supports strings and numbers)
+// Usage: sort(array, order)
+// order: "asc" or "desc" (defaults to "asc" if not provided or invalid)
+// Example: sort([3, 1, 2], "asc") returns [1, 2, 3]
+// Example: sort([3, 1, 2], "desc") returns [3, 2, 1]
+// Example: sort(["c", "a", "b"], "asc") returns ["a", "b", "c"]
+func sortSlice(arguments ...interface{}) ([]interface{}, error) {
+	if len(arguments) < 1 || len(arguments) > 2 {
+		return nil, fmt.Errorf("sort() expects one or two arguments (array, [order])")
+	}
+
+	slice, ok := arguments[0].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("sort() expects first argument to be an array")
+	}
+
+	// Default to ascending order
+	order := "asc"
+	if len(arguments) == 2 {
+		orderArg, ok := arguments[1].(string)
+		if !ok {
+			return nil, fmt.Errorf("sort() expects second argument to be a string (\"asc\" or \"desc\")")
+		}
+		order = strings.ToLower(orderArg)
+		if order != "asc" && order != "desc" {
+			return nil, fmt.Errorf("sort() order must be \"asc\" or \"desc\"")
+		}
+	}
+
+	// Create a copy to avoid modifying the original
+	result := make([]interface{}, len(slice))
+	copy(result, slice)
+
+	// Check if all elements are numeric or all are strings
+	allNumeric := true
+	allStrings := true
+
+	for _, item := range result {
+		if _, ok := toFloat64(item); !ok {
+			allNumeric = false
+		}
+		if _, ok := item.(string); !ok {
+			allStrings = false
+		}
+	}
+
+	if allNumeric {
+		// Sort numerically
+		sort.Slice(result, func(i, j int) bool {
+			vi, _ := toFloat64(result[i])
+			vj, _ := toFloat64(result[j])
+			if order == "asc" {
+				return vi < vj
+			}
+			return vi > vj
+		})
+	} else if allStrings {
+		// Sort as strings
+		sort.Slice(result, func(i, j int) bool {
+			si := result[i].(string)
+			sj := result[j].(string)
+			if order == "asc" {
+				return si < sj
+			}
+			return si > sj
+		})
+	} else {
+		return nil, fmt.Errorf("sort() expects all elements to be either numbers or strings")
+	}
+
+	return result, nil
+}
+
+// join concatenates array elements into a string with a separator
+// Usage: join(array, separator)
+// Example: join(["a", "b", "c"], ", ") returns "a, b, c"
+// Example: join([1, 2, 3], "-") returns "1-2-3"
+func join(arguments ...interface{}) (string, error) {
+	if len(arguments) != 2 {
+		return "", fmt.Errorf("join() expects exactly two arguments: array and separator")
+	}
+
+	slice, ok := arguments[0].([]interface{})
+	if !ok {
+		return "", fmt.Errorf("join() expects first argument to be an array")
+	}
+
+	separator, ok := arguments[1].(string)
+	if !ok {
+		return "", fmt.Errorf("join() expects second argument to be a string")
+	}
+
+	// Convert all elements to strings
+	strSlice := make([]string, len(slice))
+	for i, item := range slice {
+		strSlice[i] = fmt.Sprintf("%v", item)
+	}
+
+	return strings.Join(strSlice, separator), nil
 }
