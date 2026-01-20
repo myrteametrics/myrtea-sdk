@@ -7,9 +7,10 @@ import (
 
 // BooleanFragment is a fragment type allowing to combine multiple condition fragment with a boolean operator
 type BooleanFragment struct {
-	Operator   BooleanToken        `json:"operator"`
-	Expression string              `json:"expression,omitempty"`
-	Fragments  []ConditionFragment `json:"fragments"`
+	Operator           BooleanToken        `json:"operator"`
+	Expression         string              `json:"expression,omitempty"`
+	Fragments          []ConditionFragment `json:"fragments"`
+	MinimumShouldMatch interface{}         `json:"minimumShouldMatch,omitempty"`
 }
 
 // IsValid checks if an boolean fragment is valid and has no missing mandatory fields
@@ -38,16 +39,16 @@ func (frag *BooleanFragment) IsValid() (bool, error) {
 
 var booleanMap = map[BooleanToken]func() *BooleanFragment{
 	And: func() *BooleanFragment {
-		return &BooleanFragment{And, "", nil}
+		return &BooleanFragment{And, "", nil, nil}
 	},
 	Or: func() *BooleanFragment {
-		return &BooleanFragment{Or, "", nil}
+		return &BooleanFragment{Or, "", nil, 1}
 	},
 	Not: func() *BooleanFragment {
-		return &BooleanFragment{Not, "", nil}
+		return &BooleanFragment{Not, "", nil, nil}
 	},
 	If: func() *BooleanFragment {
-		return &BooleanFragment{If, "", nil}
+		return &BooleanFragment{If, "", nil, nil}
 	},
 }
 
