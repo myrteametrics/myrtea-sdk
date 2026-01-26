@@ -31,9 +31,10 @@ func unmarshalConditionFragment(raw *json.RawMessage) (ConditionFragment, error)
 		type Alias BooleanFragment
 		aux := struct {
 			*BooleanFragment
-			Fragments []*json.RawMessage `json:"fragments"`
+			Fragments          []*json.RawMessage `json:"fragments"`
+			MinimumShouldMatch interface{}        `json:"minimumShouldMatch,omitempty"`
 		}{
-			BooleanFragment: (*BooleanFragment)(nil),
+			BooleanFragment: &BooleanFragment{},
 		}
 		if err := json.Unmarshal(*raw, &aux); err != nil {
 			return nil, err
@@ -48,6 +49,9 @@ func unmarshalConditionFragment(raw *json.RawMessage) (ConditionFragment, error)
 			subFrags = append(subFrags, subFrag)
 		}
 		aux.BooleanFragment.Fragments = subFrags
+		aux.BooleanFragment.MinimumShouldMatch = aux.MinimumShouldMatch
+		aux.BooleanFragment.Operator = aux.Operator
+
 		return aux.BooleanFragment, nil
 
 	default:

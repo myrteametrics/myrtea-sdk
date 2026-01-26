@@ -3,9 +3,10 @@ package elasticsearch
 import (
 	"errors"
 	"fmt"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/calendarinterval"
 	"reflect"
 	"time"
+
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/calendarinterval"
 
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/some"
@@ -205,6 +206,18 @@ func buildElasticFilter(frag engine.ConditionFragment, variables map[string]inte
 				query.Bool.Must = subAgg
 			case engine.Or:
 				query.Bool.Should = subAgg
+				if f.MinimumShouldMatch != nil {
+					switch v := f.MinimumShouldMatch.(type) {
+					case string:
+						if v != "" {
+							query.Bool.MinimumShouldMatch = v
+						}
+					case int:
+						query.Bool.MinimumShouldMatch = v
+					case float64:
+						query.Bool.MinimumShouldMatch = int(v)
+					}
+				}
 			case engine.Not:
 				query.Bool.MustNot = subAgg
 			case engine.If:
