@@ -13,12 +13,50 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// ZapFieldEnricher is a function type that can enrich log fields
+// It receives the request and current fields, and returns additional fields to append
+type ZapFieldEnricher func(r *http.Request) []zapcore.Field
+
 var (
 	// ZapRequestLogger is called by the Logger middleware handler to log each request.
 	// Its made a package-level variable so that it can be reconfigured for custom
 	// logging configurations.
 	ZapRequestLogger = CustomZapRequestLogger(&CustomZapLogFormatter{Logger: log.New(os.Stdout, "", log.LstdFlags), NoColor: false})
+
+	// zapFieldEnrichers holds the list of field enrichment functions
+	// These functions are called when logging to add custom fields
+	zapFieldEnrichers = make([]ZapFieldEnricher, 0)
 )
+
+// RegisterZapFieldEnricher registers a function that will be called to enrich log fields.
+// Enrichers are called in the order they were registered.
+// This allows modules importing the SDK to add custom fields based on the request or context.
+//
+// Example usage:
+//
+//	router.RegisterZapFieldEnricher(func(r *http.Request) []zapcore.Field {
+//	    if tenantID := r.Context().Value("tenant_id"); tenantID != nil {
+//	        return []zapcore.Field{zap.String("tenant_id", tenantID.(string))}
+//	    }
+//	    return nil
+//	})
+func RegisterZapFieldEnricher(enricher ZapFieldEnricher) {
+	zapFieldEnrichers = append(zapFieldEnrichers, enricher)
+}
+
+// ClearZapFieldEnrichers removes all registered field enrichers.
+// Useful for testing or reconfiguration.
+func ClearZapFieldEnrichers() {
+	zapFieldEnrichers = make([]ZapFieldEnricher, 0)
+}
+
+// GetZapFieldEnrichers returns a copy of the registered enrichers.
+// Useful for testing or debugging.
+func GetZapFieldEnrichers() []ZapFieldEnricher {
+	enrichers := make([]ZapFieldEnricher, len(zapFieldEnrichers))
+	copy(enrichers, zapFieldEnrichers)
+	return enrichers
+}
 
 // CustomZapLogger is a middleware that logs the start and end of each request, along
 // with some useful data about what was requested, what the response status was,
@@ -46,6 +84,13 @@ func CustomZapRequestLogger(f chimiddleware.LogFormatter) func(next http.Handler
 				zapFields := entry.(*customZapLogEntry).ZapFields
 				if user != nil {
 					zapFields = append(zapFields, zap.String("myrtea_user", user.(string)))
+				}
+
+				// Apply custom field enrichers
+				for _, enricher := range zapFieldEnrichers {
+					if additionalFields := enricher(r); additionalFields != nil {
+						zapFields = append(zapFields, additionalFields...)
+					}
 				}
 
 				zapFields = append(zapFields,
