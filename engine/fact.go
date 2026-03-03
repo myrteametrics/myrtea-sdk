@@ -31,6 +31,7 @@ type Fact struct {
 	Intent           *IntentFragment      `json:"intent,omitempty"`
 	Dimensions       []*DimensionFragment `json:"dimensions,omitempty"`
 	Condition        ConditionFragment    `json:"condition,omitempty"`
+	Sort             json.RawMessage      `json:"sort,omitempty"`
 	Restitution      []Restitution        `json:"restitution,omitempty"`
 	Comment          string               `json:"comment"`
 	AdvancedSource   string               `json:"source,omitempty"`
