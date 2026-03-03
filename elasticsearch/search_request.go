@@ -1,7 +1,6 @@
 package elasticsearch
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
@@ -47,11 +46,7 @@ func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[st
 	}
 
 	if f.Intent.Operator == engine.Select && len(f.Sort) > 0 {
-		var sort []types.SortCombinations
-		if err := json.Unmarshal(f.Sort, &sort); err != nil {
-			return nil, err
-		}
-		request.Sort = sort
+		request.Sort = f.Sort
 	}
 
 	return request, nil
