@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/myrteametrics/myrtea-sdk/v5/expression"
 	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 	"go.uber.org/zap"
@@ -22,20 +23,21 @@ type Restitution struct{}
 
 // Fact is the main structure used to for the full fact definition
 type Fact struct {
-	ID               int64                `json:"id"`
-	Name             string               `json:"name"`
-	Description      string               `json:"description"`
-	IsObject         bool                 `json:"isObject"`
-	Model            string               `json:"model"`
-	CalculationDepth int64                `json:"calculationDepth,omitempty"`
-	Intent           *IntentFragment      `json:"intent,omitempty"`
-	Dimensions       []*DimensionFragment `json:"dimensions,omitempty"`
-	Condition        ConditionFragment    `json:"condition,omitempty"`
-	Restitution      []Restitution        `json:"restitution,omitempty"`
-	Comment          string               `json:"comment"`
-	AdvancedSource   string               `json:"source,omitempty"`
-	IsTemplate       bool                 `json:"isTemplate"`
-	Variables        []string             `json:"variables,omitempty"`
+	ID               int64                    `json:"id"`
+	Name             string                   `json:"name"`
+	Description      string                   `json:"description"`
+	IsObject         bool                     `json:"isObject"`
+	Model            string                   `json:"model"`
+	CalculationDepth int64                    `json:"calculationDepth,omitempty"`
+	Intent           *IntentFragment          `json:"intent,omitempty"`
+	Dimensions       []*DimensionFragment     `json:"dimensions,omitempty"`
+	Condition        ConditionFragment        `json:"condition,omitempty"`
+	Sort             []types.SortCombinations `json:"sort,omitempty"`
+	Restitution      []Restitution            `json:"restitution,omitempty"`
+	Comment          string                   `json:"comment"`
+	AdvancedSource   string                   `json:"source,omitempty"`
+	IsTemplate       bool                     `json:"isTemplate"`
+	Variables        []string                 `json:"variables,omitempty"`
 }
 
 // IsValid checks if a fact definition is valid and has no missing mandatory fields

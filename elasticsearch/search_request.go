@@ -45,6 +45,10 @@ func ConvertFactToSearchRequestV8(f engine.Fact, ti time.Time, parameters map[st
 		request.Aggregations = aggregations
 	}
 
+	if f.Intent.Operator == engine.Select && len(f.Sort) > 0 {
+		request.Sort = f.Sort
+	}
+
 	return request, nil
 }
 
