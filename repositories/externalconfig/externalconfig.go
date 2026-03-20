@@ -8,4 +8,5 @@ type ExternalConfig struct {
 	Data           interface{} `json:"data"`
 	CreatedAt      time.Time   `json:"created_at"`
 	CurrentVersion bool        `json:"current_version"`
+	FolderId       *int64      `json:"folder_id"`
 }
