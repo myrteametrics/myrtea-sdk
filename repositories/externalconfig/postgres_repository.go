@@ -547,20 +547,25 @@ func (r *PostgresRepository) GetAllFolders() (map[int64]Folder, error) {
 	return folders, nil
 }
 
-// GetFolderHierarchy returns a tree of folders starting from the given parentId (nil = root).
+// GetFolderHierarchy returns the direct child folders and the configs that live
+// directly at the requested level (parentId == nil → root).
+// "Root" means all folders with parent_id = NULL and all configs with folder_id = NULL.
 // All folders and current-version configs are fetched in two queries; the tree is built in memory.
-func (r *PostgresRepository) GetFolderHierarchy(parentId *int64) ([]FolderNode, error) {
+func (r *PostgresRepository) GetFolderHierarchy(parentId *int64) (HierarchyResult, error) {
 	allFolders, err := r.GetAllFolders()
 	if err != nil {
-		return nil, err
+		return HierarchyResult{}, err
 	}
 
 	allConfigs, err := r.getAllConfigs()
 	if err != nil {
-		return nil, err
+		return HierarchyResult{}, err
 	}
 
-	return r.buildFolderTree(allFolders, allConfigs, parentId), nil
+	return HierarchyResult{
+		Folders: r.buildFolderTree(allFolders, allConfigs, parentId),
+		Configs: r.getConfigsForFolder(parentId, allConfigs),
+	}, nil
 }
 
 // buildFolderTree recursively builds a FolderNode tree from flat lookup data.
