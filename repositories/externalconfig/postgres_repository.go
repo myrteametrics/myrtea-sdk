@@ -170,6 +170,7 @@ func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error
 // Update updates an existing ExternalConfig, archiving the previous version.
 // Returns an error if no config with the given id exists.
 // Enforces a maximum version history size defined by MAX_EXTERNAL_CONFIG_VERSIONS_TO_KEEP.
+// To update folder_id, please use MoveConfig
 func (r *PostgresRepository) Update(id int64, externalConfig ExternalConfig) error {
 	tx, err := r.conn.Begin()
 	if err != nil {
@@ -182,7 +183,6 @@ func (r *PostgresRepository) Update(id int64, externalConfig ExternalConfig) err
 	res, err := stmtBuilder.
 		Update(table).
 		Set("name", externalConfig.Name).
-		Set("folder_id", externalConfig.FolderId).
 		Where(sq.Eq{"id": id}).
 		Exec()
 	if err != nil {
