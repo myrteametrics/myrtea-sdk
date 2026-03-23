@@ -59,7 +59,7 @@ func (r *PostgresRepository) checkRowsAffected(res sql.Result, nbRows int64) err
 // Get retrieves an ExternalConfig by id (current version only).
 func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 	rows, err := r.newStatement().
-		Select("c.name", "v.data", "v.current_version", "v.created_at").
+		Select("c.name", "v.data", "v.current_version", "v.created_at", "c.folder_id").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.id": id, "v.current_version": true}).
@@ -90,7 +90,7 @@ func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 // GetByName retrieves an ExternalConfig by name (current version only).
 func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error) {
 	rows, err := r.newStatement().
-		Select("c.id", "v.data", "v.current_version", "v.created_at").
+		Select("c.id", "v.data", "v.current_version", "v.created_at", "c.folder_id").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.name": name, "v.current_version": true}).
@@ -295,7 +295,7 @@ func (r *PostgresRepository) GetAll() (map[int64]ExternalConfig, error) {
 // GetAllOldVersions retrieves all non-current versions of an ExternalConfig, newest first.
 func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, error) {
 	rows, err := r.newStatement().
-		Select("c.name", "v.data", "v.current_version", "v.created_at").
+		Select("c.name", "v.data", "v.current_version", "v.created_at", "c.folder_id").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.id": id, "v.current_version": false}).
