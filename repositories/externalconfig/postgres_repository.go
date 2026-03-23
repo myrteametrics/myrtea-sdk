@@ -59,7 +59,7 @@ func (r *PostgresRepository) checkRowsAffected(res sql.Result, nbRows int64) err
 // Get retrieves an ExternalConfig by id (current version only).
 func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 	rows, err := r.newStatement().
-		Select("c.name", "v.data", "v.current_version", "v.created_at").
+		Select("c.name", "c.folder_id", "v.data", "v.current_version", "v.created_at").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.id": id, "v.current_version": true}).
@@ -71,9 +71,10 @@ func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 
 	if rows.Next() {
 		var name, data string
+		var folderId *int64
 		var createdAt time.Time
 		var currentVersion bool
-		if err := rows.Scan(&name, &data, &currentVersion, &createdAt); err != nil {
+		if err := rows.Scan(&name, &folderId, &data, &currentVersion, &createdAt); err != nil {
 			return ExternalConfig{}, false, fmt.Errorf("couldn't scan external config with id %d: %w", id, err)
 		}
 		return ExternalConfig{
@@ -82,6 +83,7 @@ func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 			Data:           data,
 			CurrentVersion: currentVersion,
 			CreatedAt:      createdAt,
+			FolderId:       folderId,
 		}, true, nil
 	}
 	return ExternalConfig{}, false, nil
@@ -90,7 +92,7 @@ func (r *PostgresRepository) Get(id int64) (ExternalConfig, bool, error) {
 // GetByName retrieves an ExternalConfig by name (current version only).
 func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error) {
 	rows, err := r.newStatement().
-		Select("c.id", "v.data", "v.current_version", "v.created_at").
+		Select("c.id", "c.folder_id", "v.data", "v.current_version", "v.created_at").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.name": name, "v.current_version": true}).
@@ -101,11 +103,11 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 	defer rows.Close()
 
 	if rows.Next() {
-		var id int64
+		var id, folderId int64
 		var data string
 		var createdAt time.Time
 		var currentVersion bool
-		if err := rows.Scan(&id, &data, &currentVersion, &createdAt); err != nil {
+		if err := rows.Scan(&id, &folderId, &data, &currentVersion, &createdAt); err != nil {
 			return ExternalConfig{}, false, fmt.Errorf("couldn't scan external config with name %s: %w", name, err)
 		}
 		return ExternalConfig{
@@ -114,6 +116,7 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 			Data:           data,
 			CurrentVersion: currentVersion,
 			CreatedAt:      createdAt,
+			FolderId:       &folderId,
 		}, true, nil
 	}
 	return ExternalConfig{}, false, nil
@@ -170,6 +173,7 @@ func (r *PostgresRepository) Create(externalConfig ExternalConfig) (int64, error
 // Update updates an existing ExternalConfig, archiving the previous version.
 // Returns an error if no config with the given id exists.
 // Enforces a maximum version history size defined by MAX_EXTERNAL_CONFIG_VERSIONS_TO_KEEP.
+// To update folder_id, please use MoveConfig
 func (r *PostgresRepository) Update(id int64, externalConfig ExternalConfig) error {
 	tx, err := r.conn.Begin()
 	if err != nil {
@@ -182,7 +186,6 @@ func (r *PostgresRepository) Update(id int64, externalConfig ExternalConfig) err
 	res, err := stmtBuilder.
 		Update(table).
 		Set("name", externalConfig.Name).
-		Set("folder_id", externalConfig.FolderId).
 		Where(sq.Eq{"id": id}).
 		Exec()
 	if err != nil {
@@ -295,7 +298,7 @@ func (r *PostgresRepository) GetAll() (map[int64]ExternalConfig, error) {
 // GetAllOldVersions retrieves all non-current versions of an ExternalConfig, newest first.
 func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, error) {
 	rows, err := r.newStatement().
-		Select("c.name", "v.data", "v.current_version", "v.created_at").
+		Select("c.name", "c.folder_id", "v.data", "v.current_version", "v.created_at").
 		From(table + " AS c").
 		Join(versionsTable + " AS v ON c.id = v.config_id").
 		Where(sq.Eq{"c.id": id, "v.current_version": false}).
@@ -309,9 +312,10 @@ func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, erro
 	var oldVersions []ExternalConfig
 	for rows.Next() {
 		var name, data string
+		var folderId *int64
 		var createdAt time.Time
 		var currentVersion bool
-		if err := rows.Scan(&name, &data, &currentVersion, &createdAt); err != nil {
+		if err := rows.Scan(&name, &folderId, &data, &currentVersion, &createdAt); err != nil {
 			return nil, fmt.Errorf("couldn't scan old version for config id %d: %w", id, err)
 		}
 		oldVersions = append(oldVersions, ExternalConfig{
@@ -320,6 +324,7 @@ func (r *PostgresRepository) GetAllOldVersions(id int64) ([]ExternalConfig, erro
 			Data:           data,
 			CurrentVersion: currentVersion,
 			CreatedAt:      createdAt,
+			FolderId:       folderId,
 		})
 	}
 	return oldVersions, nil
