@@ -103,7 +103,8 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 	defer rows.Close()
 
 	if rows.Next() {
-		var id, folderId int64
+		var id int64
+		var folderId *int64
 		var data string
 		var createdAt time.Time
 		var currentVersion bool
@@ -116,7 +117,7 @@ func (r *PostgresRepository) GetByName(name string) (ExternalConfig, bool, error
 			Data:           data,
 			CurrentVersion: currentVersion,
 			CreatedAt:      createdAt,
-			FolderId:       &folderId,
+			FolderId:       folderId,
 		}, true, nil
 	}
 	return ExternalConfig{}, false, nil
