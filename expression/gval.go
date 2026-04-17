@@ -74,6 +74,7 @@ var (
 		gval.Function("numberWithoutExponent", numberWithoutExponent),
 		gval.Function("once_today_at_hour", onceTodayAtHour),
 		gval.Function("generate_time_range_indexes", generateTimeRangeIndexes),
+		gval.Function("cron_threshold", cronThreshold),
 	)
 
 	// LangEvalDateOpenDays is a custom GVal evaluator for business rules and facts conditions
