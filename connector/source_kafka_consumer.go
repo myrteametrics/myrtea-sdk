@@ -1,9 +1,10 @@
 package connector
 
 import (
+	"os"
+
 	"github.com/IBM/sarama"
 	"go.uber.org/zap"
-	"os"
 )
 
 const DefaultMaxPermittedPanics = 10
@@ -15,6 +16,8 @@ type ConsumerProcessor interface {
 type ConsumerParams struct {
 	MaxPermittedPanics int
 	Done               *chan os.Signal
+	RuntimeManager     *RuntimeManager
+	RuntimeComponentID string
 }
 
 func NewDefaultConsumerParams(done chan os.Signal) ConsumerParams {
@@ -75,6 +78,9 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 			if !ok {
 				zap.L().Warn("Message channel was closed")
 				return nil
+			}
+			if consumer.RuntimeManager != nil && !consumer.RuntimeManager.IsRunning(consumer.RuntimeComponentID) {
+				continue
 			}
 			consumer.processor.Process(message)
 			session.MarkMessage(message, "")
@@ -140,6 +146,9 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 			if !ok {
 				zap.L().Warn("Message channel was closed")
 				return nil
+			}
+			if consumer.RuntimeManager != nil && !consumer.RuntimeManager.IsRunning(message.Topic) {
+				continue
 			}
 			if processor, found := consumer.processors[message.Topic]; found {
 				processor.Process(message)

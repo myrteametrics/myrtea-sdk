@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/myrteametrics/myrtea-sdk/v5/connector"
 	"net/http"
 	"time"
+
+	"github.com/go-chi/jwtauth/v5"
+	"github.com/myrteametrics/myrtea-sdk/v5/connector"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -28,6 +29,7 @@ type ConfigSimple struct {
 	VerboseError            bool
 	Reloader                *connector.Reloader
 	Restarter               *connector.Restarter
+	RuntimeController       *connector.RuntimeController
 	AuthenticationMode      string
 	LogLevel                zap.AtomicLevel
 	MetricsNamespace        string
@@ -117,6 +119,10 @@ func NewChiRouterSimple(config ConfigSimple) *chi.Mux {
 
 			if config.Restarter != nil {
 				config.Restarter.BindEndpoint(rg)
+			}
+
+			if config.RuntimeController != nil {
+				config.RuntimeController.BindEndpoint(rg)
 			}
 
 			for path, handler := range config.PublicRoutes {
