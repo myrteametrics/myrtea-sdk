@@ -1,12 +1,14 @@
-package connector
+package kafka
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/IBM/sarama"
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+// FilterHeaderOption describes a single header based filter. It is the franz-go
+// counterpart of connector.FilterHeaderOption and keeps the same semantics.
 type FilterHeaderOption struct {
 	Key       string
 	Value     string
@@ -14,30 +16,27 @@ type FilterHeaderOption struct {
 	Condition string
 }
 
-// Deprecated: use kafka.GetHeader from
-// github.com/myrteametrics/myrtea-sdk/v5/kafka instead, which operates on
-// []kgo.RecordHeader (franz-go). Kept for backward compatibility.
-func GetHeader(key string, headers []*sarama.RecordHeader) (value string, found bool) {
-	found = false
+// GetHeader returns the value of the first header matching key.
+func GetHeader(key string, headers []kgo.RecordHeader) (value string, found bool) {
 	for _, header := range headers {
-		if string(header.Key) == key {
-			value = string(header.Value)
-			found = true
-			return
+		if header.Key == key {
+			return string(header.Value), true
 		}
 	}
-	return
+	return "", false
 }
 
-// Deprecated: use kafka.FilterHeaders from
-// github.com/myrteametrics/myrtea-sdk/v5/kafka instead, which operates on
-// []kgo.RecordHeader (franz-go). Kept for backward compatibility.
-func FilterHeaders(filters []FilterHeaderOption, headers []*sarama.RecordHeader) (bool, string) {
+// FilterHeaders evaluates every filter against the given record headers. It
+// returns false and an explanatory message on the first failing filter, or true
+// and an empty message when all filters pass.
+//
+// Supported conditions: exists, equals, equals_atleastone, notEquals,
+// startWith, endWith, contains.
+func FilterHeaders(filters []FilterHeaderOption, headers []kgo.RecordHeader) (bool, string) {
 	for _, filter := range filters {
 		value := "key_not_found"
 		for _, header := range headers {
-			key := string(header.Key)
-			if key == filter.Key {
+			if header.Key == filter.Key {
 				value = string(header.Value)
 			}
 		}

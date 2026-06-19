@@ -3,6 +3,10 @@ package connector
 import "go.uber.org/zap"
 
 // SaramaLogger wraps zap.Logger with the sarama.StdLogger interface
+//
+// Deprecated: use kafka.KgoLogger from
+// github.com/myrteametrics/myrtea-sdk/v5/kafka instead (franz-go). Kept for
+// backward compatibility.
 type SaramaLogger struct {
 	logger *zap.SugaredLogger
 }
@@ -27,6 +31,10 @@ func (s *SaramaLogger) Println(v ...interface{}) {
 }
 
 // SaramaDebugLogger wraps zap.Logger with the sarama.StdLogger interface
+//
+// Deprecated: use kafka.KgoLogger from
+// github.com/myrteametrics/myrtea-sdk/v5/kafka instead (franz-go). Kept for
+// backward compatibility.
 type SaramaDebugLogger struct {
 	logger *zap.SugaredLogger
 }
