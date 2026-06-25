@@ -124,7 +124,7 @@ func TestRuleActionDependency(t *testing.T) {
 		t.Errorf("expected t_minus_1 to be disabled, got %+v", situationReportingAction.ActionCondition.TMinus1)
 	}
 
-	// Executing the rule should resolve the "set" action and expose its id in the resolved parameters
+	// Executing the rule should resolve the "set" action and expose its id on the resolved action
 	engine := NewRuleEngine()
 	engine.InsertRule(&rule)
 	engine.knowledgeBase.SetFacts(map[string]interface{}{})
