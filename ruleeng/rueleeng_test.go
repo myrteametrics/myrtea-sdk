@@ -280,7 +280,7 @@ func TestRuleCaseEnable(t *testing.T) {
 		actions := engine.GetResults()
 
 		if !compareActionArrays(ruleTest.expected, actions) {
-			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut got : \n ", actions)
 		}
 
 	}
@@ -395,7 +395,7 @@ func TestRuleCaseActionEnable(t *testing.T) {
 
 		if !compareActionArrays(ruleTest.expected, actions) {
 
-			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut got : \n ", actions)
 		}
 
 	}
@@ -604,14 +604,14 @@ func TestRuleEvaluateAllCase(t *testing.T) {
 
 		if !compareActionArrays(ruleTest.expected, actions) {
 
-			t.Error("\n Expected : \n", ruleTest.expected, "\nBut find : \n ", actions)
+			t.Error("\n Expected : \n", ruleTest.expected, "\nBut got : \n ", actions)
 		}
 
 	}
 
 }
 
-// compare two tab of actions
+// compare two slices of actions
 func compareActionArrays(actions1, actions2 []Action) bool {
 	if len(actions1) != len(actions2) {
 		return false
@@ -679,13 +679,13 @@ var ruleStr = `{
 
 var ruleDependencyStr = `{
     "name": "missing_objects_rule",
-    "description": "Surveillance des nombre de fichiers manquants.",
+    "description": "Monitoring the number of missing files.",
     "enabled": true,
     "calendarId": 0,
     "id": 1,
     "cases": [
         {
-            "name": "[Critical] Fichiers manquants",
+            "name": "[Critical] Missing files",
             "condition": "true",
             "actions": [
                 {
@@ -746,17 +746,17 @@ var ruleDependencyStr = `{
                     "parameters": {
                         "attachmentFactIds": "",
                         "attachmentFileNames": "",
-                        "bodyTemplate": "\"ismail\"",
+                        "bodyTemplate": "\"myrtea\"",
                         "cc": "",
                         "columns": "",
                         "columnsLabel": "",
                         "formateColumns": "",
-                        "id": "\"ismail\"",
+                        "id": "\"myrtea\"",
                         "issueId": "",
                         "separator": "",
-                        "subject": "\"ismail\"",
+                        "subject": "\"myrtea\"",
                         "timeout": "\"0m\"",
-                        "to": "\"liamsi2019@gmail.com\""
+                        "to": "\"myrtea@myrtea.com\""
                     },
                     "enabled": true,
                     "enabledDepends": false,
