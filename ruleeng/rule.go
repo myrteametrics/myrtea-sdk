@@ -153,8 +153,7 @@ type Case struct {
 	Condition                 Expression  `json:"condition"`
 	Actions                   []ActionDef `json:"actions"`
 	Enabled                   bool        `json:"enabled"`
-	EnableDependsForALLAction bool        `json:"enableDependsForALLAction"`
-	CheckPrevSetAction        bool        `json:"checkPrevSetAction"` // CheckPrevSet indicates whether to verify the previously set action parameters in the rule evaluation process.
+	EnableDependsForAllAction bool        `json:"enableDependsForALLAction"`
 }
 
 func (c Case) evaluate(k KnowledgeBase) []DefaultAction {
@@ -215,10 +214,36 @@ func (c *Case) UnmarshalJSON(data []byte) error {
 
 // ActionDef action definition
 type ActionDef struct {
-	Name           Expression            `json:"name"`
-	Parameters     map[string]Expression `json:"parameters"`
-	Enabled        bool                  `json:"enabled"`
-	EnabledDepends bool                  `json:"enabledDepends"`
+	Name                  Expression            `json:"name"`
+	Parameters            map[string]Expression `json:"parameters"`
+	Enabled               bool                  `json:"enabled"`
+	EnabledDepends        bool                  `json:"enabledDepends"`
+	EnableActionCondition bool                  `json:"enableActionCondition"`
+	ID                    string                `json:"id,omitempty"`
+	ActionCondition       *ActionCondition      `json:"actionCondition,omitempty"`
+}
+
+// ActionConditionParameter is a snapshot of a "set" action parameter (key/value)
+// captured at the time a dependent action was configured to depend on it.
+type ActionConditionParameter struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+// ActionConditionSlot describes a dependency on a "set" action, identified by
+// its stable ID, along with a snapshot of the conditions (parameters) it was
+// configured with.
+type ActionConditionSlot struct {
+	Enabled     bool                       `json:"enabled"`
+	ActionSetID string                     `json:"actionSetId"`
+	Conditions  []ActionConditionParameter `json:"conditions"`
+}
+
+// ActionCondition holds the dependency configuration of an action on "set"
+// actions evaluated at the current tick (T) and/or the previous tick (T-1).
+type ActionCondition struct {
+	T       *ActionConditionSlot `json:"t,omitempty"`
+	TMinus1 *ActionConditionSlot `json:"t_minus_1,omitempty"`
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
@@ -231,12 +256,14 @@ func (a ActionDef) Resolve(k KnowledgeBase, c Case) (DefaultAction, error) {
 	}
 
 	rAction := DefaultAction{
+		ID:                        a.ID,
 		Name:                      name,
 		Parameters:                make(map[string]interface{}),
 		MetaData:                  make(map[string]interface{}),
 		EnabledDependsAction:      a.EnabledDepends,
-		EnableDependsForALLAction: c.EnableDependsForALLAction,
-		CheckPrevSetAction:        c.CheckPrevSetAction,
+		EnableDependsForAllAction: c.EnableDependsForAllAction,
+		EnableActionCondition:     a.EnableActionCondition,
+		ActionCondition:           a.ActionCondition,
 	}
 
 	for key, exp := range a.Parameters {
