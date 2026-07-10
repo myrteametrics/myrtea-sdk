@@ -118,35 +118,65 @@ func GetConsumerKafkaConfigKeys() []ConfigKey {
 	return []ConfigKey{
 		{
 			Type: StringFlag, Name: "KAFKA_CONSUMER_VERBOSE", DefaultValue: "false",
-			Description: "Enable debug mode",
+			Description: "Kafka consumer verbose logging",
 		},
 		{
 			Type: StringFlag, Name: "KAFKA_CONSUMER_CLIENTID", DefaultValue: "",
-			Description: "Enable debug mode",
+			Description: "Kafka consumer client ID",
 		},
 		{
 			Type: StringSliceFlag, Name: "KAFKA_CONSUMER_BROKERS", DefaultValue: []string{},
-			Description: "Enable debug mode",
+			Description: "Kafka broker addresses",
 		},
 		{
 			Type: StringFlag, Name: "KAFKA_CONSUMER_GROUPID", DefaultValue: "",
-			Description: "Enable debug mode",
+			Description: "Kafka consumer group ID",
 		},
 		{
 			Type: StringSliceFlag, Name: "KAFKA_CONSUMER_TOPICS", DefaultValue: []string{},
-			Description: "Enable debug mode",
+			Description: "Kafka topics to consume",
 		},
 		{
 			Type: StringFlag, Name: "KAFKA_CONSUMER_OFFSET_OLDEST", DefaultValue: "false",
-			Description: "Enable debug mode",
+			Description: "Start consuming from the oldest offset",
 		},
 		{
 			Type: StringFlag, Name: "KAFKA_SCHEMA_REGISTRY_URL", DefaultValue: "",
-			Description: "Enable debug mode",
+			Description: "Kafka schema registry URL",
 		},
 		{
 			Type: StringFlag, Name: "KAFKA_SCHEMA_REGISTRY_TTL_DURATION", DefaultValue: "24",
-			Description: "Enable debug mode",
+			Description: "Kafka schema registry TTL duration (hours)",
+		},
+	}
+}
+
+func GetProducerKafkaConfigKeys() []ConfigKey {
+	return []ConfigKey{
+		{
+			Type: StringFlag, Name: "KAFKA_PRODUCER_CLIENTID", DefaultValue: "",
+			Description: "Kafka producer client ID",
+		},
+		{
+			Type: StringSliceFlag, Name: "KAFKA_PRODUCER_BROKERS", DefaultValue: []string{},
+			Description: "Kafka broker addresses",
+		},
+	}
+}
+
+func GetSASLKafkaConfigKeys() []ConfigKey {
+	return []ConfigKey{
+		{
+			Type: StringFlag, Name: "KAFKA_SASL_AUTH", DefaultValue: "false",
+			Description: "Enable SASL authentication",
+		},
+		{
+			Type: StringFlag, Name: "KAFKA_SASL_USER", DefaultValue: "",
+			Description: "Kafka SASL username",
+		},
+		{
+			Type: StringFlag, Name: "KAFKA_SASL_PASSWORD", DefaultValue: "",
+			Description: "Kafka SASL password",
 		},
 	}
 }

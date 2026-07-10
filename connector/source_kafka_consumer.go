@@ -8,6 +8,10 @@ import (
 
 const DefaultMaxPermittedPanics = 10
 
+// Deprecated: the sarama-based consumers in this package are superseded by the
+// franz-go implementation in github.com/myrteametrics/myrtea-sdk/v5/kafka
+// (kafka.ConsumerProcessor, kafka.DefaultMultiConsumer, kafka.Handler). They are
+// kept for backward compatibility; new code should use the kafka package.
 type ConsumerProcessor interface {
 	Process(message *sarama.ConsumerMessage)
 }
@@ -25,6 +29,9 @@ func NewDefaultConsumerParams(done chan os.Signal) ConsumerParams {
 }
 
 // DefaultConsumer represents a Sarama consumer group consumer
+//
+// Deprecated: use github.com/myrteametrics/myrtea-sdk/v5/kafka instead
+// (franz-go). Kept for backward compatibility.
 type DefaultConsumer struct {
 	Ready      chan bool
 	processor  ConsumerProcessor
@@ -89,6 +96,10 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 }
 
 // DefaultMultiConsumer represents a Sarama consumer group consumer
+//
+// Deprecated: use kafka.DefaultMultiConsumer from
+// github.com/myrteametrics/myrtea-sdk/v5/kafka instead (franz-go). Kept for
+// backward compatibility.
 type DefaultMultiConsumer struct {
 	Ready      chan bool
 	processors map[string]ConsumerProcessor
