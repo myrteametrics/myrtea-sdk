@@ -899,13 +899,20 @@ func TestFieldMergeFallsBackToNestedLookup(t *testing.T) {
 
 	// The result must land back at the nested path (not as a literal "claims.uuids"
 	// top-level key), proving the write followed the same nested path the fallback
-	// read resolved, not just the fact that the field name contains a ".".
+	// read resolved, not just the fact that the field name contains a ".". Read the
+	// result by walking the plain map directly (not via utils.LookupNestedMap, which
+	// is the very mechanism under test here) so this actually exercises
+	// ApplyFieldMerge's documented contract instead of restating its own internals.
 	if _, ok := out.Source["claims.uuids"]; ok {
 		t.Errorf("result must not have a flat \"claims.uuids\" key: %v", out.Source)
 	}
-	value, found := utils.LookupNestedMap([]string{"claims", "uuids"}, out.Source)
-	if !found {
-		t.Fatalf("expected claims.uuids to be set at the nested path, got %v", out.Source)
+	claims, ok := out.Source["claims"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected out.Source[\"claims\"] to be a nested map, got %v", out.Source["claims"])
+	}
+	value, ok := claims["uuids"]
+	if !ok {
+		t.Fatalf("expected claims.uuids to be set, got %v", claims)
 	}
 	array, ok := value.([]interface{})
 	if !ok {
@@ -956,10 +963,14 @@ func TestFieldMergePrefersFlatKeyOverNested(t *testing.T) {
 	}
 
 	// The unrelated nested a.b value must be untouched - still the original scalar,
-	// not merged with the flat values and not overwritten by them.
-	nestedValue, found := utils.LookupNestedMap([]string{"a", "b"}, out.Source)
-	if !found || nestedValue != "nested-existing-should-be-ignored" {
-		t.Errorf("nested a.b value should be untouched, got %v (found=%v)", nestedValue, found)
+	// not merged with the flat values and not overwritten by them. Walked directly
+	// (not via utils.LookupNestedMap) for the same reason as above.
+	aMap, ok := out.Source["a"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected out.Source[\"a\"] to still be a nested map, got %v", out.Source["a"])
+	}
+	if aMap["b"] != "nested-existing-should-be-ignored" {
+		t.Errorf("nested a.b value should be untouched, got %v", aMap["b"])
 	}
 }
 
