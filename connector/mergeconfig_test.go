@@ -2,10 +2,12 @@ package connector
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/myrteametrics/myrtea-sdk/v5/models"
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 func TestMergeMath(t *testing.T) {
@@ -723,6 +725,86 @@ func TestFieldMergeArray(t *testing.T) {
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": "test1"}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": "test2"}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
+	)
+}
+
+// testMergeWithNestedArrayCheck is like testMergeWithArrayCheck, but fieldPath is a
+// dotted path resolved with utils.LookupNestedMap instead of a flat top-level key.
+func testMergeWithNestedArrayCheck(t *testing.T, fieldPath string, config Config, new *models.Document, existing *models.Document, expectedArray []interface{}) {
+	out := config.Apply(new, existing)
+
+	actualValue, ok := utils.LookupNestedMap(strings.Split(fieldPath, "."), out.Source)
+	if !ok {
+		t.Errorf("Field %s not found in output: %v", fieldPath, out.Source)
+		t.FailNow()
+	}
+
+	actualArray, ok := actualValue.([]interface{})
+	if !ok {
+		t.Errorf("Field %s is not an array: %v", fieldPath, actualValue)
+		t.FailNow()
+	}
+
+	if !arraysHaveSameElements(actualArray, expectedArray) {
+		t.Errorf("Arrays don't match for field %s\nActual: %v\nExpected: %v", fieldPath, actualArray, expectedArray)
+		t.Fail()
+	}
+}
+
+// TestFieldMergeNestedPath covers FieldMerge on dotted paths (e.g. "claims.uuids"),
+// which used to be a silent no-op: ApplyFieldMerge only ever looked up the flat,
+// literal key "claims.uuids" at the top level of the source map, which never exists
+// since the actual data lives nested at Source["claims"]["uuids"].
+func TestFieldMergeNestedPath(t *testing.T) {
+	// Existing (master) already has a value, new message contributes a second one:
+	// they should accumulate into a deduplicated array at the nested path.
+	testMergeWithNestedArrayCheck(t, "claims.uuids",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{FieldMerge: []string{"claims.uuids"}},
+			},
+		},
+		&models.Document{ID: "new", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": "u2"},
+		}},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": "u1"},
+		}},
+		[]interface{}{"u1", "u2"},
+	)
+
+	// Existing already accumulated an array, new message contributes one more value,
+	// duplicates of an already-present value must not be re-added.
+	testMergeWithNestedArrayCheck(t, "claims.uuids",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{FieldMerge: []string{"claims.uuids"}},
+			},
+		},
+		&models.Document{ID: "new", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": "u1"},
+		}},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": []interface{}{"u1", "u2"}},
+		}},
+		[]interface{}{"u1", "u2"},
+	)
+
+	// Existing document predates the "claims" field entirely: the nested path is
+	// absent on the output side, only the enricher (new) side has it.
+	testMergeWithNestedArrayCheck(t, "claims.uuids",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{FieldMerge: []string{"claims.uuids"}},
+			},
+		},
+		&models.Document{ID: "new", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": "u1"},
+		}},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"uuid": "parcel-1",
+		}},
+		[]interface{}{"u1"},
 	)
 }
 

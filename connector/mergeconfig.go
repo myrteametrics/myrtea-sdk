@@ -250,35 +250,57 @@ func ApplyFieldForceUpdate(fieldUpdate []string, enricherSource map[string]inter
 // ApplyFieldMerge applies all FieldReplace merging configuration on input documents
 // Merge can merge a single field with a slice, or vice versa
 // The result of a merge is always a slice with unique fields
+// Supports dotted paths for nested fields (e.g. "claims.uuids"): the flat top-level
+// key is tried first for backward compatibility with existing configs, falling back
+// to a nested lookup/patch (utils.LookupNestedMap / utils.PatchNestedMap) otherwise,
+// the same pattern already used by ApplyFieldReplaceIfMissing and ApplyFieldReplace.
 func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
 	for _, field := range fieldMerge {
-		if _, ok := enricherSource[field]; ok {
-			m := make(map[interface{}]bool)
+		parts := strings.Split(field, ".")
 
-			switch v := outputSource[field].(type) {
-			case []interface{}:
-				for _, e := range v {
-					m[e] = true
-				}
-			case interface{}:
-				m[v] = true
-			}
+		enricherVal, enricherOk := enricherSource[field]
+		if !enricherOk {
+			enricherVal, enricherOk = utils.LookupNestedMap(parts, enricherSource)
+		}
+		if !enricherOk {
+			continue
+		}
 
-			switch v := enricherSource[field].(type) {
-			case []interface{}:
-				for _, e := range v {
-					m[e] = true
-				}
-			case interface{}:
-				m[v] = true
-			}
+		m := make(map[interface{}]bool)
 
-			newSlice := make([]interface{}, 0)
-			for k := range m {
-				newSlice = append(newSlice, k)
-			}
+		outputVal, outputOk := outputSource[field]
+		if !outputOk {
+			outputVal, outputOk = utils.LookupNestedMap(parts, outputSource)
+		}
+		if outputOk {
+			addFieldMergeValue(m, outputVal)
+		}
+
+		addFieldMergeValue(m, enricherVal)
+
+		newSlice := make([]interface{}, 0, len(m))
+		for k := range m {
+			newSlice = append(newSlice, k)
+		}
+
+		if len(parts) > 1 {
+			utils.PatchNestedMap(parts, outputSource, newSlice)
+		} else {
 			outputSource[field] = newSlice
 		}
+	}
+}
+
+// addFieldMergeValue adds a single value, or every element of a []interface{}, to the
+// uniqueness set used by ApplyFieldMerge.
+func addFieldMergeValue(m map[interface{}]bool, v interface{}) {
+	switch val := v.(type) {
+	case []interface{}:
+		for _, e := range val {
+			m[e] = true
+		}
+	case interface{}:
+		m[val] = true
 	}
 }
 
