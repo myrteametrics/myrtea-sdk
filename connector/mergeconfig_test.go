@@ -707,9 +707,12 @@ func TestFieldKeepLatest(t *testing.T) {
 	)
 }
 
+// Was skipped ("issue with array order"): same root cause as
+// TestMergeConfigFieldMerge above - ApplyFieldMerge iterates a Go map, whose order
+// is randomized per process, while testMerge does an exact ordered JSON comparison.
+// Re-enabled with testMergeWithArrayCheck, which compares the merged field as a set.
 func TestFieldMergeArray(t *testing.T) {
-	t.SkipNow() // issue with array order
-	testMerge(t,
+	testMergeWithArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{
@@ -719,10 +722,10 @@ func TestFieldMergeArray(t *testing.T) {
 		},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test1"}}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
-		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
+		[]interface{}{"test1", "test2"},
 	)
 
-	testMerge(t,
+	testMergeWithArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{
@@ -732,7 +735,7 @@ func TestFieldMergeArray(t *testing.T) {
 		},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": "test1"}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": "test2"}},
-		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
+		[]interface{}{"test1", "test2"},
 	)
 }
 
