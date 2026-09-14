@@ -268,11 +268,12 @@ func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{},
 
 		m := make(map[interface{}]bool)
 
-		outputVal, outputOk := outputSource[field]
-		if !outputOk {
-			outputVal, outputOk = utils.LookupNestedMap(parts, outputSource)
+		outputVal, outputFlatOk := outputSource[field]
+		outputFoundNested := false
+		if !outputFlatOk {
+			outputVal, outputFoundNested = utils.LookupNestedMap(parts, outputSource)
 		}
-		if outputOk {
+		if outputFlatOk || outputFoundNested {
 			addFieldMergeValue(m, outputVal)
 		}
 
@@ -283,10 +284,16 @@ func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{},
 			newSlice = append(newSlice, k)
 		}
 
-		if len(parts) > 1 {
-			utils.PatchNestedMap(parts, outputSource, newSlice)
-		} else {
+		// Write back to wherever the existing value was actually found (flat or
+		// nested), not merely based on whether the field name contains a ".", so an
+		// existing flat literal key (e.g. from a legacy config) isn't silently moved
+		// into a nested structure. When nothing existed yet on the output side, fall
+		// back to the field's natural location: flat for a single-part name, nested
+		// otherwise - matching ApplyFieldReplaceIfMissing's behavior in that case.
+		if outputFlatOk || (!outputFoundNested && len(parts) == 1) {
 			outputSource[field] = newSlice
+		} else {
+			utils.PatchNestedMap(parts, outputSource, newSlice)
 		}
 	}
 }

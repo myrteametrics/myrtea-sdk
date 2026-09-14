@@ -865,6 +865,104 @@ func TestFieldMergeNestedPath(t *testing.T) {
 	)
 }
 
+// TestFieldMergeFallsBackToNestedLookup makes the flat-then-nested fallback explicit:
+// with a dotted field name and no literal flat key anywhere, ApplyFieldMerge's first
+// lookup attempt (enricherSource[field] / outputSource[field], the literal key
+// "claims.uuids") must fail before it falls back to utils.LookupNestedMap - which is
+// what actually resolves the value here, on both the enricher and the output side
+// independently.
+func TestFieldMergeFallsBackToNestedLookup(t *testing.T) {
+	config := Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+		Groups: []Group{
+			{FieldMerge: []string{"claims.uuids"}},
+		},
+	}
+
+	newDoc := &models.Document{ID: "new", IndexType: "doc", Source: map[string]interface{}{
+		"claims": map[string]interface{}{"uuids": "u2"},
+	}}
+	existingDoc := &models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+		"claims": map[string]interface{}{"uuids": "u1"},
+	}}
+
+	// Sanity check on the fixtures themselves: neither document has a literal flat
+	// "claims.uuids" key, only nested `claims: {uuids: ...}` - so the flat lookup this
+	// test exercises is guaranteed to miss on both sides.
+	if _, ok := newDoc.Source["claims.uuids"]; ok {
+		t.Fatal("test fixture is invalid: newDoc unexpectedly has a flat \"claims.uuids\" key")
+	}
+	if _, ok := existingDoc.Source["claims.uuids"]; ok {
+		t.Fatal("test fixture is invalid: existingDoc unexpectedly has a flat \"claims.uuids\" key")
+	}
+
+	out := config.Apply(newDoc, existingDoc)
+
+	// The result must land back at the nested path (not as a literal "claims.uuids"
+	// top-level key), proving the write followed the same nested path the fallback
+	// read resolved, not just the fact that the field name contains a ".".
+	if _, ok := out.Source["claims.uuids"]; ok {
+		t.Errorf("result must not have a flat \"claims.uuids\" key: %v", out.Source)
+	}
+	value, found := utils.LookupNestedMap([]string{"claims", "uuids"}, out.Source)
+	if !found {
+		t.Fatalf("expected claims.uuids to be set at the nested path, got %v", out.Source)
+	}
+	array, ok := value.([]interface{})
+	if !ok {
+		t.Fatalf("expected claims.uuids to be an array, got %v", value)
+	}
+	if !arraysHaveSameElements(array, []interface{}{"u1", "u2"}) {
+		t.Errorf("claims.uuids mismatch: got %v", array)
+	}
+}
+
+// TestFieldMergePrefersFlatKeyOverNested locks in ApplyFieldMerge's backward-compat
+// guarantee: the flat, literal top-level key is tried first, and the nested lookup is
+// only a fallback for when the flat key isn't found - so an existing config merging a
+// field whose name happens to literally contain a "." (not meant as a nested path,
+// e.g. an ES field named "a.b" at the top level) keeps working exactly as before this
+// change: reading the flat key, and writing the merged result back to that same flat
+// key rather than moving it into a newly created nested structure.
+func TestFieldMergePrefersFlatKeyOverNested(t *testing.T) {
+	config := Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+		Groups: []Group{
+			{FieldMerge: []string{"a.b"}},
+		},
+	}
+
+	// Both documents carry a literal flat "a.b" key *and* an unrelated nested "a"."b"
+	// value that must be left untouched, since the flat key is found first.
+	newDoc := &models.Document{ID: "new", IndexType: "doc", Source: map[string]interface{}{
+		"a.b": "flat-new",
+		"a":   map[string]interface{}{"b": "nested-new-should-be-ignored"},
+	}}
+	existingDoc := &models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+		"a.b": "flat-existing",
+		"a":   map[string]interface{}{"b": "nested-existing-should-be-ignored"},
+	}}
+
+	out := config.Apply(newDoc, existingDoc)
+
+	flatValue, ok := out.Source["a.b"]
+	if !ok {
+		t.Fatalf("expected flat key \"a.b\" in output: %v", out.Source)
+	}
+	flatArray, ok := flatValue.([]interface{})
+	if !ok {
+		t.Fatalf("expected flat key \"a.b\" to be an array, got %v", flatValue)
+	}
+	if !arraysHaveSameElements(flatArray, []interface{}{"flat-existing", "flat-new"}) {
+		t.Errorf("flat key merge mismatch: got %v", flatArray)
+	}
+
+	// The unrelated nested a.b value must be untouched - still the original scalar,
+	// not merged with the flat values and not overwritten by them.
+	nestedValue, found := utils.LookupNestedMap([]string{"a", "b"}, out.Source)
+	if !found || nestedValue != "nested-existing-should-be-ignored" {
+		t.Errorf("nested a.b value should be untouched, got %v (found=%v)", nestedValue, found)
+	}
+}
+
 func TestMergeForceUpdate(t *testing.T) {
 	testMerge(t,
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
