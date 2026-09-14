@@ -460,32 +460,40 @@ func TestMergeConfigDateArithmetic(t *testing.T) {
 	)
 }
 
-//func TestMergeConfigFieldMerge(t *testing.T) {
-//	testMerge(t,
-//		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
-//			Groups: []Group{
-//				{
-//					FieldMerge: []string{"a"},
-//				}},
-//		},
-//		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
-//		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
-//		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1", "value2"}}},
-//	)
-//
-//	testMerge(t,
-//		Config{Type: "doc", Mode: Self, ExistingAsMaster: false,
-//			Groups: []Group{
-//				{
-//					FieldMerge: []string{"a"},
-//				},
-//			},
-//		},
-//		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
-//		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
-//		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1", "value2"}}},
-//	)
-//}
+// TestMergeConfigFieldMerge was disabled in f8c1467b ("Deactivated randomly failing
+// test", 2024-10-11) because ApplyFieldMerge builds its result by iterating a Go map,
+// whose order is randomized per process, while testMerge does an exact ordered JSON
+// comparison - roughly a third of runs failed on array order alone (same root cause
+// as the still-skipped TestFieldMergeArray). Re-enabled here using
+// testMergeWithArrayCheck, which compares the merged field as a set, so the test
+// actually exercises FieldMerge's real contract (unique values, order not guaranteed)
+// instead of an incidental ordering.
+func TestMergeConfigFieldMerge(t *testing.T) {
+	testMergeWithArrayCheck(t, "a",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"a"},
+				}},
+		},
+		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
+		[]interface{}{"value1", "value2"},
+	)
+
+	testMergeWithArrayCheck(t, "a",
+		Config{Type: "doc", Mode: Self, ExistingAsMaster: false,
+			Groups: []Group{
+				{
+					FieldMerge: []string{"a"},
+				},
+			},
+		},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
+		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
+		[]interface{}{"value1", "value2"},
+	)
+}
 
 func TestMergeConfigPartial(t *testing.T) {
 	testMerge(t,
