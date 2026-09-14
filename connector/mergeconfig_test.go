@@ -465,11 +465,11 @@ func TestMergeConfigDateArithmetic(t *testing.T) {
 // whose order is randomized per process, while testMerge does an exact ordered JSON
 // comparison - roughly a third of runs failed on array order alone (same root cause
 // as the still-skipped TestFieldMergeArray). Re-enabled here using
-// testMergeWithArrayCheck, which compares the merged field as a set, so the test
-// actually exercises FieldMerge's real contract (unique values, order not guaranteed)
-// instead of an incidental ordering.
+// testMergeWithDocumentArrayCheck, which compares the whole document like testMerge but
+// treats the merged field as a set, so the test actually exercises FieldMerge's real
+// contract (unique values, order not guaranteed) instead of an incidental ordering.
 func TestMergeConfigFieldMerge(t *testing.T) {
-	testMergeWithArrayCheck(t, "a",
+	testMergeWithDocumentArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{
@@ -478,10 +478,10 @@ func TestMergeConfigFieldMerge(t *testing.T) {
 		},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
-		[]interface{}{"value1", "value2"},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1", "value2"}}},
 	)
 
-	testMergeWithArrayCheck(t, "a",
+	testMergeWithDocumentArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: false,
 			Groups: []Group{
 				{
@@ -491,7 +491,7 @@ func TestMergeConfigFieldMerge(t *testing.T) {
 		},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1"}}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value2"}}},
-		[]interface{}{"value1", "value2"},
+		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"value1", "value2"}}},
 	)
 }
 
@@ -710,9 +710,10 @@ func TestFieldKeepLatest(t *testing.T) {
 // Was skipped ("issue with array order"): same root cause as
 // TestMergeConfigFieldMerge above - ApplyFieldMerge iterates a Go map, whose order
 // is randomized per process, while testMerge does an exact ordered JSON comparison.
-// Re-enabled with testMergeWithArrayCheck, which compares the merged field as a set.
+// Re-enabled with testMergeWithDocumentArrayCheck, which compares the whole document
+// like testMerge but treats the merged field as a set.
 func TestFieldMergeArray(t *testing.T) {
-	testMergeWithArrayCheck(t, "a",
+	testMergeWithDocumentArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{
@@ -722,10 +723,10 @@ func TestFieldMergeArray(t *testing.T) {
 		},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test1"}}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
-		[]interface{}{"test1", "test2"},
+		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
 	)
 
-	testMergeWithArrayCheck(t, "a",
+	testMergeWithDocumentArrayCheck(t, "a",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{
@@ -735,31 +736,69 @@ func TestFieldMergeArray(t *testing.T) {
 		},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"a": "test1"}},
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": "test2"}},
-		[]interface{}{"test1", "test2"},
+		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"a": []interface{}{"test2", "test1"}}},
 	)
 }
 
-// testMergeWithNestedArrayCheck is like testMergeWithArrayCheck, but fieldPath is a
-// dotted path resolved with utils.LookupNestedMap instead of a flat top-level key.
-func testMergeWithNestedArrayCheck(t *testing.T, fieldPath string, config Config, new *models.Document, existing *models.Document, expectedArray []interface{}) {
+// testMergeWithDocumentArrayCheck behaves like testMerge: `expected` is a full document,
+// matching the shape our Elasticsearch documents actually have, and everything is
+// compared exactly - except the field at arrayFieldPath (a dotted path, e.g.
+// "claims.uuids"), which is compared as a set instead of exact JSON equality.
+// ApplyFieldMerge builds its result by iterating a Go map internally, so that field's
+// element order is randomized per process and must not be asserted on.
+func testMergeWithDocumentArrayCheck(t *testing.T, arrayFieldPath string, config Config, new *models.Document, existing *models.Document, expected *models.Document) *models.Document {
 	out := config.Apply(new, existing)
+	parts := strings.Split(arrayFieldPath, ".")
 
-	actualValue, ok := utils.LookupNestedMap(strings.Split(fieldPath, "."), out.Source)
-	if !ok {
-		t.Errorf("Field %s not found in output: %v", fieldPath, out.Source)
+	actualValue, actualFound := utils.LookupNestedMap(parts, out.Source)
+	expectedValue, expectedFound := utils.LookupNestedMap(parts, expected.Source)
+	if actualFound != expectedFound {
+		t.Errorf("Field %s presence mismatch: got present=%v, expected present=%v", arrayFieldPath, actualFound, expectedFound)
 		t.FailNow()
 	}
-
-	actualArray, ok := actualValue.([]interface{})
-	if !ok {
-		t.Errorf("Field %s is not an array: %v", fieldPath, actualValue)
-		t.FailNow()
+	if actualFound {
+		actualArray, ok := actualValue.([]interface{})
+		if !ok {
+			t.Errorf("Field %s is not an array in the result: %v", arrayFieldPath, actualValue)
+			t.FailNow()
+		}
+		expectedArray, ok := expectedValue.([]interface{})
+		if !ok {
+			t.Errorf("Field %s is not an array in the expected document: %v", arrayFieldPath, expectedValue)
+			t.FailNow()
+		}
+		if !arraysHaveSameElements(actualArray, expectedArray) {
+			t.Errorf("Arrays don't match for field %s\nActual: %v\nExpected: %v", arrayFieldPath, actualArray, expectedArray)
+			t.Fail()
+		}
 	}
 
-	if !arraysHaveSameElements(actualArray, expectedArray) {
-		t.Errorf("Arrays don't match for field %s\nActual: %v\nExpected: %v", fieldPath, actualArray, expectedArray)
+	// Compare the rest of the document exactly, with the array field removed on both
+	// sides (deep-copied first, so this doesn't mutate the caller's documents).
+	actualRest := cloneDocumentWithoutField(out, parts)
+	expectedRest := cloneDocumentWithoutField(expected, parts)
+	actualJSON, _ := json.Marshal(actualRest)
+	expectedJSON, _ := json.Marshal(expectedRest)
+	if string(actualJSON) != string(expectedJSON) {
+		t.Error("invalid merge (fields other than the array)")
+		t.Log(actualRest)
+		t.Log(expectedRest)
 		t.Fail()
 	}
+
+	return out
+}
+
+// cloneDocumentWithoutField returns a deep copy of doc with fieldPath deleted from its
+// Source, for comparing a document while ignoring one field asserted on separately.
+func cloneDocumentWithoutField(doc *models.Document, fieldPath []string) *models.Document {
+	data, _ := json.Marshal(doc)
+	clone := &models.Document{}
+	_ = json.Unmarshal(data, clone)
+	if clone.Source != nil {
+		utils.DeleteNestedMap(fieldPath, clone.Source)
+	}
+	return clone
 }
 
 // TestFieldMergeNestedPath covers FieldMerge on dotted paths (e.g. "claims.uuids"),
@@ -769,7 +808,7 @@ func testMergeWithNestedArrayCheck(t *testing.T, fieldPath string, config Config
 func TestFieldMergeNestedPath(t *testing.T) {
 	// Existing (master) already has a value, new message contributes a second one:
 	// they should accumulate into a deduplicated array at the nested path.
-	testMergeWithNestedArrayCheck(t, "claims.uuids",
+	testMergeWithDocumentArrayCheck(t, "claims.uuids",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{FieldMerge: []string{"claims.uuids"}},
@@ -781,12 +820,14 @@ func TestFieldMergeNestedPath(t *testing.T) {
 		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
 			"claims": map[string]interface{}{"uuids": "u1"},
 		}},
-		[]interface{}{"u1", "u2"},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": []interface{}{"u1", "u2"}},
+		}},
 	)
 
 	// Existing already accumulated an array, new message contributes one more value,
 	// duplicates of an already-present value must not be re-added.
-	testMergeWithNestedArrayCheck(t, "claims.uuids",
+	testMergeWithDocumentArrayCheck(t, "claims.uuids",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{FieldMerge: []string{"claims.uuids"}},
@@ -798,12 +839,14 @@ func TestFieldMergeNestedPath(t *testing.T) {
 		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
 			"claims": map[string]interface{}{"uuids": []interface{}{"u1", "u2"}},
 		}},
-		[]interface{}{"u1", "u2"},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"claims": map[string]interface{}{"uuids": []interface{}{"u1", "u2"}},
+		}},
 	)
 
 	// Existing document predates the "claims" field entirely: the nested path is
 	// absent on the output side, only the enricher (new) side has it.
-	testMergeWithNestedArrayCheck(t, "claims.uuids",
+	testMergeWithDocumentArrayCheck(t, "claims.uuids",
 		Config{Type: "doc", Mode: Self, ExistingAsMaster: true,
 			Groups: []Group{
 				{FieldMerge: []string{"claims.uuids"}},
@@ -815,7 +858,10 @@ func TestFieldMergeNestedPath(t *testing.T) {
 		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
 			"uuid": "parcel-1",
 		}},
-		[]interface{}{"u1"},
+		&models.Document{ID: "existing", IndexType: "doc", Source: map[string]interface{}{
+			"uuid":   "parcel-1",
+			"claims": map[string]interface{}{"uuids": []interface{}{"u1"}},
+		}},
 	)
 }
 
