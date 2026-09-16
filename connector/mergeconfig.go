@@ -250,35 +250,64 @@ func ApplyFieldForceUpdate(fieldUpdate []string, enricherSource map[string]inter
 // ApplyFieldMerge applies all FieldReplace merging configuration on input documents
 // Merge can merge a single field with a slice, or vice versa
 // The result of a merge is always a slice with unique fields
+// Supports dotted paths for nested fields (e.g. "claims.uuids"): the flat top-level
+// key is tried first for backward compatibility with existing configs, falling back
+// to a nested lookup/patch (utils.LookupNestedMap / utils.PatchNestedMap) otherwise,
+// the same pattern already used by ApplyFieldReplaceIfMissing and ApplyFieldReplace.
 func ApplyFieldMerge(fieldMerge []string, enricherSource map[string]interface{}, outputSource map[string]interface{}) {
 	for _, field := range fieldMerge {
-		if _, ok := enricherSource[field]; ok {
-			m := make(map[interface{}]bool)
+		parts := strings.Split(field, ".")
 
-			switch v := outputSource[field].(type) {
-			case []interface{}:
-				for _, e := range v {
-					m[e] = true
-				}
-			case interface{}:
-				m[v] = true
-			}
-
-			switch v := enricherSource[field].(type) {
-			case []interface{}:
-				for _, e := range v {
-					m[e] = true
-				}
-			case interface{}:
-				m[v] = true
-			}
-
-			newSlice := make([]interface{}, 0)
-			for k := range m {
-				newSlice = append(newSlice, k)
-			}
-			outputSource[field] = newSlice
+		enricherVal, enricherOk := enricherSource[field]
+		if !enricherOk {
+			enricherVal, enricherOk = utils.LookupNestedMap(parts, enricherSource)
 		}
+		if !enricherOk {
+			continue
+		}
+
+		m := make(map[interface{}]bool)
+
+		outputVal, outputFlatOk := outputSource[field]
+		outputFoundNested := false
+		if !outputFlatOk {
+			outputVal, outputFoundNested = utils.LookupNestedMap(parts, outputSource)
+		}
+		if outputFlatOk || outputFoundNested {
+			addFieldMergeValue(m, outputVal)
+		}
+
+		addFieldMergeValue(m, enricherVal)
+
+		newSlice := make([]interface{}, 0, len(m))
+		for k := range m {
+			newSlice = append(newSlice, k)
+		}
+
+		// Write back to wherever the existing value was actually found (flat or
+		// nested), not merely based on whether the field name contains a ".", so an
+		// existing flat literal key (e.g. from a legacy config) isn't silently moved
+		// into a nested structure. When nothing existed yet on the output side, fall
+		// back to the field's natural location: flat for a single-part name, nested
+		// otherwise - matching ApplyFieldReplaceIfMissing's behavior in that case.
+		if outputFlatOk || (!outputFoundNested && len(parts) == 1) {
+			outputSource[field] = newSlice
+		} else {
+			utils.PatchNestedMap(parts, outputSource, newSlice)
+		}
+	}
+}
+
+// addFieldMergeValue adds a single value, or every element of a []interface{}, to the
+// uniqueness set used by ApplyFieldMerge.
+func addFieldMergeValue(m map[interface{}]bool, v interface{}) {
+	switch val := v.(type) {
+	case []interface{}:
+		for _, e := range val {
+			m[e] = true
+		}
+	case interface{}:
+		m[val] = true
 	}
 }
 
