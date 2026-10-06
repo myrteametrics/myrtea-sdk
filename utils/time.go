@@ -25,34 +25,82 @@ func GetTimeZone(t time.Time) string {
 	return t.Format("-07:00")
 }
 
+// BeginningOfDay returns the midnight starting the day of t, in the location of t
+func BeginningOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+}
+
+// BeginningOfMonth returns the midnight starting the month of t, in the location of t
+func BeginningOfMonth(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+}
+
+// BeginningOfYear returns the midnight starting the year of t, in the location of t
+func BeginningOfYear(t time.Time) time.Time {
+	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location())
+}
+
+// EndOfDay returns the midnight ending the day of t, in the location of t
+func EndOfDay(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location())
+}
+
+// EndOfMonth returns the midnight ending the month of t, in the location of t
+func EndOfMonth(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, t.Location())
+}
+
+// EndOfYear returns the midnight ending the year of t, in the location of t
+func EndOfYear(t time.Time) time.Time {
+	return time.Date(t.Year()+1, time.January, 1, 0, 0, 0, 0, t.Location())
+}
+
 // GetBeginningOfDay return input time with time 00:00:00 formated to elasticsearch standard format
+//
+// Deprecated: the result does not state its timezone. Use BeginningOfDay and format
+// it with TimeLayoutWithZone.
 func GetBeginningOfDay(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return BeginningOfDay(t).Format(TimeLayout)
 }
 
 // GetBeginningOfMonth beginning of month
+//
+// Deprecated: the result does not state its timezone. Use BeginningOfMonth and format
+// it with TimeLayoutWithZone.
 func GetBeginningOfMonth(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return BeginningOfMonth(t).Format(TimeLayout)
 }
 
 // GetBeginningOfYear beginning of year
+//
+// Deprecated: the result does not state its timezone. Use BeginningOfYear and format
+// it with TimeLayoutWithZone.
 func GetBeginningOfYear(t time.Time) string {
-	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return BeginningOfYear(t).Format(TimeLayout)
 }
 
 // GetEndOfDay return input time with time 00:00:00 formated to elasticsearch standard format
+//
+// Deprecated: the result does not state its timezone. Use EndOfDay and format it
+// with TimeLayoutWithZone.
 func GetEndOfDay(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return EndOfDay(t).Format(TimeLayout)
 }
 
 // GetEndOfMonth beginning of month
+//
+// Deprecated: the result does not state its timezone. Use EndOfMonth and format it
+// with TimeLayoutWithZone.
 func GetEndOfMonth(t time.Time) string {
-	return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return EndOfMonth(t).Format(TimeLayout)
 }
 
 // GetEndOfYear beginning of year
+//
+// Deprecated: the result does not state its timezone. Use EndOfYear and format it
+// with TimeLayoutWithZone.
 func GetEndOfYear(t time.Time) string {
-	return time.Date(t.Year()+1, time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return EndOfYear(t).Format(TimeLayout)
 }
 
 // GetDailyRange returns a range of time for the current day (from 00:00:00 to now)

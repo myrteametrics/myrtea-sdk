@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // dayOfWeek returns the input date day of week (1 to 7)
@@ -96,11 +98,11 @@ func startOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch startOf {
 	case "day":
-		return formatDateWithZone(beginningOfDay(t)), nil
+		return formatDateWithZone(utils.BeginningOfDay(t)), nil
 	case "month":
-		return formatDateWithZone(beginningOfMonth(t)), nil
+		return formatDateWithZone(utils.BeginningOfMonth(t)), nil
 	case "year":
-		return formatDateWithZone(beginningOfYear(t)), nil
+		return formatDateWithZone(utils.BeginningOfYear(t)), nil
 	}
 	return nil, fmt.Errorf("startOf() expect 'day', 'month' or 'year'")
 }
@@ -124,11 +126,11 @@ func endOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch endOf {
 	case "day":
-		return formatDateWithZone(beginningOfDay(t).AddDate(0, 0, 1)), nil
+		return formatDateWithZone(utils.EndOfDay(t)), nil
 	case "month":
-		return formatDateWithZone(beginningOfMonth(t).AddDate(0, 1, 0)), nil
+		return formatDateWithZone(utils.EndOfMonth(t)), nil
 	case "year":
-		return formatDateWithZone(beginningOfYear(t).AddDate(1, 0, 0)), nil
+		return formatDateWithZone(utils.EndOfYear(t)), nil
 	}
 	return nil, fmt.Errorf("endOf() expect 'day', 'month' or 'year'")
 }
