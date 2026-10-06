@@ -12,8 +12,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `set_timezone` function to state the IANA timezone of a date returned by Gval
 - Add `convert_timezone` function to express a date returned by Gval in an IANA timezone
 - Embed the IANA timezone database (`time/tzdata`) in the expression package
-- Add `utils.BeginningOfDay`, `BeginningOfMonth`, `BeginningOfYear`, `EndOfDay`, `EndOfMonth` and
-  `EndOfYear`, returning a `time.Time`
 
 ### Changed
 
@@ -22,12 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `startOf`, `endOf`, `calendar_add`, `calendar_add_od` and `truncate_date` functions.
   Elasticsearch ignores the `time_zone` of a range query for a date carrying an offset:
   queries pairing these dates with a non-UTC `time_zone` must be reviewed
-
-### Deprecated
-
 - `utils.GetBeginningOfDay`, `GetBeginningOfMonth`, `GetBeginningOfYear`, `GetEndOfDay`,
-  `GetEndOfMonth` and `GetEndOfYear`: their result does not state its timezone. Use the
-  `time.Time` variants above and format them with `utils.TimeLayoutWithZone`
+  `GetEndOfMonth` and `GetEndOfYear` return `utils.TimeLayoutWithZone`, stating the UTC offset
 
 ## [v5.4.6] - 2026-09-16
 

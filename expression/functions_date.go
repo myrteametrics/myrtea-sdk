@@ -98,11 +98,11 @@ func startOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch startOf {
 	case "day":
-		return formatDateWithZone(utils.BeginningOfDay(t)), nil
+		return utils.GetBeginningOfDay(t), nil
 	case "month":
-		return formatDateWithZone(utils.BeginningOfMonth(t)), nil
+		return utils.GetBeginningOfMonth(t), nil
 	case "year":
-		return formatDateWithZone(utils.BeginningOfYear(t)), nil
+		return utils.GetBeginningOfYear(t), nil
 	}
 	return nil, fmt.Errorf("startOf() expect 'day', 'month' or 'year'")
 }
@@ -126,11 +126,11 @@ func endOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch endOf {
 	case "day":
-		return formatDateWithZone(utils.EndOfDay(t)), nil
+		return utils.GetEndOfDay(t), nil
 	case "month":
-		return formatDateWithZone(utils.EndOfMonth(t)), nil
+		return utils.GetEndOfMonth(t), nil
 	case "year":
-		return formatDateWithZone(utils.EndOfYear(t)), nil
+		return utils.GetEndOfYear(t), nil
 	}
 	return nil, fmt.Errorf("endOf() expect 'day', 'month' or 'year'")
 }
