@@ -80,7 +80,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-10T00:00:00.000" {
+	if val != "2020-02-10T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -88,7 +88,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-01T00:00:00.000" {
+	if val != "2020-02-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -96,7 +96,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-01-01T00:00:00.000" {
+	if val != "2020-01-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 }
@@ -106,7 +106,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-11T00:00:00.000" {
+	if val != "2020-02-11T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -114,7 +114,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-03-01T00:00:00.000" {
+	if val != "2020-03-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -122,7 +122,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2021-01-01T00:00:00.000" {
+	if val != "2021-01-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 }
@@ -202,7 +202,7 @@ func TestAddDurationDays(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-09T12:30:00.000" {
+	if res != "2020-02-09T12:30:00.000Z" {
 		t.Error("invalid result")
 		t.Log(res)
 		t.FailNow()
@@ -243,9 +243,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -254,9 +254,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -265,9 +265,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -276,9 +276,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:45:00.000" {
+	if res != "2020-02-08T12:45:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 }

@@ -43,6 +43,12 @@ func parseDateAllFormat(s string) (time.Time, string, error) {
 	return time.Time{}, "", fmt.Errorf("could not parse %s", s)
 }
 
+// formatDateWithZone formats a date returned by an expression: the default layout
+// followed by its UTC offset, "Z" for a date in UTC
+func formatDateWithZone(t time.Time) string {
+	return t.Format(utils.TimeLayoutWithZone)
+}
+
 // layoutHasZone reports whether a layout prints the timezone or UTC offset of a date
 func layoutHasZone(layout string) bool {
 	return strings.Contains(layout, "Z07") || strings.Contains(layout, "-07") || strings.Contains(layout, "MST")

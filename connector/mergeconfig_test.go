@@ -295,7 +295,7 @@ func TestMergeConfigDateArithmeticWorkingDays(t *testing.T) {
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"date1": "2019-05-10T12:10:25.000+02:00"}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"date1": "2019-05-06T12:00:25.000+02:00"}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"date1": "2019-05-06T12:00:25.000+02:00",
-			"dateWorkingDays": "2019-05-09T12:10:25.000",
+			"dateWorkingDays": "2019-05-09T12:10:25.000+02:00",
 		}},
 	)
 
@@ -312,7 +312,7 @@ func TestMergeConfigDateArithmeticWorkingDays(t *testing.T) {
 		&models.Document{ID: "2", IndexType: "doc", Source: map[string]interface{}{"duration": "-72h"}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"date1": "2019-05-10T12:10:25.000+02:00"}},
 		&models.Document{ID: "1", IndexType: "doc", Source: map[string]interface{}{"date1": "2019-05-10T12:10:25.000+02:00",
-			"dateWorkingDays": "2019-05-06T12:10:25.000",
+			"dateWorkingDays": "2019-05-06T12:10:25.000+02:00",
 		}},
 	)
 

@@ -13,6 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `convert_timezone` function to express a date returned by Gval in an IANA timezone
 - Embed the IANA timezone database (`time/tzdata`) in the expression package
 
+### Changed
+
+- Dates returned by Gval state their UTC offset (`2006-01-02T15:04:05.000Z07:00`, `Z` for UTC):
+  the `now`, `begin`, `startofday`, `startofnextday` and `startofmonth` keywords, and the
+  `startOf`, `endOf`, `calendar_add`, `calendar_add_od` and `truncate_date` functions.
+  Elasticsearch ignores the `time_zone` of a range query for a date carrying an offset:
+  queries pairing these dates with a non-UTC `time_zone` must be reviewed
+
 ## [v5.4.6] - 2026-09-16
 
 ### Added

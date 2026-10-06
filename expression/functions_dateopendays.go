@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/myrteametrics/myrtea-sdk/v5/calendar"
-	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // delayInOpenDays returns the duration between two date in open days/time
@@ -78,5 +77,5 @@ func addDurationOpenDays(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("addDurationOpenDays() %s", err.Error())
 	}
-	return c.Add(t, d).Format(utils.TimeLayout), nil
+	return formatDateWithZone(c.Add(t, d)), nil
 }

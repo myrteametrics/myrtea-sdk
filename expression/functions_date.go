@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
 
 // dayOfWeek returns the input date day of week (1 to 7)
@@ -98,11 +96,11 @@ func startOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch startOf {
 	case "day":
-		return utils.GetBeginningOfDay(t), nil
+		return formatDateWithZone(beginningOfDay(t)), nil
 	case "month":
-		return utils.GetBeginningOfMonth(t), nil
+		return formatDateWithZone(beginningOfMonth(t)), nil
 	case "year":
-		return utils.GetBeginningOfYear(t), nil
+		return formatDateWithZone(beginningOfYear(t)), nil
 	}
 	return nil, fmt.Errorf("startOf() expect 'day', 'month' or 'year'")
 }
@@ -126,11 +124,11 @@ func endOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch endOf {
 	case "day":
-		return utils.GetEndOfDay(t), nil
+		return formatDateWithZone(beginningOfDay(t).AddDate(0, 0, 1)), nil
 	case "month":
-		return utils.GetEndOfMonth(t), nil
+		return formatDateWithZone(beginningOfMonth(t).AddDate(0, 1, 0)), nil
 	case "year":
-		return utils.GetEndOfYear(t), nil
+		return formatDateWithZone(beginningOfYear(t).AddDate(1, 0, 0)), nil
 	}
 	return nil, fmt.Errorf("endOf() expect 'day', 'month' or 'year'")
 }
@@ -197,7 +195,7 @@ func addDurationDays(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("addDurationDays() %s", err.Error())
 	}
-	return t.Add(d).Format(utils.TimeLayout), nil
+	return formatDateWithZone(t.Add(d)), nil
 }
 
 func truncateDate(arguments ...interface{}) (interface{}, error) {
@@ -217,7 +215,11 @@ func truncateDate(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("truncateDate() %s", err.Error())
 	}
-	return t.Truncate(d).Format(utils.TimeLayout), nil
+	// Truncate works on absolute time, so it runs on the wall clock read as UTC:
+	// a truncation to "24h" then lands on the midnight of the input offset
+	wall := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC).Truncate(d)
+	truncated := time.Date(wall.Year(), wall.Month(), wall.Day(), wall.Hour(), wall.Minute(), wall.Second(), wall.Nanosecond(), t.Location())
+	return formatDateWithZone(truncated), nil
 }
 
 func extractFromDate(arguments ...interface{}) (interface{}, error) {
@@ -568,7 +570,7 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("once_today_at_hour() expects 3 string args")
 	}
 
-	nowUTC, err := time.Parse(utils.TimeLayout, nowStr)
+	nowUTC, _, err := parseDateAllFormat(nowStr)
 	if err != nil {
 		return nil, fmt.Errorf("once_today_at_hour() invalid nowUTC: %v", err)
 	}
