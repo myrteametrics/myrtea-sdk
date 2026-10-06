@@ -2,7 +2,11 @@ package expression
 
 import (
 	"fmt"
+	"strings"
 	"time"
+	// Embeds the IANA timezone database, so that the timezone functions resolve
+	// names such as "Europe/Paris" on images that ship without tzdata (alpine, scratch)
+	_ "time/tzdata"
 
 	"github.com/myrteametrics/myrtea-sdk/v5/utils"
 )
@@ -10,6 +14,7 @@ import (
 var (
 	dateLayouts = [...]string{
 		utils.TimeLayout,
+		utils.TimeLayoutWithZone,
 		time.ANSIC,
 		time.UnixDate,
 		time.RubyDate,
@@ -36,4 +41,9 @@ func parseDateAllFormat(s string) (time.Time, string, error) {
 		}
 	}
 	return time.Time{}, "", fmt.Errorf("could not parse %s", s)
+}
+
+// layoutHasZone reports whether a layout prints the timezone or UTC offset of a date
+func layoutHasZone(layout string) bool {
+	return strings.Contains(layout, "Z07") || strings.Contains(layout, "-07") || strings.Contains(layout, "MST")
 }

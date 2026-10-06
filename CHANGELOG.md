@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Add `set_timezone` function to state the IANA timezone of a date returned by Gval
+- Add `convert_timezone` function to express a date returned by Gval in an IANA timezone
+- Embed the IANA timezone database (`time/tzdata`) in the expression package
+
 ## [v5.4.6] - 2026-09-16
 
 ### Added
