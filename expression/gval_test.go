@@ -116,7 +116,7 @@ func TestComplexDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if eval != "2020-04-01T00:00:00.000" {
+	if eval != "2020-04-01T00:00:00.000Z" {
 		t.Error("invalid result")
 		t.FailNow()
 	}
@@ -462,6 +462,89 @@ func TestEvalFormatDate(t *testing.T) {
 		t.FailNow()
 	}
 
+}
+
+func TestEvalTimezone(t *testing.T) {
+	// 22:30 UTC is already the next day in Paris (00:30 CEST)
+	variables := GetDateKeywords(time.Date(2026, 10, 6, 22, 30, 0, 0, time.UTC))
+
+	tests := []struct {
+		expression string
+		expected   interface{}
+	}{
+		// Keywords state their UTC offset
+		{`now`, "2026-10-06T22:30:00.000Z"},
+		{`startofday`, "2026-10-06T00:00:00.000Z"},
+		{`startofnextday`, "2026-10-07T00:00:00.000Z"},
+		{`startofmonth`, "2026-10-01T00:00:00.000Z"},
+
+		// convert_timezone reads a date without offset as UTC
+		{`convert_timezone("2026-10-06T22:30:00.000", "UTC")`, "2026-10-06T22:30:00.000Z"},
+		{`convert_timezone(now, "Europe/Paris")`, "2026-10-07T00:30:00.000+02:00"},
+		{`convert_timezone(now, "America/New_York")`, "2026-10-06T18:30:00.000-04:00"},
+		{`convert_timezone(startofday, "Europe/Paris")`, "2026-10-06T02:00:00.000+02:00"},
+		{`convert_timezone("2026-12-06T22:30:00.000", "Europe/Paris")`, "2026-12-06T23:30:00.000+01:00"},
+		{`convert_timezone(now, "Europe/Paris", "2006-01-02 15:04")`, "2026-10-07 00:30"},
+
+		// set_timezone keeps the wall clock of a date without offset
+		{`set_timezone("2026-10-06T22:30:00.000", "UTC")`, "2026-10-06T22:30:00.000Z"},
+		{`set_timezone("2026-10-06T00:00:00.000", "Europe/Paris")`, "2026-10-06T00:00:00.000+02:00"},
+		{`set_timezone("2026-12-06T00:00:00.000", "Europe/Paris")`, "2026-12-06T00:00:00.000+01:00"},
+
+		// A date with an offset is converted by both functions
+		{`set_timezone(now, "Europe/Paris")`, "2026-10-07T00:30:00.000+02:00"},
+		{`convert_timezone(convert_timezone(now, "Europe/Paris"), "UTC")`, "2026-10-06T22:30:00.000Z"},
+		{`set_timezone("2026-10-06T22:30:00Z", "Europe/Paris")`, "2026-10-07T00:30:00+02:00"},
+
+		// Date functions applied on a converted date use its wall clock
+		{`day(convert_timezone(now, "Europe/Paris"))`, 7},
+		{`extract_from_date(convert_timezone(now, "Europe/Paris"), "hour")`, 0},
+		{`dayOfWeek(convert_timezone(now, "Europe/Paris"))`, 3},
+		{`format_date(convert_timezone(now, "Europe/Paris"), "02/01/2006 15:04")`, "07/10/2026 00:30"},
+		{`datemillis(convert_timezone(now, "Europe/Paris")) == datemillis(now)`, true},
+
+		// Date functions keep the offset of their input
+		{`calendar_add(now, "-3h")`, "2026-10-06T19:30:00.000Z"},
+		{`calendar_add(convert_timezone(now, "Europe/Paris"), "-3h")`, "2026-10-06T21:30:00.000+02:00"},
+		{`calendar_add_od(now, "24h")`, "2026-10-07T22:30:00.000Z"},
+		{`truncate_date(now, "1h")`, "2026-10-06T22:00:00.000Z"},
+		{`truncate_date(convert_timezone(now, "Europe/Paris"), "24h")`, "2026-10-07T00:00:00.000+02:00"},
+		{`startOf(now, "day")`, "2026-10-06T00:00:00.000Z"},
+		{`startOf(convert_timezone(now, "Europe/Paris"), "day")`, "2026-10-07T00:00:00.000+02:00"},
+		{`endOf(convert_timezone(now, "Europe/Paris"), "day")`, "2026-10-08T00:00:00.000+02:00"},
+
+		// Results of other date functions can be converted
+		{`convert_timezone(calendar_add(now, "-3h"), "Europe/Paris")`, "2026-10-06T21:30:00.000+02:00"},
+		{`convert_timezone(truncate_date(now, "1h"), "Europe/Paris")`, "2026-10-07T00:00:00.000+02:00"},
+		{`convert_timezone(startOf(convert_timezone(now, "Europe/Paris"), "day"), "UTC")`, "2026-10-06T22:00:00.000Z"},
+	}
+	for _, test := range tests {
+		result, err := Process(LangEval, test.expression, variables)
+		if err != nil {
+			t.Errorf("%s: unexpected error: %v", test.expression, err)
+			continue
+		}
+		if result != test.expected {
+			t.Errorf("%s = %v (%T), expected %v (%T)", test.expression, result, result, test.expected, test.expected)
+		}
+	}
+}
+
+func TestEvalTimezoneInvalid(t *testing.T) {
+	variables := GetDateKeywords(time.Date(2026, 10, 6, 22, 30, 0, 0, time.UTC))
+
+	for _, expression := range []string{
+		`convert_timezone(now)`,
+		`convert_timezone(now, "Europe/Nowhere")`,
+		`convert_timezone(now, "")`,
+		`convert_timezone("blabla", "Europe/Paris")`,
+		`set_timezone(now, 2)`,
+		`set_timezone(now, "Europe/Paris", "")`,
+	} {
+		if _, err := Process(LangEval, expression, variables); err == nil {
+			t.Errorf("%s should return an error", expression)
+		}
+	}
 }
 
 func TestEvalGetFormattedDuration(t *testing.T) {

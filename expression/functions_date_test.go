@@ -80,7 +80,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-10T00:00:00.000" {
+	if val != "2020-02-10T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -88,7 +88,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-01T00:00:00.000" {
+	if val != "2020-02-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -96,7 +96,7 @@ func TestStartOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-01-01T00:00:00.000" {
+	if val != "2020-01-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 }
@@ -106,7 +106,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-02-11T00:00:00.000" {
+	if val != "2020-02-11T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -114,7 +114,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2020-03-01T00:00:00.000" {
+	if val != "2020-03-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 
@@ -122,7 +122,7 @@ func TestEndOf(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if val != "2021-01-01T00:00:00.000" {
+	if val != "2021-01-01T00:00:00.000Z" {
 		t.Error(val)
 	}
 }
@@ -202,7 +202,7 @@ func TestAddDurationDays(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-09T12:30:00.000" {
+	if res != "2020-02-09T12:30:00.000Z" {
 		t.Error("invalid result")
 		t.Log(res)
 		t.FailNow()
@@ -243,9 +243,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -254,9 +254,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -265,9 +265,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:30:00.000" {
+	if res != "2020-02-08T12:30:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 
@@ -276,9 +276,9 @@ func TestTruncateDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-08T12:45:00.000" {
+	if res != "2020-02-08T12:45:00.000Z" {
 		t.Error("invalid result")
-		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000")
+		t.Logf("Result: %s, Expected: %s", res, "2020-02-08T12:30:00.000Z")
 		t.FailNow()
 	}
 }
@@ -429,6 +429,102 @@ func TestFormatDate(t *testing.T) {
 	if result != "2023-08-04" {
 		t.Error("formatDate should return 2023-08-04")
 		t.FailNow()
+	}
+}
+
+func TestSetTimezone(t *testing.T) {
+	tests := []struct {
+		args     []interface{}
+		expected string
+	}{
+		// Date without offset: wall clock kept, offset appended to the input layout
+		{[]interface{}{"2026-10-06T10:00:00.000", "Europe/Paris"}, "2026-10-06T10:00:00.000+02:00"},
+		{[]interface{}{"2026-12-06T10:00:00.000", "Europe/Paris"}, "2026-12-06T10:00:00.000+01:00"},
+		{[]interface{}{"2026-10-06T10:00:00.000", "UTC"}, "2026-10-06T10:00:00.000Z"},
+		{[]interface{}{"2026-10-06 10:00:00", "Europe/Paris"}, "2026-10-06 10:00:00+02:00"},
+		// Date with an offset: converted to the timezone, layout kept
+		{[]interface{}{"2026-10-06T08:00:00.000Z", "Europe/Paris"}, "2026-10-06T10:00:00.000+02:00"},
+		{[]interface{}{"2026-10-06T10:00:00.000+02:00", "UTC"}, "2026-10-06T08:00:00.000Z"},
+		{[]interface{}{"2026-10-06T08:00:00Z", "America/New_York"}, "2026-10-06T04:00:00-04:00"},
+		{[]interface{}{"2026-10-06T08:00:00.123456Z", "Europe/Paris"}, "2026-10-06T10:00:00.123456+02:00"},
+		{[]interface{}{"2026-10-06T10:00:00+0200", "UTC"}, "2026-10-06T08:00:00Z"},
+		// Explicit output layout
+		{[]interface{}{"2026-10-06T10:00:00.000", "Europe/Paris", "2006-01-02 15:04 MST"}, "2026-10-06 10:00 CEST"},
+	}
+	for _, test := range tests {
+		result, err := setTimezone(test.args...)
+		if err != nil {
+			t.Errorf("setTimezone(%v) unexpected error: %v", test.args, err)
+			continue
+		}
+		if result != test.expected {
+			t.Errorf("setTimezone(%v) = %v, expected %v", test.args, result, test.expected)
+		}
+	}
+}
+
+func TestSetTimezoneInvalid(t *testing.T) {
+	tests := [][]interface{}{
+		{},
+		{"2026-10-06T10:00:00.000"},
+		{"2026-10-06T10:00:00.000", "Europe/Paris", "2006", "extra"},
+		{1, "Europe/Paris"},
+		{"2026-10-06T10:00:00.000", 1},
+		{"2026-10-06T10:00:00.000", ""},
+		{"2026-10-06T10:00:00.000", "Europe/Nowhere"},
+		{"blabla", "Europe/Paris"},
+		{"2026-10-06T10:00:00.000", "Europe/Paris", ""},
+	}
+	for _, args := range tests {
+		if _, err := setTimezone(args...); err == nil {
+			t.Errorf("setTimezone(%v) should return an error", args)
+		}
+	}
+}
+
+func TestConvertTimezone(t *testing.T) {
+	tests := []struct {
+		args     []interface{}
+		expected string
+	}{
+		// Date without offset: read as UTC, offset appended to the input layout
+		{[]interface{}{"2026-10-06T08:00:00.000", "Europe/Paris"}, "2026-10-06T10:00:00.000+02:00"},
+		{[]interface{}{"2026-12-06T08:00:00.000", "Europe/Paris"}, "2026-12-06T09:00:00.000+01:00"},
+		{[]interface{}{"2026-10-06T08:00:00.000", "UTC"}, "2026-10-06T08:00:00.000Z"},
+		{[]interface{}{"2026-10-06T23:30:00.000", "Europe/Paris"}, "2026-10-07T01:30:00.000+02:00"},
+		{[]interface{}{"2026-10-06 08:00:00", "Europe/Paris"}, "2026-10-06 10:00:00+02:00"},
+		// Date with an offset: converted to the timezone, layout kept
+		{[]interface{}{"2026-10-06T10:00:00.000+02:00", "UTC"}, "2026-10-06T08:00:00.000Z"},
+		{[]interface{}{"2026-10-06T08:00:00.123456Z", "America/New_York"}, "2026-10-06T04:00:00.123456-04:00"},
+		// Explicit output layout
+		{[]interface{}{"2026-10-06T08:00:00.000", "Europe/Paris", "2006-01-02 15:04"}, "2026-10-06 10:00"},
+	}
+	for _, test := range tests {
+		result, err := convertTimezone(test.args...)
+		if err != nil {
+			t.Errorf("convertTimezone(%v) unexpected error: %v", test.args, err)
+			continue
+		}
+		if result != test.expected {
+			t.Errorf("convertTimezone(%v) = %v, expected %v", test.args, result, test.expected)
+		}
+	}
+}
+
+func TestConvertTimezoneInvalid(t *testing.T) {
+	tests := [][]interface{}{
+		{},
+		{"2026-10-06T08:00:00.000"},
+		{1, "Europe/Paris"},
+		{"2026-10-06T08:00:00.000", ""},
+		{"2026-10-06T08:00:00.000", "Europe/Nowhere"},
+		{"blabla", "Europe/Paris"},
+		{"2026-10-06T08:00:00.000", "Europe/Paris", 1},
+	}
+	for _, args := range tests {
+		if _, err := convertTimezone(args...); err == nil {
+			t.Errorf("convertTimezone(%v) should return an error", args)
+		}
 	}
 }
 

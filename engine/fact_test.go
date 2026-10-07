@@ -170,22 +170,22 @@ func TestContextualize(t *testing.T) {
 	}
 
 	c1 := f.Condition.(*BooleanFragment)
-	if c1.Fragments[0].(*LeafConditionFragment).Value != "2019-09-15T00:00:00.000" {
+	if c1.Fragments[0].(*LeafConditionFragment).Value != "2019-09-15T00:00:00.000+02:00" {
 		t.Error("invalid __begin__replacement")
 	}
-	if c1.Fragments[0].(*LeafConditionFragment).Value2 != "2019-09-15T12:30:00.000" {
+	if c1.Fragments[0].(*LeafConditionFragment).Value2 != "2019-09-15T12:30:00.000+02:00" {
 		t.Error("invalid __now__ replacement")
 	}
 	if c1.Fragments[0].(*LeafConditionFragment).TimeZone != "+02:00" {
 		t.Error("invalid timezone")
 	}
-	if c1.Fragments[1].(*LeafConditionFragment).Value != "2019-09-15T12:30:00.000" {
+	if c1.Fragments[1].(*LeafConditionFragment).Value != "2019-09-15T12:30:00.000+02:00" {
 		t.Error("invalid __now__ replacement")
 	}
 	if c1.Fragments[1].(*LeafConditionFragment).TimeZone != "+02:00" {
 		t.Error("invalid timezone")
 	}
-	if c1.Fragments[2].(*LeafConditionFragment).Value != "2019-09-15T12:30:00.000" {
+	if c1.Fragments[2].(*LeafConditionFragment).Value != "2019-09-15T12:30:00.000+02:00" {
 		t.Error("invalid __now__ replacement")
 	}
 	if c1.Fragments[2].(*LeafConditionFragment).TimeZone != "+02:00" {

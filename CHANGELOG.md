@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v5.4.7] - 2026-10-06
+
+### Added
+
+- Add `set_timezone` gval function to state the IANA timezone of a date
+- Add `convert_timezone` gval function to express a date in an IANA timezone
+- Add `utils.TimeLayoutWithZone` layout (`2006-01-02T15:04:05.000Z07:00`)
+- Embed the IANA timezone database (`time/tzdata`) in the expression package
+
+### Changed
+
+- Dates returned by Gval state their UTC offset (`Z` for UTC): the `now`, `begin`, `startofday`,
+  `startofnextday` and `startofmonth` keywords, and the `startOf`, `endOf`, `calendar_add`,
+  `calendar_add_od` and `truncate_date` functions.
+  Elasticsearch ignores the `time_zone` of a range query for a date carrying an offset:
+  queries pairing these dates with a non-UTC `time_zone` must be reviewed
+- `utils.GetBeginningOfDay`, `GetBeginningOfMonth`, `GetBeginningOfYear`, `GetEndOfDay`,
+  `GetEndOfMonth` and `GetEndOfYear` return `utils.TimeLayoutWithZone`, stating the UTC offset
+- `truncate_date` truncates the wall clock of its input, keeping its offset
+- `once_today_at_hour` accepts its first argument in any supported date layout
 
 ## [v5.4.6] - 2026-09-16
 

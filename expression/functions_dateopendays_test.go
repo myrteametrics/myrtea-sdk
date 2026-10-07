@@ -59,7 +59,7 @@ func TestAddDurationOpenDays(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if res != "2020-02-10T12:30:00.000" {
+	if res != "2020-02-10T12:30:00.000Z" {
 		t.Error("invalid result")
 		t.Log(res)
 		t.FailNow()

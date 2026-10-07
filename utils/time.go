@@ -7,6 +7,10 @@ import (
 // TimeLayout is the myrtea default time layout
 const TimeLayout = "2006-01-02T15:04:05.000"
 
+// TimeLayoutWithZone is TimeLayout followed by the UTC offset of the date:
+// "Z" for UTC, "+hh:mm" / "-hh:mm" otherwise
+const TimeLayoutWithZone = TimeLayout + "Z07:00"
+
 // GetTime return now time formated to elasticsearch standard format
 func GetTime(t time.Time) string {
 	return t.Format(TimeLayout)
@@ -21,34 +25,40 @@ func GetTimeZone(t time.Time) string {
 	return t.Format("-07:00")
 }
 
-// GetBeginningOfDay return input time with time 00:00:00 formated to elasticsearch standard format
+// GetBeginningOfDay returns the midnight starting the day of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetBeginningOfDay(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
-// GetBeginningOfMonth beginning of month
+// GetBeginningOfMonth returns the midnight starting the month of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetBeginningOfMonth(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
-// GetBeginningOfYear beginning of year
+// GetBeginningOfYear returns the midnight starting the year of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetBeginningOfYear(t time.Time) string {
-	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
-// GetEndOfDay return input time with time 00:00:00 formated to elasticsearch standard format
+// GetEndOfDay returns the midnight ending the day of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetEndOfDay(t time.Time) string {
-	return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
-// GetEndOfMonth beginning of month
+// GetEndOfMonth returns the midnight ending the month of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetEndOfMonth(t time.Time) string {
-	return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
-// GetEndOfYear beginning of year
+// GetEndOfYear returns the midnight ending the year of t, in the location of t,
+// formatted with TimeLayoutWithZone
 func GetEndOfYear(t time.Time) string {
-	return time.Date(t.Year()+1, time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayout)
+	return time.Date(t.Year()+1, time.January, 1, 0, 0, 0, 0, t.Location()).Format(TimeLayoutWithZone)
 }
 
 // GetDailyRange returns a range of time for the current day (from 00:00:00 to now)

@@ -197,7 +197,7 @@ func addDurationDays(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("addDurationDays() %s", err.Error())
 	}
-	return t.Add(d).Format(utils.TimeLayout), nil
+	return formatDateWithZone(t.Add(d)), nil
 }
 
 func truncateDate(arguments ...interface{}) (interface{}, error) {
@@ -217,7 +217,11 @@ func truncateDate(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("truncateDate() %s", err.Error())
 	}
-	return t.Truncate(d).Format(utils.TimeLayout), nil
+	// Truncate works on absolute time, so it runs on the wall clock read as UTC:
+	// a truncation to "24h" then lands on the midnight of the input offset
+	wall := time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), time.UTC).Truncate(d)
+	truncated := time.Date(wall.Year(), wall.Month(), wall.Day(), wall.Hour(), wall.Minute(), wall.Second(), wall.Nanosecond(), t.Location())
+	return formatDateWithZone(truncated), nil
 }
 
 func extractFromDate(arguments ...interface{}) (interface{}, error) {
@@ -275,6 +279,74 @@ func formatDate(arguments ...interface{}) (interface{}, error) {
 
 	// if s2 layout is wrong, the format function will output given s2 string as result
 	return t.Format(s2), nil
+}
+
+// setTimezone states the timezone of a date
+// Usage: <date> <timezone> [layout]
+//   - timezone: an IANA name ("Europe/Paris", "UTC", ...)
+//   - layout: optional Go layout of the result. By default the layout of the input
+//     date is kept; when it does not print an offset, the offset is appended to it
+//
+// A date without offset is taken as the wall clock of the timezone: only the offset
+// is added. A date with an offset is converted to the timezone, keeping its instant.
+func setTimezone(arguments ...interface{}) (interface{}, error) {
+	return applyTimezone("setTimezone", false, arguments...)
+}
+
+// convertTimezone expresses a date in another timezone, keeping its instant
+// Usage: <date> <timezone> [layout]
+//   - timezone: an IANA name ("Europe/Paris", "UTC", ...)
+//   - layout: optional Go layout of the result. By default the layout of the input
+//     date is kept; when it does not print an offset, the offset is appended to it
+//
+// A date without offset is read as UTC, as the "now" keyword is on a UTC server.
+func convertTimezone(arguments ...interface{}) (interface{}, error) {
+	return applyTimezone("convertTimezone", true, arguments...)
+}
+
+// applyTimezone implements setTimezone and convertTimezone, which only differ on a
+// date without offset: convert reads it as UTC, otherwise its wall clock is kept.
+func applyTimezone(name string, convert bool, arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 2 && len(arguments) != 3 {
+		return nil, fmt.Errorf("%s() expects 2 or 3 string arguments <date> <timezone> [layout]", name)
+	}
+	s, ok := arguments[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("%s() expects 2 or 3 string arguments <date> <timezone> [layout]", name)
+	}
+	tz, ok := arguments[1].(string)
+	if !ok || strings.TrimSpace(tz) == "" {
+		return nil, fmt.Errorf("%s() expects a non-empty timezone", name)
+	}
+	t, layout, err := parseDateAllFormat(s)
+	if err != nil {
+		return nil, fmt.Errorf("%s() %s", name, err.Error())
+	}
+	loc, err := time.LoadLocation(strings.TrimSpace(tz))
+	if err != nil {
+		return nil, fmt.Errorf("%s() %s", name, err.Error())
+	}
+
+	if layout == time.RFC3339 {
+		// RFC3339 parses fractional seconds but does not print them
+		layout = time.RFC3339Nano
+	}
+	if layoutHasZone(layout) || convert {
+		t = t.In(loc)
+	} else {
+		t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), t.Nanosecond(), loc)
+	}
+	if !layoutHasZone(layout) {
+		layout += "Z07:00"
+	}
+
+	if len(arguments) == 3 {
+		layout, ok = arguments[2].(string)
+		if !ok || layout == "" {
+			return nil, fmt.Errorf("%s() expects a non-empty layout", name)
+		}
+	}
+	return t.Format(layout), nil
 }
 
 func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
@@ -500,7 +572,7 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("once_today_at_hour() expects 3 string args")
 	}
 
-	nowUTC, err := time.Parse(utils.TimeLayout, nowStr)
+	nowUTC, _, err := parseDateAllFormat(nowStr)
 	if err != nil {
 		return nil, fmt.Errorf("once_today_at_hour() invalid nowUTC: %v", err)
 	}

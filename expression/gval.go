@@ -69,6 +69,8 @@ var (
 		gval.Function("truncate_date", truncateDate),
 		gval.Function("extract_from_date", extractFromDate),
 		gval.Function("format_date", formatDate),
+		gval.Function("set_timezone", setTimezone),
+		gval.Function("convert_timezone", convertTimezone),
 		gval.Function("get_value_current_day", getValueForCurrentDay),
 		gval.Function("get_formatted_duration", getFormattedDuration),
 		gval.Function("numberWithoutExponent", numberWithoutExponent),
