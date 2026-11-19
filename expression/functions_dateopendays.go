@@ -78,5 +78,5 @@ func addDurationOpenDays(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("addDurationOpenDays() %s", err.Error())
 	}
-	return c.Add(t, d).Format(utils.TimeLayout), nil
+	return c.Add(t, d).Format(utils.TimeLayoutWithZone), nil
 }

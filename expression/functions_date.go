@@ -98,11 +98,11 @@ func startOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch startOf {
 	case "day":
-		return utils.GetBeginningOfDay(t), nil
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	case "month":
-		return utils.GetBeginningOfMonth(t), nil
+		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	case "year":
-		return utils.GetBeginningOfYear(t), nil
+		return time.Date(t.Year(), time.January, 1, 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	}
 	return nil, fmt.Errorf("startOf() expect 'day', 'month' or 'year'")
 }
@@ -126,11 +126,11 @@ func endOf(arguments ...interface{}) (interface{}, error) {
 	}
 	switch endOf {
 	case "day":
-		return utils.GetEndOfDay(t), nil
+		return time.Date(t.Year(), t.Month(), t.Day()+1, 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	case "month":
-		return utils.GetEndOfMonth(t), nil
+		return time.Date(t.Year(), t.Month()+1, 1, 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	case "year":
-		return utils.GetEndOfYear(t), nil
+		return time.Date(t.Year()+1, time.January, 1, 0, 0, 0, 0, t.Location()).Format(utils.TimeLayoutWithZone), nil
 	}
 	return nil, fmt.Errorf("endOf() expect 'day', 'month' or 'year'")
 }
@@ -197,7 +197,7 @@ func addDurationDays(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("addDurationDays() %s", err.Error())
 	}
-	return t.Add(d).Format(utils.TimeLayout), nil
+	return t.Add(d).Format(utils.TimeLayoutWithZone), nil
 }
 
 func truncateDate(arguments ...interface{}) (interface{}, error) {
@@ -217,7 +217,7 @@ func truncateDate(arguments ...interface{}) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("truncateDate() %s", err.Error())
 	}
-	return t.Truncate(d).Format(utils.TimeLayout), nil
+	return t.Truncate(d).Format(utils.TimeLayoutWithZone), nil
 }
 
 func extractFromDate(arguments ...interface{}) (interface{}, error) {
@@ -275,6 +275,32 @@ func formatDate(arguments ...interface{}) (interface{}, error) {
 
 	// if s2 layout is wrong, the format function will output given s2 string as result
 	return t.Format(s2), nil
+}
+
+// convertTimezone converts the input date to the given IANA time zone (e.g. "Europe/Paris", "UTC")
+// and returns it with that time zone explicitly included in the result.
+// Usage: <date> <timezone>
+func convertTimezone(arguments ...interface{}) (interface{}, error) {
+	if len(arguments) != 2 {
+		return nil, fmt.Errorf("convertTimezone() expects exactly two string argument <date> <timezone>")
+	}
+	s, ok := arguments[0].(string)
+	if !ok {
+		return nil, fmt.Errorf("convertTimezone() expects exactly two string argument <date> <timezone>")
+	}
+	tz, ok := arguments[1].(string)
+	if !ok {
+		return nil, fmt.Errorf("convertTimezone() expects exactly two string argument <date> <timezone>")
+	}
+	t, _, err := parseDateAllFormat(s)
+	if err != nil {
+		return nil, fmt.Errorf("convertTimezone() %s", err.Error())
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return nil, fmt.Errorf("convertTimezone() invalid timezone %q: %s", tz, err.Error())
+	}
+	return t.In(loc).Format(utils.TimeLayoutWithZone), nil
 }
 
 func getValueForCurrentDay(arguments ...interface{}) (interface{}, error) {
@@ -500,7 +526,7 @@ func onceTodayAtHour(args ...interface{}) (interface{}, error) {
 		return nil, fmt.Errorf("once_today_at_hour() expects 3 string args")
 	}
 
-	nowUTC, err := time.Parse(utils.TimeLayout, nowStr)
+	nowUTC, _, err := parseDateAllFormat(nowStr)
 	if err != nil {
 		return nil, fmt.Errorf("once_today_at_hour() invalid nowUTC: %v", err)
 	}

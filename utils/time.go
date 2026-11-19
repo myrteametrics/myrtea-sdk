@@ -7,6 +7,12 @@ import (
 // TimeLayout is the myrtea default time layout
 const TimeLayout = "2006-01-02T15:04:05.000"
 
+// TimeLayoutWithZone is TimeLayout with an explicit UTC offset appended
+// ("Z" for UTC, "+02:00"/"-07:00" otherwise). It is used wherever a date is
+// returned to a caller that cannot otherwise infer which time zone was used
+// to compute it (e.g. GVAL expression functions).
+const TimeLayoutWithZone = "2006-01-02T15:04:05.000Z07:00"
+
 // GetTime return now time formated to elasticsearch standard format
 func GetTime(t time.Time) string {
 	return t.Format(TimeLayout)

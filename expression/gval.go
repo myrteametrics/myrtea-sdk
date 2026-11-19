@@ -69,6 +69,7 @@ var (
 		gval.Function("truncate_date", truncateDate),
 		gval.Function("extract_from_date", extractFromDate),
 		gval.Function("format_date", formatDate),
+		gval.Function("convert_timezone", convertTimezone),
 		gval.Function("get_value_current_day", getValueForCurrentDay),
 		gval.Function("get_formatted_duration", getFormattedDuration),
 		gval.Function("numberWithoutExponent", numberWithoutExponent),
@@ -124,7 +125,10 @@ var (
 
 // Process processes an expression with a map of properties using a specific GVal language
 func Process(langEval gval.Language, expression string, variables map[string]interface{}) (interface{}, error) {
-	for k, v := range GetDateKeywords(time.Now()) {
+	// GVAL date functions parse zone-less dates as UTC (see parseDateAllFormat), so the
+	// implicit "now" keyword must be anchored to UTC too, otherwise it would silently carry
+	// the server's local time zone without saying so.
+	for k, v := range GetDateKeywords(time.Now().UTC()) {
 		if _, ok := variables[k]; !ok {
 			variables[k] = v
 		}

@@ -10,6 +10,7 @@ import (
 var (
 	dateLayouts = [...]string{
 		utils.TimeLayout,
+		utils.TimeLayoutWithZone,
 		time.ANSIC,
 		time.UnixDate,
 		time.RubyDate,

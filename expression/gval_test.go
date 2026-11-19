@@ -116,8 +116,24 @@ func TestComplexDate(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	if eval != "2020-04-01T00:00:00.000" {
+	if eval != "2020-04-01T00:00:00.000Z" {
 		t.Error("invalid result")
+		t.FailNow()
+	}
+}
+
+func TestConvertTimezoneThenAdd(t *testing.T) {
+	// startofday is always computed in UTC; converting it to Europe/Paris before calendar_add
+	// yields a result expressed (and explicitly tagged) in Europe/Paris local time.
+	eval, err := Process(LangEval, "calendar_add(convert_timezone(startofday, \"Europe/Paris\"), \"0h\")",
+		GetDateKeywords(time.Date(2020, 8, 17, 12, 30, 0, 0, time.UTC)))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if eval != "2020-08-17T02:00:00.000+02:00" {
+		t.Error("invalid result")
+		t.Log(eval)
 		t.FailNow()
 	}
 }
