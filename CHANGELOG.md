@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.4.8] - 2026-11-19
+
+### Added
+
+- Add `ActionConditionSlot.Offset`: an action can depend on a "set" action at any number of ticks back
+  (T, T-1, T-2, ...), one slot per offset
+- Add `ActionCondition.Slot`, `ActionCondition.MaxEnabledOffset` and `ActionCondition.Validate`
+  (offset between 0 and `MaxActionConditionOffset`, no duplicate, action set required when enabled),
+  checked by `DefaultRule.IsValid`
+
+### Changed
+
+- `ActionCondition` holds a list of `Slots` instead of the fixed `T` and `TMinus1` fields.
+  The former JSON format (`t`, `t_minus_1`) is still read and converted to offsets 0 and 1,
+  the `slots` format is the only one written
+
 ## [v5.4.7] - 2026-10-06
 
 ### Added

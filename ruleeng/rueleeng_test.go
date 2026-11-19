@@ -88,7 +88,7 @@ func TestRuleActionDependency(t *testing.T) {
 		t.Fatalf("expected actionCondition to be set on the create-issue action")
 	}
 
-	for _, slot := range []*ActionConditionSlot{createIssueAction.ActionCondition.T, createIssueAction.ActionCondition.TMinus1} {
+	for _, slot := range []*ActionConditionSlot{createIssueAction.ActionCondition.Slot(0), createIssueAction.ActionCondition.Slot(1)} {
 		if slot == nil {
 			t.Fatalf("expected both t and t_minus_1 to be set on the create-issue action")
 		}
@@ -116,12 +116,12 @@ func TestRuleActionDependency(t *testing.T) {
 	if situationReportingAction.ActionCondition == nil {
 		t.Fatalf("expected actionCondition to be set on the situation-reporting action")
 	}
-	if situationReportingAction.ActionCondition.T == nil || !situationReportingAction.ActionCondition.T.Enabled ||
-		situationReportingAction.ActionCondition.T.ActionSetID != setAction.ID {
-		t.Errorf("invalid t actionCondition, got %+v", situationReportingAction.ActionCondition.T)
+	if slot := situationReportingAction.ActionCondition.Slot(0); slot == nil || !slot.Enabled ||
+		slot.ActionSetID != setAction.ID {
+		t.Errorf("invalid offset 0 actionCondition, got %+v", slot)
 	}
-	if situationReportingAction.ActionCondition.TMinus1 == nil || situationReportingAction.ActionCondition.TMinus1.Enabled {
-		t.Errorf("expected t_minus_1 to be disabled, got %+v", situationReportingAction.ActionCondition.TMinus1)
+	if slot := situationReportingAction.ActionCondition.Slot(1); slot == nil || slot.Enabled {
+		t.Errorf("expected offset 1 to be disabled, got %+v", slot)
 	}
 
 	// Executing the rule should resolve the "set" action and expose its id on the resolved action
@@ -154,8 +154,8 @@ func TestRuleActionDependency(t *testing.T) {
 	if resolvedCondition == nil {
 		t.Fatalf("expected actionCondition to be set on the resolved create-issue action")
 	}
-	if resolvedCondition.T == nil || resolvedCondition.T.ActionSetID != actions[0].GetID() {
-		t.Errorf("invalid resolved actionCondition.t: %+v", resolvedCondition.T)
+	if slot := resolvedCondition.Slot(0); slot == nil || slot.ActionSetID != actions[0].GetID() {
+		t.Errorf("invalid resolved actionCondition offset 0: %+v", slot)
 	}
 }
 

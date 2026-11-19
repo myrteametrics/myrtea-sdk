@@ -71,6 +71,12 @@ func (r DefaultRule) IsValid() (bool, error) {
 				return false, fmt.Errorf("missing action name at index %d in case: %s", j, c.Name)
 			}
 
+			if a.EnableActionCondition {
+				if err := a.ActionCondition.Validate(); err != nil {
+					return false, fmt.Errorf("invalid action condition at index %d in case '%s': %w", j, c.Name, err)
+				}
+			}
+
 			// Validate action name expression syntax
 			if err := ValidateExpressionSyntax(string(a.Name)); err != nil {
 				return false, fmt.Errorf("invalid action name syntax at index %d in case '%s': %w", j, c.Name, err)
@@ -230,20 +236,110 @@ type ActionConditionParameter struct {
 	Value string `json:"value"`
 }
 
+// MaxActionConditionOffset is the deepest history offset an action condition can look back to.
+const MaxActionConditionOffset = 50
+
 // ActionConditionSlot describes a dependency on a "set" action, identified by
 // its stable ID, along with a snapshot of the conditions (parameters) it was
-// configured with.
+// configured with. Offset is the number of ticks to look back: 0 is the current
+// tick (T), 1 the previous tick (T-1), 2 the one before (T-2), and so on.
 type ActionConditionSlot struct {
+	Offset      int                        `json:"offset"`
 	Enabled     bool                       `json:"enabled"`
 	ActionSetID string                     `json:"actionSetId"`
 	Conditions  []ActionConditionParameter `json:"conditions"`
 }
 
 // ActionCondition holds the dependency configuration of an action on "set"
-// actions evaluated at the current tick (T) and/or the previous tick (T-1).
+// actions evaluated at any number of ticks (T, T-1, T-2, ...), one slot per offset.
+// All the enabled slots must be verified (AND).
 type ActionCondition struct {
-	T       *ActionConditionSlot `json:"t,omitempty"`
-	TMinus1 *ActionConditionSlot `json:"t_minus_1,omitempty"`
+	Slots []ActionConditionSlot `json:"slots"`
+}
+
+// legacyActionCondition is the former fixed-slot format, still read for the rules already stored.
+type legacyActionCondition struct {
+	T       *ActionConditionSlot `json:"t"`
+	TMinus1 *ActionConditionSlot `json:"t_minus_1"`
+}
+
+// UnmarshalJSON reads the current format ({"slots": [...]}) as well as the former one
+// ({"t": {...}, "t_minus_1": {...}}), which is converted to offsets 0 and 1.
+func (c *ActionCondition) UnmarshalJSON(data []byte) error {
+	var current struct {
+		Slots []ActionConditionSlot `json:"slots"`
+	}
+	if err := json.Unmarshal(data, &current); err != nil {
+		return err
+	}
+	var legacy legacyActionCondition
+	if err := json.Unmarshal(data, &legacy); err != nil {
+		return err
+	}
+
+	c.Slots = current.Slots
+	if len(c.Slots) > 0 {
+		return nil
+	}
+	if legacy.T != nil {
+		slot := *legacy.T
+		slot.Offset = 0
+		c.Slots = append(c.Slots, slot)
+	}
+	if legacy.TMinus1 != nil {
+		slot := *legacy.TMinus1
+		slot.Offset = 1
+		c.Slots = append(c.Slots, slot)
+	}
+	return nil
+}
+
+// Slot returns the slot configured for the given offset, or nil if there is none.
+func (c *ActionCondition) Slot(offset int) *ActionConditionSlot {
+	if c == nil {
+		return nil
+	}
+	for i := range c.Slots {
+		if c.Slots[i].Offset == offset {
+			return &c.Slots[i]
+		}
+	}
+	return nil
+}
+
+// MaxEnabledOffset returns the deepest offset among the enabled slots, or 0 if there is none.
+func (c *ActionCondition) MaxEnabledOffset() int {
+	if c == nil {
+		return 0
+	}
+	max := 0
+	for _, slot := range c.Slots {
+		if slot.Enabled && slot.Offset > max {
+			max = slot.Offset
+		}
+	}
+	return max
+}
+
+// Validate checks that the offsets are within bounds and unique.
+func (c *ActionCondition) Validate() error {
+	if c == nil {
+		return nil
+	}
+	seen := make(map[int]struct{}, len(c.Slots))
+	for _, slot := range c.Slots {
+		if slot.Offset < 0 || slot.Offset > MaxActionConditionOffset {
+			return fmt.Errorf("invalid action condition offset %d (must be between 0 and %d)", slot.Offset, MaxActionConditionOffset)
+		}
+		if _, dup := seen[slot.Offset]; dup {
+			return fmt.Errorf("duplicate action condition offset %d", slot.Offset)
+		}
+		seen[slot.Offset] = struct{}{}
+		if slot.Enabled && slot.ActionSetID == "" {
+			return fmt.Errorf("missing actionSetId for the action condition at offset %d", slot.Offset)
+		}
+	}
+	return nil
 }
 
 // Resolve resolves the ActionDef into a DefaultAction
