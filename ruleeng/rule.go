@@ -237,7 +237,7 @@ type ActionConditionParameter struct {
 }
 
 // MaxActionConditionOffset is the deepest history offset an action condition can look back to.
-const MaxActionConditionOffset = 50
+const MaxActionConditionOffset = 10
 
 // ActionConditionSlot describes a dependency on a "set" action, identified by
 // its stable ID, along with a snapshot of the conditions (parameters) it was
