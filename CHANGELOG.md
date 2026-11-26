@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `redis.NewRedisClient` scans the cluster topology every 30s (`redis.DefaultShardsRefreshInterval`),
   as a safeguard on top of the refreshes rueidis does on redirections and connection errors
+- Update the dependencies (rueidis v1.0.80, sarama v1.62.0, franz-go v1.22.3, chi v5.5.0, zap v1.28.0, ...).
+  sarama v1.62.0 requires Go 1.26, the minimum Go version of the module goes from 1.25 to 1.26
 
 ## [v5.4.7] - 2026-10-06
 
