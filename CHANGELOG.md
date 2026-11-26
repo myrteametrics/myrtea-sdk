@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Add `redis.NewRedisClientWithOptions` and `redis.Options` to tune `ShardsRefreshInterval` and `ConnWriteTimeout`
+
+### Changed
+
+- `redis.NewRedisClient` scans the cluster topology every 30s (`redis.DefaultShardsRefreshInterval`),
+  as a safeguard on top of the refreshes rueidis does on redirections and connection errors
+
 ## [v5.4.7] - 2026-10-06
 
 ### Added
