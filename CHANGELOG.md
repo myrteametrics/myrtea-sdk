@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v5.4.8] - 2026-11-26
+
+### Added
+
+- `BatchSink` metrics: `myrtea_sink_flush_total{status,reason}`, `myrtea_sink_flush_duration_seconds` and
+  `myrtea_sink_dropped_batches_total`, registered on the default registry (every connector exposes them)
+
+- Kafka consumer metrics (new package `connector/consumermetrics`, used by both the franz-go consumer in `connector/kafka`
+  and the deprecated sarama consumers): `myrtea_kafka_connector_last_poll_timestamp_seconds`,
+  `myrtea_kafka_connector_last_message_timestamp_seconds{topic}` and
+  `myrtea_kafka_connector_message_duration_seconds{topic}`. A flat message counter can mean a quiet topic or a stuck
+  consumer; the timestamps tell them apart
+
+### Fixed
+
+- `BatchSink.flushBuffer` no longer fails silently: a failed send to the ingester is logged at error level with the
+  number of dropped batches (the rest of the flush is still abandoned, behaviour unchanged)
+- `BatchSink.SendToIngester` now closes the response body (the connection could not be reused)
+
+
 ## [v5.4.7] - 2026-10-06
 
 ### Added

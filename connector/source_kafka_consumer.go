@@ -2,8 +2,10 @@ package connector
 
 import (
 	"github.com/IBM/sarama"
+	"github.com/myrteametrics/myrtea-sdk/v5/connector/consumermetrics"
 	"go.uber.org/zap"
 	"os"
+	"time"
 )
 
 const DefaultMaxPermittedPanics = 10
@@ -76,14 +78,23 @@ func (consumer *DefaultConsumer) ConsumeClaim(session sarama.ConsumerGroupSessio
 	// Do not move the code below to a goroutine.
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/IBM/sarama/blob/main/consumer_group.go#L27-L29
+	// While idle the loop wakes up regularly so that "no message" and "loop blocked" can be told apart.
+	heartbeat := time.NewTicker(consumermetrics.HeartbeatInterval)
+	defer heartbeat.Stop()
+	consumermetrics.Poll()
 	for {
 		select {
+		case <-heartbeat.C:
+			consumermetrics.Poll()
 		case message, ok := <-claim.Messages():
+			consumermetrics.Poll()
 			if !ok {
 				zap.L().Warn("Message channel was closed")
 				return nil
 			}
+			start := time.Now()
 			consumer.processor.Process(message)
+			consumermetrics.Processed(message.Topic, time.Since(start))
 			session.MarkMessage(message, "")
 
 		// Should return when `session.Context()` is done.
@@ -145,15 +156,23 @@ func (consumer *DefaultMultiConsumer) ConsumeClaim(session sarama.ConsumerGroupS
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/IBM/sarama/blob/main/consumer_group.go#L27-L29
 
+	heartbeat := time.NewTicker(consumermetrics.HeartbeatInterval)
+	defer heartbeat.Stop()
+	consumermetrics.Poll()
 	for {
 		select {
+		case <-heartbeat.C:
+			consumermetrics.Poll()
 		case message, ok := <-claim.Messages():
+			consumermetrics.Poll()
 			if !ok {
 				zap.L().Warn("Message channel was closed")
 				return nil
 			}
 			if processor, found := consumer.processors[message.Topic]; found {
+				start := time.Now()
 				processor.Process(message)
+				consumermetrics.Processed(message.Topic, time.Since(start))
 				session.MarkMessage(message, "")
 			} else {
 				zap.L().Warn("Processor not found for topic", zap.String("topic", message.Topic))

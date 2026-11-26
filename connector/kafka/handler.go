@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/myrteametrics/myrtea-sdk/v5/connector/consumermetrics"
 	"github.com/spf13/viper"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.uber.org/zap"
@@ -229,6 +230,8 @@ func (h *Handler) pollLoop(ctx context.Context, client *kgo.Client, consumer *De
 
 		// PollRecords is strongly recommended when using BlockRebalanceOnPoll.
 		fetches := client.PollRecords(ctx, h.cfg.PollMaxRecords)
+		// The loop turned (even with no record): tells a quiet topic from a blocked consumer.
+		consumermetrics.Poll()
 		if fetches.IsClientClosed() {
 			zap.L().Info("Client closed, stopping consumer")
 			return

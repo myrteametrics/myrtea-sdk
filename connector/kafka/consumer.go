@@ -5,7 +5,9 @@ import (
 	"os"
 	"sync"
 	"sync/atomic"
+	"time"
 
+	"github.com/myrteametrics/myrtea-sdk/v5/connector/consumermetrics"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"go.uber.org/zap"
 )
@@ -87,6 +89,10 @@ func (pc *partitionConsumer) consume() {
 // faulty message cannot crash the whole connector. Recovery is bounded by
 // ConsumerParams.MaxPermittedPanics (see handlePanic).
 func (pc *partitionConsumer) process(record *kgo.Record) {
+	start := time.Now()
+	defer func() {
+		consumermetrics.Processed(pc.topic, time.Since(start))
+	}()
 	defer func() {
 		if r := recover(); r != nil {
 			handlePanic(r, pc.params, pc.panicCount)
